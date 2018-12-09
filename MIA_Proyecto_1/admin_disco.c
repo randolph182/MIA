@@ -190,9 +190,18 @@ void crear_particion_(MBR *mbr,int size,char unit,char type,char fit[],char *pat
 
     int ini_part = sizeof(*mbr);    //acordarse que se utiliza el n-1 en los tamanios
     int size_bytes = numero_bytes(unit,size);
+
+    //si retorna 1 == la direccion de la particion debe ir contenida
+    //si retorna 0 = no hay particiones disponibles
+    int flag_ptr_dispo = buscar_particion_disponible(*&mbr,name,&particion,type);
+
     //mbr->referencia ; particion -> referencia ;hay_particion->referencia ; ini_part->lo que ocupa mbr; name-> por si se repite
     buscar_particion_dispo(*&mbr,&particion,size_bytes,&hay_particion,&ini_part,name,type);
 
+    if(flag_ptr_dispo == 1) //ahora que si hay ptr disponible debemos buscar el tamanio
+    {
+        
+    }
     if(hay_particion == 1)
     {
         particion->part_status = '1';
@@ -262,6 +271,56 @@ void crear_particion_(MBR *mbr,int size,char unit,char type,char fit[],char *pat
         printf("ERROR: no se ha podido crear la particion\n\n");
     }
 }
+
+int buscar_particion_disponible(MBR *mbr,char *name,PTR **particion,char type)
+{
+    PTR particiones[4];
+    particiones[0] = mbr->mbr_partition_1;
+    particiones[1] = mbr->mbr_partition_2;
+    particiones[2] = mbr->mbr_partition_3;
+    particiones[3] = mbr->mbr_partition_4;
+
+    //::::verificando que no hayan nombres repetidos ni mas de una extendida
+    for (int i = 0; i < 4; ++i) 
+    {
+        if(particiones[i].part_status == '1')//si esta activa
+        {
+            if(strcasecmp(particiones[i].part_name,name) == 0)
+            {
+                printf("ERROR: No se puede Crear la particion porque el nombre ya existe\n\n");
+                return 0;
+            }
+            if(particiones[i].part_type == 'e' && type == 'e')
+            {
+                printf("ERROR: No se puede Crear mas de una  particion extendida \n\n");
+                return 0;
+            }
+
+        }
+    }
+    // si todas estan vacias
+    if(particiones[0].part_status == '0' && particiones[1].part_status == '0' && particiones[2].part_status =='0' && particiones[3].part_status == '0')
+    {
+       (*particion) =  &mbr->mbr_partition_1; //paso la direccion
+       return 1;
+    }
+    else if(particiones[0].part_status == '1' && particiones[1].part_status == '1' && particiones[2].part_status =='1' && particiones[3].part_status == '1')
+    {
+        //si estan todas ocupadas
+        printf("ERROR: no hay particiones disponibles dentro del disco para mas particiones\n\n");
+        return 0;
+    }
+    else
+    {
+        int flag_particion_encontrada = 0;
+        ptr_libre(*&mbr,*&particion,&flag_particion_encontrada);
+
+        if(flag_particion_encontrada == 1)
+            return 1;
+        return 0;
+    }
+}
+
 
 void buscar_particion_dispo(MBR *mbr,PTR **particion,int size_buscado,int *flag_ptr,int *ini_ptr,char *name,char type)
 {
