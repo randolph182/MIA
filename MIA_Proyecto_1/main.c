@@ -25,7 +25,6 @@ int main()
             flag = 1;
             break;
         }
-
         if(comando[0] == '#') // para los comentarios
         {
             int index_lst =0;

@@ -147,3 +147,38 @@
 	<ctype.h>
 	<stdio.h>
 
+1536132593 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/mount.c
+	"mount.h"
+
+1534355889 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/mount.h
+	<string.h>
+	<stdio.h>
+
+1536384100 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/reporte_grafico.c
+	"reporte_grafico.h"
+
+1536210025 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/reporte_grafico.h
+	<string.h>
+	<stdio.h>
+	"admin_disco.h"
+	<sys/types.h>
+	<dirent.h>
+	<sys/stat.h>
+
+1544316236 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/admin_disco.h
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	<unistd.h>
+	<sys/types.h>
+	<dirent.h>
+	<sys/stat.h>
+	<errno.h>
+	<time.h>
+	"mount.h"
+
+1536384615 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/sistema_archivos.c
+	"sistema_archivos.h"
+
+1536458927 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/sistema_archivos.h
+
