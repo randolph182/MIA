@@ -60,6 +60,8 @@ void crear_particion(int size,char unit,char type,char fit[],char *path, char *n
 void crear_particion_(MBR *mbr,int size,char unit,char type,char fit[],char *path,char *name);
 void buscar_particion_dispo(MBR *mbr,PTR **particion,int size_buscado,int *flag_ptr,int *ini_ptr,char *name,char type);
 int buscar_particion_disponible(MBR *mbr,char *name,PTR **particion,char type);
+int buscar_espacio_adecuado(MBR *mbr,int size_buscado,int *ini_ptr);
+int buscar_espacio_ff_disco(PTR particion_mbr[],int itera,int *inicio_disponible,int size_nuevo,MBR *mbr);
 
 void ordenar_particiones(PTR *particion);
 void buscar_espacio(PTR **particion,PTR particion_mbr[],int itera,int *inicio_libre,int size_nuevo,MBR *mbr,int *flag);

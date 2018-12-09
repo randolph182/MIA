@@ -196,11 +196,11 @@ void crear_particion_(MBR *mbr,int size,char unit,char type,char fit[],char *pat
     int flag_ptr_dispo = buscar_particion_disponible(*&mbr,name,&particion,type);
 
     //mbr->referencia ; particion -> referencia ;hay_particion->referencia ; ini_part->lo que ocupa mbr; name-> por si se repite
-    buscar_particion_dispo(*&mbr,&particion,size_bytes,&hay_particion,&ini_part,name,type);
+    //buscar_particion_dispo(*&mbr,&particion,size_bytes,&hay_particion,&ini_part,name,type);
 
     if(flag_ptr_dispo == 1) //ahora que si hay ptr disponible debemos buscar el tamanio
     {
-
+        buscar_espacio_adecuado(*&mbr,size_bytes,&ini_part);
     }
     if(hay_particion == 1)
     {
@@ -281,7 +281,7 @@ int buscar_particion_disponible(MBR *mbr,char *name,PTR **particion,char type)
     particiones[3] = mbr->mbr_partition_4;
 
     //::::verificando que no hayan nombres repetidos ni mas de una extendida
-    for (int i = 0; i < 4; ++i) 
+    for (int i = 0; i < 4; ++i)
     {
         if(particiones[i].part_status == '1')//si esta activa
         {
@@ -322,11 +322,11 @@ int buscar_particion_disponible(MBR *mbr,char *name,PTR **particion,char type)
 }
 
 
-int buscar_espacio_adecuado(MBR *mbr,PTR **particion,int size_buscado,int *ini_ptr)
+int buscar_espacio_adecuado(MBR *mbr,int size_buscado,int *ini_ptr)
 {
-    //Ojo particiones solo serviran para encontrar la posicion adecuada y no 
+    //Ojo particiones solo serviran para encontrar la posicion adecuada y no
     //alterar las particiones dentro del mbr real
-    PTR particiones[4]; 
+    PTR particiones[4];
     particiones[0] = mbr->mbr_partition_1;
     particiones[1] = mbr->mbr_partition_2;
     particiones[2] = mbr->mbr_partition_3;
@@ -334,9 +334,51 @@ int buscar_espacio_adecuado(MBR *mbr,PTR **particion,int size_buscado,int *ini_p
 
     ordenar_particiones(&particiones);
 
-    
+    if(strcasecmp(mbr->disk_fit,'ff'))
+    {
+        int itera_ff =0;
+        int flag_ff= buscar_espacio_ff_disco(particiones,itera_ff,*&ini_ptr,size_buscado,*&mbr);
+    }
+    else if(strcasecmp(mbr->disk_fit,'bf'))
+    {
+
+    }
+    else if(strcasecmp(mbr->disk_fit,'wf'))
+    {
+
+    }
 
 }
+
+int buscar_espacio_ff_disco(PTR particion_mbr[],int itera,int *inicio_disponible,int size_nuevo,MBR *mbr)
+{
+    if(itera < 4)
+    {
+        if(particion_mbr[itera].part_status != '0' && itera != 3)
+        {
+
+        }
+        else
+        {
+            int esp_total = *inicio_disponible + size_nuevo;
+            if(itera == 3) //es el ultimo del vector
+            {
+            }
+            else //significa que estoy en una particion nula o part_status = '0'
+            {    //como los status iran al final de la lista de particiones  si un part_status = 0
+                 //signifca que estos en las posiciones finales
+                 if(esp_total <= mbr->mbr_tamanio_disk)
+                     return 1;
+                 else{
+                    printf("ERROR: el espacio que desea almacenar sobrepasa el espacio libre del disco \n\n");
+                    return 0;
+                 }
+            }
+        }
+
+    }
+}
+
 
 void buscar_particion_dispo(MBR *mbr,PTR **particion,int size_buscado,int *flag_ptr,int *ini_ptr,char *name,char type)
 {
@@ -403,15 +445,15 @@ void ordenar_particiones(PTR *particion)
             i++;
         }
     }
-    for(int k = i; k < 4; i++)
-    {   
+    for(int k = i; k < 4; k++)
+    {
         tmp[k].part_status = '0';
     }
     for(int pos = 0; pos < 4; pos++)
     {
         particion[pos] = tmp[pos];
     }
-    
+
     //ordenacion por burbuja
     PTR aux;
     for(int i =0; i < 3 ;i++)
