@@ -334,16 +334,20 @@ int buscar_espacio_adecuado(MBR *mbr,int size_buscado,int *ini_ptr)
 
     ordenar_particiones(&particiones);
 
-    if(strcasecmp(mbr->disk_fit,'ff'))
+    char tmp[3];
+
+    strcpy(tmp,mbr->disk_fit);
+
+    if(strcasecmp(mbr->disk_fit,"ff") == 0)
     {
         int itera_ff =0;
         int flag_ff= buscar_espacio_ff_disco(particiones,itera_ff,*&ini_ptr,size_buscado,*&mbr);
     }
-    else if(strcasecmp(mbr->disk_fit,'bf'))
+    else if(strcasecmp(mbr->disk_fit,"bf") == 0)
     {
 
     }
-    else if(strcasecmp(mbr->disk_fit,'wf'))
+    else if(strcasecmp(mbr->disk_fit,"wf") == 0)
     {
 
     }
