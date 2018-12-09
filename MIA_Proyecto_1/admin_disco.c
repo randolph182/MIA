@@ -200,7 +200,7 @@ void crear_particion_(MBR *mbr,int size,char unit,char type,char fit[],char *pat
 
     if(flag_ptr_dispo == 1) //ahora que si hay ptr disponible debemos buscar el tamanio
     {
-        
+
     }
     if(hay_particion == 1)
     {
@@ -322,6 +322,22 @@ int buscar_particion_disponible(MBR *mbr,char *name,PTR **particion,char type)
 }
 
 
+int buscar_espacio_adecuado(MBR *mbr,PTR **particion,int size_buscado,int *ini_ptr)
+{
+    //Ojo particiones solo serviran para encontrar la posicion adecuada y no 
+    //alterar las particiones dentro del mbr real
+    PTR particiones[4]; 
+    particiones[0] = mbr->mbr_partition_1;
+    particiones[1] = mbr->mbr_partition_2;
+    particiones[2] = mbr->mbr_partition_3;
+    particiones[3] = mbr->mbr_partition_4;
+
+    ordenar_particiones(&particiones);
+
+    
+
+}
+
 void buscar_particion_dispo(MBR *mbr,PTR **particion,int size_buscado,int *flag_ptr,int *ini_ptr,char *name,char type)
 {
     int mbr_tamanio_disk = mbr->mbr_tamanio_disk;
@@ -377,19 +393,45 @@ void buscar_particion_dispo(MBR *mbr,PTR **particion,int size_buscado,int *flag_
 
 void ordenar_particiones(PTR *particion)
 {
+    PTR tmp[4];
+    int i =0;
+    for(int j = 0; j < 4; j++)
+    {
+        if(particion[j].part_status != '0')
+        {
+            tmp[i] = particion[j];
+            i++;
+        }
+    }
+    for(int k = i; k < 4; i++)
+    {   
+        tmp[k].part_status = '0';
+    }
+    for(int pos = 0; pos < 4; pos++)
+    {
+        particion[pos] = tmp[pos];
+    }
+    
     //ordenacion por burbuja
     PTR aux;
-    for(int i =0; i<4-1 ;i++)
+    for(int i =0; i < 3 ;i++)
     {
-        for(int j = i+1; j < 4;j++ )
+        if(particion[i].part_status != '0')
         {
-            if(particion[i].part_start > particion[j].part_start && particion[i].part_status != '0' && particion[j].part_status != '0')
+            for(int j = i+1; j < 4;j++ )
             {
-                aux = particion[i];
-                particion[i] = particion[j];
-                particion[j] = aux;
+                if(particion[j].part_status != '0')
+                {
+                    if(particion[i].part_start > particion[j].part_start )
+                    {
+                        aux = particion[i];
+                        particion[i] = particion[j];
+                        particion[j] = aux;
+                    }
+                }
             }
         }
+
     }
 }
 
