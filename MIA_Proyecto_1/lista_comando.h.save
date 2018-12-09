@@ -1,0 +1,19 @@
+#ifndef LISTA_COMANDO_H_INCLUDED
+#define LISTA_COMANDO_H_INCLUDED
+
+typedef struct LST_COMANDO LST_COMANDO;
+typedef struct NODO_COMANDO NODO_COMANDO;
+
+struct NODO_COMANDO{
+    char valor[250];
+    NODO_COMANDO *siguiente;
+};
+
+struct LST_COMANDO{
+    NODO_COMANDO *primero;
+    int size;
+};
+
+void add_
+
+#endif // LISTA_COMANDO_H_INCLUDED

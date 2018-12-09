@@ -1,0 +1,8 @@
+#include <stdio.h>
+#include <stdlib.h>
+int main()
+{
+    char comando[250];
+    fgets(comando,sizeof(comando),stdin);
+    return 0;
+}

@@ -1,0 +1,149 @@
+# depslib dependency file v1.0
+1535930471 source:/home/randolph/codeblocks_projects/MIA_Proyecto_1/main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"analizador.h"
+	<unistd.h>
+	"mount.h"
+
+1533770878 source:/home/randolph/codeblocks_projects/MIA_Proyecto_1/lista_comando.c
+	"lista_comando.h"
+
+1533770878 /home/randolph/codeblocks_projects/MIA_Proyecto_1/lista_comando.h
+	<stdio.h>
+	<stdlib.h>
+	<ctype.h>
+
+1534371291 /home/randolph/codeblocks_projects/MIA_Proyecto_1/analizador.h
+	<stdio.h>
+	<string.h>
+	<strings.h>
+	"mount.h"
+	"reporte_grafico.h"
+
+1536276500 source:/home/randolph/codeblocks_projects/MIA_Proyecto_1/analizador.c
+	"analizador.h"
+	"admin_disco.h"
+
+1536131545 source:/home/randolph/codeblocks_projects/MIA_Proyecto_1/admin_disco.c
+	"admin_disco.h"
+
+1536073839 /home/randolph/codeblocks_projects/MIA_Proyecto_1/admin_disco.h
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	<unistd.h>
+	<sys/types.h>
+	<dirent.h>
+	<sys/stat.h>
+	<errno.h>
+	<time.h>
+	"mount.h"
+
+1536384100 source:/home/randolph/codeblocks_projects/MIA_Proyecto_1/reporte_grafico.c
+	"reporte_grafico.h"
+
+1536210025 /home/randolph/codeblocks_projects/MIA_Proyecto_1/reporte_grafico.h
+	<string.h>
+	<stdio.h>
+	"admin_disco.h"
+	<sys/types.h>
+	<dirent.h>
+	<sys/stat.h>
+
+1534326604 source:/home/randolph/codeblocks_projects/MIA_Proyecto_1/lista_simple.c
+	"lista_simple.h"
+
+1534326604 /home/randolph/codeblocks_projects/MIA_Proyecto_1/lista_simple.h
+	<string.h>
+	<stdlib.h>
+	<ctype.h>
+	<stdio.h>
+
+1536132593 source:/home/randolph/codeblocks_projects/MIA_Proyecto_1/mount.c
+	"mount.h"
+
+1534355889 /home/randolph/codeblocks_projects/MIA_Proyecto_1/mount.h
+	<string.h>
+	<stdio.h>
+
+1536384615 source:/home/randolph/codeblocks_projects/MIA_Proyecto_1/sistema_archivos.c
+	"sistema_archivos.h"
+
+1536458927 /home/randolph/codeblocks_projects/MIA_Proyecto_1/sistema_archivos.h
+
+1544326557 source:/home/rm/Documentos/code_blocks_proyectos/MIA_Proyecto_1/admin_disco.c
+	"admin_disco.h"
+
+1544316236 /home/rm/Documentos/code_blocks_proyectos/MIA_Proyecto_1/admin_disco.h
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	<unistd.h>
+	<sys/types.h>
+	<dirent.h>
+	<sys/stat.h>
+	<errno.h>
+	<time.h>
+	"mount.h"
+
+1534355889 /home/rm/Documentos/code_blocks_proyectos/MIA_Proyecto_1/mount.h
+	<string.h>
+	<stdio.h>
+
+1544319171 source:/home/rm/Documentos/code_blocks_proyectos/MIA_Proyecto_1/analizador.c
+	"analizador.h"
+	"admin_disco.h"
+
+1534371291 /home/rm/Documentos/code_blocks_proyectos/MIA_Proyecto_1/analizador.h
+	<stdio.h>
+	<string.h>
+	<strings.h>
+	"mount.h"
+	"reporte_grafico.h"
+
+1536210025 /home/rm/Documentos/code_blocks_proyectos/MIA_Proyecto_1/reporte_grafico.h
+	<string.h>
+	<stdio.h>
+	"admin_disco.h"
+	<sys/types.h>
+	<dirent.h>
+	<sys/stat.h>
+
+1536132593 source:/home/rm/Documentos/code_blocks_proyectos/MIA_Proyecto_1/mount.c
+	"mount.h"
+
+1536384100 source:/home/rm/Documentos/code_blocks_proyectos/MIA_Proyecto_1/reporte_grafico.c
+	"reporte_grafico.h"
+
+1536384615 source:/home/rm/Documentos/code_blocks_proyectos/MIA_Proyecto_1/sistema_archivos.c
+	"sistema_archivos.h"
+
+1536458927 /home/rm/Documentos/code_blocks_proyectos/MIA_Proyecto_1/sistema_archivos.h
+
+1544230775 source:/home/rm/Documentos/code_blocks_proyectos/MIA_Proyecto_1/main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"analizador.h"
+	<unistd.h>
+	"mount.h"
+
+1533770878 source:/home/rm/Documentos/code_blocks_proyectos/MIA_Proyecto_1/lista_comando.c
+	"lista_comando.h"
+
+1533770878 /home/rm/Documentos/code_blocks_proyectos/MIA_Proyecto_1/lista_comando.h
+	<stdio.h>
+	<stdlib.h>
+	<ctype.h>
+
+1544319314 source:/home/rm/Documentos/code_blocks_proyectos/MIA_Proyecto_1/lista_simple.c
+	"lista_simple.h"
+
+1544319314 /home/rm/Documentos/code_blocks_proyectos/MIA_Proyecto_1/lista_simple.h
+	<string.h>
+	<stdlib.h>
+	<ctype.h>
+	<stdio.h>
+
