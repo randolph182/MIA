@@ -408,7 +408,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
                     if(strcmp(fit,"") == 0)
                     {
                         memset(fit,0,sizeof(fit));
-                        strcpy(fit,"wf");   //peor ajuste por defecto 
+                        strcpy(fit,"wf");   //peor ajuste por defecto
                     }
                     crear_particion(size,unit,type,fit,path,name);
                 }
@@ -473,6 +473,23 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
             {
                 printf("ERROR:el id que desea generar reporte no se encontro\n\n");
             }
+        }
+        else if(flag_exec == 1)    //============================================== EXEC
+        {
+            FILE *archivo;
+
+            if((archivo = fopen(path,"rb")))//lectura archivo binario
+            {
+                char linea[1024];
+                while(fgets(linea,1024,archivo)) //obtengo linea por linea con \n al final
+                {
+                    if(linea[0] != '#')         //no tomamos en cuenta los comentarios
+                        iniciar_analisis(linea,ptr_mount);
+                }
+            }
+            else
+                printf("ERROR: el archivo que Exec quiere ejecutar no Existe\n");
+            fclose(archivo);
         }
         else if(flag_mkfs == 1)
         {

@@ -43,7 +43,7 @@ struct MASTER_BOOT_RECORD
 struct EXTENDED_BOOT_RECORD
 {
   char part_status;// = '0'; //1
-  char part_fit[2];       //2
+  char part_fit[3];       //3
   int  part_start;        //4
   int  part_size;         //4
   int part_next;          //4

@@ -217,7 +217,7 @@ void crear_particion_(MBR *mbr,int size,char unit,char type,char fit[],char *pat
 
             if(type == 'e')
             {
-                FILE *archivo2 = fopen(path,"r+b");  //escritura (machaca datos) y lectura
+                FILE *archivo2 = fopen(path,"rb+");  //escritura (machaca datos) y lectura
                 fseek(archivo2,0,SEEK_SET);
                 MBR mbr_ex[1];
                 fread(mbr_ex,sizeof(MBR),1,archivo2);
@@ -241,16 +241,26 @@ void crear_particion_(MBR *mbr,int size,char unit,char type,char fit[],char *pat
 
                 if(extend.part_status !='0')
                 {
-                    EBR *mi_ebr = (EBR*)malloc(sizeof(EBR));
+                    //EBR *mi_ebr = (EBR*)malloc(sizeof(EBR));
+                    EBR mi_ebr;
                     /*comprobando*/
-                    mi_ebr->part_next = 1;
-                    int comp = sizeof(*mi_ebr) + extend.part_start;
+                    mi_ebr.part_next = 1;
+                    strcpy(mi_ebr.part_fit,"ff");
+                    strcpy(mi_ebr.part_name,"prueba");
+                    int comp = sizeof(EBR) + extend.part_start;
+                    int total = extend.part_start + extend.part_size;
+                    int size_ebr = sizeof(EBR);
+                    int inicio_ebr = extend.part_start;
                     if(comp <= (extend.part_start + extend.part_size))
                     {
-                        fseek(archivo2,extend.part_start,SEEK_SET);
-                        fwrite(mi_ebr,sizeof(EBR),1,archivo2);
+                        fseek(archivo2,inicio_ebr,SEEK_SET);
+                        fwrite(&mi_ebr,sizeof(EBR),1,archivo2);
 
                         printf("se ha creado una particion Extendida\n\n");
+                        fseek(archivo2,inicio_ebr,SEEK_SET);
+                        EBR ebr_tmp[1];
+                        fread(ebr_tmp,sizeof(EBR),1,archivo2);
+                        int i = 0;
                     }
                     else
                         printf("ERROR:No hay suficiente espacio para escribir un EBR en la particion extendida\n\n");
