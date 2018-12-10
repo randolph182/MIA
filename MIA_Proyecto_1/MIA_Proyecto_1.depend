@@ -147,7 +147,7 @@
 	<ctype.h>
 	<stdio.h>
 
-1536132593 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/mount.c
+1544468268 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/mount.c
 	"mount.h"
 
 1534355889 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/mount.h
@@ -209,6 +209,6 @@
 	<string.h>
 	<stdio.h>
 
-1544461355 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/lista_ajuste.c
+1544463172 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/lista_ajuste.c
 	"lista_ajuste.h"
 

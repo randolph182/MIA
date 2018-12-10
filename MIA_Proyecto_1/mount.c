@@ -80,7 +80,8 @@ char get_letra_mount(char *path,LISTA_MOUNT *const ptr_mount)
         {
             return tmp->letra;
         }
-        else if(strcmp(tmp->letra,letra_mayor) > 0)
+        //else if(strcmp(tmp->letra,letra_mayor) > 0)
+        else if(tmp->letra > letra_mayor);
             letra_mayor = tmp->letra;
         tmp = tmp->siguiente;
     }

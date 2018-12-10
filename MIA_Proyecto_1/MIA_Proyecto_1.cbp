@@ -39,6 +39,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="analizador.h" />
+		<Unit filename="lista_ajuste.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="lista_ajuste.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
