@@ -215,6 +215,9 @@ void reporte_mbr_(char *path_archivo,char *path_disco,char *path_archivo_destino
     sprintf(id_disco,"%d", mbr_tmp[0].mbr_disk_segnature);
     concat_2_val(archivo,"id asignado a disco = ",id_disco,3);
 
+    //concatenando el fit del disco
+    concat_2_val(archivo,"mbr_ajuste = ",mbr_tmp[0].disk_fit,2);
+
     PTR particion[4];
     particion[0] = (mbr_tmp[0]).mbr_partition_1;
     particion[1] = (mbr_tmp[0]).mbr_partition_2;
@@ -248,7 +251,11 @@ void reporte_mbr_(char *path_archivo,char *path_disco,char *path_archivo_destino
    {
     strcat(comando," -Tpng");
    }
-   else if(strcasecmp(extension,"pdf"))
+   else if(strcasecmp(extension,"jpg") ==0)
+   {
+    strcat(comando," -Tjpg");
+   }
+   else if(strcasecmp(extension,"pdf") ==0)
    {
     strcat(comando," -Tpdf");
    }
@@ -408,7 +415,11 @@ void reporte_disk_(char *path_archivo,char *path_disco, char *path_archivo_desti
    {
     strcat(comando," -Tpng");
    }
-   else if(strcasecmp(extension,"pdf"))
+    else if(strcasecmp(extension,"jpg") ==0)
+   {
+    strcat(comando," -Tjpg");
+   }
+   else if(strcasecmp(extension,"pdf") ==0)
    {
     strcat(comando," -Tpdf");
    }

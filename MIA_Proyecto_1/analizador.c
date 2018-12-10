@@ -50,7 +50,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
     memset(id,0,sizeof(id));
 
     char *fit = (char*)malloc(sizeof(char)*3);
-    // memset(fit,0,sizeof(fit));
+     memset(fit,0,sizeof(fit));
     // strcpy(fit,"ff");
 
 /*=================== VARIABLES GENERALES ==================*/
@@ -411,6 +411,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
                         strcpy(fit,"wf");   //peor ajuste por defecto
                     }
                     crear_particion(size,unit,type,fit,path,name);
+                    memset(fit,0,sizeof(fit));
                 }
             }
             else if(strcmp(path,"") != 0 && strcmp(name,"") != 0 )
