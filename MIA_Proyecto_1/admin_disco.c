@@ -257,10 +257,6 @@ void crear_particion_(MBR *mbr,int size,char unit,char type,char fit[],char *pat
                         fwrite(&mi_ebr,sizeof(EBR),1,archivo2);
 
                         printf("se ha creado una particion Extendida\n\n");
-                        fseek(archivo2,inicio_ebr,SEEK_SET);
-                        EBR ebr_tmp[1];
-                        fread(ebr_tmp,sizeof(EBR),1,archivo2);
-                        int i = 0;
                     }
                     else
                         printf("ERROR:No hay suficiente espacio para escribir un EBR en la particion extendida\n\n");
@@ -269,8 +265,6 @@ void crear_particion_(MBR *mbr,int size,char unit,char type,char fit[],char *pat
                     printf("ERROR: hubo problemas con encontrara la particon extendida pra escribir el EBR inicial.\n\n");
 
                 fclose(archivo2);
-
-
             }
             else
                 printf("Se ha Creado una particion Primaria\n\n");
@@ -645,42 +639,54 @@ void delete_particion(char *tipoDel,char *name,char *path_archivo)
         partition[1] = &mbr[0].mbr_partition_2;
         partition[2] = &mbr[0].mbr_partition_3;
         partition[3] = &mbr[0].mbr_partition_4;
+        fclose(archivo);
 
         for (int i = 0; i < 4; ++i) {
             if(partition[i]->part_status == '1')
             {
                 if(strcmp(partition[i]->part_name,name) ==0)
                 {
-                    if(strcasecmp(tipoDel,"fast") ==0)
+                    if(strcasecmp(tipoDel,"fast") ==0) //limpiar tabla de particiones
                     {
                         partition[i]->part_status ='0';
                         partition[i]->part_type = ' ';
                         partition[i]->part_size =0;
                         partition[i]->part_start =0;
-                        strcpy(partition[i]->part_name,"");
-                        strcpy(partition[i]->part_fit,"");
+                        memset(partition[i]->part_name,0,sizeof(partition[i]->part_name));
+                        memset(partition[i]->part_fit,0,sizeof(partition[i]->part_fit));
                         eliminado =1;
                         break;
                     }
-                    else if(strcasecmp(tipoDel,"full") ==0)
+                    else if(strcasecmp(tipoDel,"full") ==0) //limpia tabla de particiones y su contenido en laparticion
                     {
+                        FILE *archivo2 = fopen(path_archivo,"rb+");
+                        //int tmp1 = partition[i]->part_start;
+                        //int tmp2 = partition[i]->part_size;
+                        for(int j = partition[i]->part_start; j < (partition[i]->part_start + partition[i]->part_size); j++)
+                        {
+                            fseek(archivo2,j,SEEK_SET);
+                            fwrite("\0",1,1,archivo2);
+                        }
+                        fclose(archivo2);
+
                         partition[i]->part_status ='0';
                         partition[i]->part_type = ' ';
                         partition[i]->part_size =0;
                         partition[i]->part_start =0;
-                        strcpy(partition[i]->part_name,"");
-                        strcpy(partition[i]->part_fit,"");
+                        memset(partition[i]->part_name,0,sizeof(partition[i]->part_name));
+                        memset(partition[i]->part_fit,0,sizeof(partition[i]->part_fit));
                         eliminado =1;
+
                         break;
                     }
-                    else
+                    else //por defecto una fast
                     {
                         partition[i]->part_status ='0';
                         partition[i]->part_type = ' ';
                         partition[i]->part_size =0;
                         partition[i]->part_start =0;
-                        strcpy(partition[i]->part_name,"");
-                        strcpy(partition[i]->part_fit,"");
+                        memset(partition[i]->part_name,0,sizeof(partition[i]->part_name));
+                        memset(partition[i]->part_fit,0,sizeof(partition[i]->part_fit));
                         eliminado =1;
                         break;
                     }
@@ -688,7 +694,7 @@ void delete_particion(char *tipoDel,char *name,char *path_archivo)
                 }
             }
         }
-        fclose(archivo);
+
 
         if(eliminado == 1)
         {
