@@ -13,6 +13,7 @@
 #include <time.h>
 
 #include "mount.h"
+#include "lista_ajuste.h"
 
 typedef struct MASTER_BOOT_RECORD MBR;
 typedef struct PARTICION PTR;
@@ -61,6 +62,11 @@ void crear_particion_(MBR *mbr,int size,char unit,char type,char fit[],char *pat
 void buscar_particion_dispo(MBR *mbr,PTR **particion,int size_buscado,int *flag_ptr,int *ini_ptr,char *name,char type);
 int buscar_particion_disponible(MBR *mbr,char *name,PTR **particion,char type);
 int buscar_espacio_adecuado(MBR *mbr,int size_buscado,int *ini_ptr);
+
+
+
+
+void buscar_espacio_disco(PTR particion_mbr[],int itera,int inicio_disponible,int size_nuevo,MBR *mbr,LISTA_AJUSTE *const ptr_ajuste);
 int buscar_espacio_ff_disco(PTR particion_mbr[],int itera,int *inicio_disponible,int size_nuevo,MBR *mbr);
 
 void ordenar_particiones(PTR *particion);
