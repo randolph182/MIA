@@ -200,75 +200,73 @@ void crear_particion_(MBR *mbr,int size,char unit,char type,char fit[],char *pat
 
     if(flag_ptr_dispo == 1) //ahora que si hay ptr disponible debemos buscar el tamanio
     {
-        buscar_espacio_adecuado(*&mbr,size_bytes,&ini_part);
-    }
-    if(hay_particion == 1)
-    {
-        particion->part_status = '1';
-        particion->part_type = type;
-        strcpy(particion->part_fit,fit);
-        particion->part_start = ini_part;
-        particion->part_size = numero_bytes(unit,size);
-        strcpy(particion->part_name,name);
-
-        FILE *archivo = fopen(path,"r+b");
-        fseek(archivo,0,SEEK_SET);
-        fwrite(mbr,sizeof(MBR),1,archivo);
-        fclose(archivo);
-
-        if(type == 'e')
+        int flag_espacio = buscar_espacio_adecuado(*&mbr,size_bytes,&ini_part);
+        if(flag_espacio == 1)
         {
-            FILE *archivo2 = fopen(path,"r+b");
-            fseek(archivo2,0,SEEK_SET);
-            MBR mbr_ex[1];
-            fread(mbr_ex,sizeof(MBR),1,archivo2);
-            PTR ptr_extend[4];
-            ptr_extend[0] = mbr_ex[0].mbr_partition_1;
-            ptr_extend[1] = mbr_ex[0].mbr_partition_2;
-            ptr_extend[2] = mbr_ex[0].mbr_partition_3;
-            ptr_extend[3] = mbr_ex[0].mbr_partition_4;
+            particion->part_status = '1';
+            particion->part_type = type;
+            strcpy(particion->part_fit,fit);
+            particion->part_start = ini_part;
+            particion->part_size = numero_bytes(unit,size);
+            strcpy(particion->part_name,name);
 
-            PTR extend;
-            for (int i = 0; i < 4; ++i) {
-                if(ptr_extend[i].part_status =='1')
-                {
-                    if(ptr_extend[i].part_type == 'e')
+            FILE *archivo = fopen(path,"r+b");
+            fseek(archivo,0,SEEK_SET);
+            fwrite(mbr,sizeof(MBR),1,archivo);
+            fclose(archivo);
+
+            if(type == 'e')
+            {
+                FILE *archivo2 = fopen(path,"r+b");  //escritura (machaca datos) y lectura
+                fseek(archivo2,0,SEEK_SET);
+                MBR mbr_ex[1];
+                fread(mbr_ex,sizeof(MBR),1,archivo2);
+                PTR ptr_extend[4];
+                ptr_extend[0] = mbr_ex[0].mbr_partition_1;
+                ptr_extend[1] = mbr_ex[0].mbr_partition_2;
+                ptr_extend[2] = mbr_ex[0].mbr_partition_3;
+                ptr_extend[3] = mbr_ex[0].mbr_partition_4;
+
+                PTR extend;
+                for (int i = 0; i < 4; ++i) {
+                    if(ptr_extend[i].part_status =='1')
                     {
-                        extend = ptr_extend[i];
-                        break;
+                        if(ptr_extend[i].part_type == 'e')
+                        {
+                            extend = ptr_extend[i];
+                            break;
+                        }
                     }
                 }
-            }
 
-            if(extend.part_status !='0')
-            {
-                EBR *mi_ebr = (EBR*)malloc(sizeof(EBR));
-                /*comprobando*/
-                mi_ebr->part_next = 1;
-                int comp = sizeof(*mi_ebr) + extend.part_start;
-                if(comp <= (extend.part_start + extend.part_size))
+                if(extend.part_status !='0')
                 {
-                    fseek(archivo2,extend.part_start,SEEK_SET);
-                    fwrite(mi_ebr,sizeof(EBR),1,archivo2);
+                    EBR *mi_ebr = (EBR*)malloc(sizeof(EBR));
+                    /*comprobando*/
+                    mi_ebr->part_next = 1;
+                    int comp = sizeof(*mi_ebr) + extend.part_start;
+                    if(comp <= (extend.part_start + extend.part_size))
+                    {
+                        fseek(archivo2,extend.part_start,SEEK_SET);
+                        fwrite(mi_ebr,sizeof(EBR),1,archivo2);
 
-                    printf("se ha creado una particion Extendida\n\n");
+                        printf("se ha creado una particion Extendida\n\n");
+                    }
+                    else
+                        printf("ERROR:No hay suficiente espacio para escribir un EBR en la particion extendida\n\n");
                 }
                 else
-                    printf("ERROR:No hay suficiente espacio para escribir un EBR en la particion extendida\n\n");
+                    printf("ERROR: hubo problemas con encontrara la particon extendida pra escribir el EBR inicial.\n\n");
+
+                fclose(archivo2);
+
+
             }
             else
-                printf("ERROR: hubo problemas con encontrara la particon extendida pra escribir el EBR inicial.\n\n");
-
-            fclose(archivo2);
-
-
+                printf("Se ha Creado una particion Primaria\n\n");
         }
         else
-            printf("Se ha Creado una particion Primaria\n\n");
-    }
-    else
-    {
-        printf("ERROR: no se ha podido crear la particion\n\n");
+            printf("ERROR: no se ha podido crear la particion\n\n");
     }
 }
 
@@ -294,6 +292,24 @@ int buscar_particion_disponible(MBR *mbr,char *name,PTR **particion,char type)
             {
                 printf("ERROR: No se puede Crear mas de una  particion extendida \n\n");
                 return 0;
+            }
+            if(particiones[i].part_type == 'p')
+            {
+                int conteo_primarias = 0;
+                for(int j = 0; j < 4; j++)
+                {
+                    if(particiones[j].part_type == 'p')
+                        conteo_primarias++;
+                }
+                if(conteo_primarias == 3)
+                {
+                    if(type == 'p')
+                    {
+                        printf("ERROR: No se puede Crear mas de 3 particiones primarias \n\n");
+                        return 0;
+                    }
+
+                }
             }
 
         }
@@ -334,14 +350,17 @@ int buscar_espacio_adecuado(MBR *mbr,int size_buscado,int *ini_ptr)
 
     ordenar_particiones(&particiones);
 
-    char tmp[3];
-
-    strcpy(tmp,mbr->disk_fit);
-
     if(strcasecmp(mbr->disk_fit,"ff") == 0)
     {
         int itera_ff =0;
         int flag_ff= buscar_espacio_ff_disco(particiones,itera_ff,*&ini_ptr,size_buscado,*&mbr);
+        if(flag_ff == 1)
+            return 1;
+        else
+        {
+            printf("ERROR: no se pudo encontrar espacio en el primer ajuste(FF)\n\n");
+            return 0;
+        }
     }
     else if(strcasecmp(mbr->disk_fit,"bf") == 0)
     {
@@ -358,28 +377,55 @@ int buscar_espacio_ff_disco(PTR particion_mbr[],int itera,int *inicio_disponible
 {
     if(itera < 4)
     {
+
         if(particion_mbr[itera].part_status != '0' && itera != 3)
         {
-
+            if(*inicio_disponible < particion_mbr[itera].part_start) //si el inicio de todo esta disponible
+            {
+                int esp_total = *inicio_disponible + size_nuevo;
+                if(esp_total <= particion_mbr[itera].part_start)
+                    return 1;
+            }
+            if(itera + 1 < 4) //me adelanto uno
+            {
+                if(particion_mbr[itera+1].part_status != '0')
+                {
+                    *inicio_disponible = particion_mbr[itera].part_start + particion_mbr[itera].part_size;
+                    int esp_total = *inicio_disponible + size_nuevo;
+                    if(esp_total <= particion_mbr[itera+1].part_start) //entra dentro del espacio
+                        return 1;
+                    else
+                    {
+                        itera++;
+                        buscar_espacio_ff_disco(particion_mbr,itera,*&inicio_disponible,size_nuevo,*&mbr);
+                    }
+                }
+                else
+                {
+                    *inicio_disponible = particion_mbr[itera].part_start + particion_mbr[itera].part_size;
+                    itera++;
+                    buscar_espacio_ff_disco(particion_mbr,itera,*&inicio_disponible,size_nuevo,*&mbr);
+                }
+            }
         }
         else
         {
             int esp_total = *inicio_disponible + size_nuevo;
-            if(itera == 3) //es el ultimo del vector
-            {
-            }
-            else //significa que estoy en una particion nula o part_status = '0'
-            {    //como los status iran al final de la lista de particiones  si un part_status = 0
-                 //signifca que estos en las posiciones finales
-                 if(esp_total <= mbr->mbr_tamanio_disk)
-                     return 1;
-                 else{
-                    printf("ERROR: el espacio que desea almacenar sobrepasa el espacio libre del disco \n\n");
-                    return 0;
-                 }
+             //significa que estoy en una particion nula o part_status = '0'
+            //como los status iran al final de la lista de particiones  si un part_status = 0
+            //signifca que estos en las posiciones finales
+            if(esp_total <= mbr->mbr_tamanio_disk)
+                return 1;
+            else{
+            printf("ERROR: el espacio que desea almacenar sobrepasa el espacio libre del disco \n\n");
+            return 0;
             }
         }
-
+    }
+    else
+    {
+        printf("ERROR: no hay espacio para asignar la nueva particion \n\n");
+        return 0;
     }
 }
 
@@ -595,14 +641,40 @@ void delete_particion(char *tipoDel,char *name,char *path_archivo)
             {
                 if(strcmp(partition[i]->part_name,name) ==0)
                 {
-                   partition[i]->part_status ='0';
-                   partition[i]->part_type = ' ';
-                   partition[i]->part_size =0;
-                   partition[i]->part_start =0;
-                   strcpy(partition[i]->part_name,"");
-                   strcpy(partition[i]->part_fit,"");
-                   eliminado =1;
-                   break;
+                    if(strcasecmp(tipoDel,"fast") ==0)
+                    {
+                        partition[i]->part_status ='0';
+                        partition[i]->part_type = ' ';
+                        partition[i]->part_size =0;
+                        partition[i]->part_start =0;
+                        strcpy(partition[i]->part_name,"");
+                        strcpy(partition[i]->part_fit,"");
+                        eliminado =1;
+                        break;
+                    }
+                    else if(strcasecmp(tipoDel,"full") ==0)
+                    {
+                        partition[i]->part_status ='0';
+                        partition[i]->part_type = ' ';
+                        partition[i]->part_size =0;
+                        partition[i]->part_start =0;
+                        strcpy(partition[i]->part_name,"");
+                        strcpy(partition[i]->part_fit,"");
+                        eliminado =1;
+                        break;
+                    }
+                    else
+                    {
+                        partition[i]->part_status ='0';
+                        partition[i]->part_type = ' ';
+                        partition[i]->part_size =0;
+                        partition[i]->part_start =0;
+                        strcpy(partition[i]->part_name,"");
+                        strcpy(partition[i]->part_fit,"");
+                        eliminado =1;
+                        break;
+                    }
+
                 }
             }
         }
