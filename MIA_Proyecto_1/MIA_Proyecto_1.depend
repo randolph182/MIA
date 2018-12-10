@@ -183,7 +183,7 @@
 
 1536458927 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/sistema_archivos.h
 
-1544438025 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/admin_disco.c
+1544460586 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/admin_disco.c
 	"admin_disco.h"
 
 1544422297 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/analizador.c
@@ -205,10 +205,10 @@
 	<unistd.h>
 	"mount.h"
 
-1544443315 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/lista_ajuste.h
+1544460586 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/lista_ajuste.h
 	<string.h>
 	<stdio.h>
 
-1544439629 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/lista_ajuste.c
+1544461355 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/lista_ajuste.c
 	"lista_ajuste.h"
 

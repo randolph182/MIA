@@ -39,7 +39,7 @@ void ordenar_menor_mayor(LISTA_AJUSTE *const lista)
     {
         if(lista->size != 1)
         {
-            
+
             for(int i = 0; i < lista->size; ++i)
             {
                 NODO_AJUSTE *tmp = lista->primero;
@@ -50,15 +50,71 @@ void ordenar_menor_mayor(LISTA_AJUSTE *const lista)
                         int result = tmp->tamanio_total - tmp->siguiente->tamanio_total;
                         if(result > 0) //es porque el valor del nodo siguiente es menor que el actual
                         {
-                            NODO_AJUSTE *aux = tmp->siguiente;
-                            tmp->siguiente = tmp;
-                            tmp = aux;
+                            int ini_tmp = tmp->tamanio_inicio;
+                            int t_tmp = tmp->tamanio_total;
+
+                            NODO_AJUSTE *aux = (NODO_AJUSTE*)malloc(sizeof(NODO_AJUSTE));
+                            aux->tamanio_inicio = tmp->siguiente->tamanio_inicio;
+                            aux->tamanio_total = tmp->siguiente->tamanio_total;
+
+                            tmp->siguiente->tamanio_inicio = tmp->tamanio_inicio;
+                            tmp->siguiente->tamanio_total = tmp->tamanio_total;
+
+                            tmp->tamanio_inicio = aux->tamanio_inicio;
+                            tmp->tamanio_total = aux->tamanio_total;
+
+                            int ini_tmp2 = tmp->tamanio_inicio;
+                            int t_tmp2 = tmp->tamanio_total;
+
                             continue;
                         }
                     }
                     tmp = tmp->siguiente;
                 }
-            }  
+            }
+        }
+    }
+}
+
+void ordenar_mayor_menor(LISTA_AJUSTE *const lista)
+{
+    if(lista->size > 0)
+    {
+        if(lista->size != 1)
+        {
+
+            for(int i = 0; i < lista->size; ++i)
+            {
+                NODO_AJUSTE *tmp = lista->primero;
+                while(tmp !=NULL)
+                {
+                    if(tmp->siguiente !=NULL)
+                    {
+                        int result = tmp->tamanio_total - tmp->siguiente->tamanio_total;
+                        if(result < 0) //es porque el valor del nodo siguiente es mayor que el actual
+                        {
+                            int ini_tmp = tmp->tamanio_inicio;
+                            int t_tmp = tmp->tamanio_total;
+
+                            NODO_AJUSTE *aux = (NODO_AJUSTE*)malloc(sizeof(NODO_AJUSTE));
+                            aux->tamanio_inicio = tmp->siguiente->tamanio_inicio;
+                            aux->tamanio_total = tmp->siguiente->tamanio_total;
+
+                            tmp->siguiente->tamanio_inicio = tmp->tamanio_inicio;
+                            tmp->siguiente->tamanio_total = tmp->tamanio_total;
+
+                            tmp->tamanio_inicio = aux->tamanio_inicio;
+                            tmp->tamanio_total = aux->tamanio_total;
+
+                            int ini_tmp2 = tmp->tamanio_inicio;
+                            int t_tmp2 = tmp->tamanio_total;
+
+                            continue;
+                        }
+                    }
+                    tmp = tmp->siguiente;
+                }
+            }
         }
     }
 }

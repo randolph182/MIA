@@ -391,11 +391,32 @@ int buscar_espacio_adecuado(MBR *mbr,int size_buscado,int *ini_ptr)
             printf("ERROR: No se pudo encontrar Espacio en le mejor ajuste para la particion\n\n");
             return 0;
         }
-
     }
     else if(strcasecmp(mbr->disk_fit,"wf") == 0)
     {
-
+        LISTA_AJUSTE *ptr_ajuste = (LISTA_AJUSTE*)malloc(sizeof(LISTA_AJUSTE));
+        inicializar_lst_ajuste(ptr_ajuste);
+        int itera =0;
+        buscar_espacio_disco(particiones,itera,*ini_ptr,size_buscado,*&mbr,ptr_ajuste);
+        if(ptr_ajuste->size != 0)
+        {
+            if(ptr_ajuste->size == 1)
+            {
+                *ini_ptr = ptr_ajuste->primero->tamanio_inicio;
+                return 1;
+            }
+            else
+            {
+                ordenar_mayor_menor(ptr_ajuste);
+                *ini_ptr = ptr_ajuste->primero->tamanio_inicio;
+                return 1;
+            }
+        }
+        else
+        {
+            printf("ERROR: No se pudo encontrar Espacio en le mejor ajuste para la particion\n\n");
+            return 0;
+        }
     }
 
 }
@@ -412,10 +433,10 @@ void buscar_espacio_disco(PTR particion_mbr[],int itera,int inicio_disponible,in
                 if(esp_total <= particion_mbr[itera].part_start)
                     add_lst_ajuste(ptr_ajuste,inicio_disponible,esp_total);
 
-                inicio_disponible = particion_mbr[itera].part_start + particion_mbr[itera].part_size;
+                inicio_disponible = particion_mbr[itera].part_start + particion_mbr[itera].part_size; //verificar a fondo esta linea
                 itera++;
                 buscar_espacio_disco(particion_mbr,itera,inicio_disponible,size_nuevo,*&mbr,ptr_ajuste);
-                
+
             }
             else if(itera + 1 < 4) //me adelanto uno
             {
@@ -423,7 +444,7 @@ void buscar_espacio_disco(PTR particion_mbr[],int itera,int inicio_disponible,in
                 {
                     inicio_disponible = particion_mbr[itera].part_start + particion_mbr[itera].part_size;
                     int esp_total = inicio_disponible + size_nuevo;
-                    
+
                     if(esp_total <= particion_mbr[itera+1].part_start) //entra dentro del espacio
                         add_lst_ajuste(ptr_ajuste,inicio_disponible,esp_total);
                     itera++;
@@ -444,7 +465,10 @@ void buscar_espacio_disco(PTR particion_mbr[],int itera,int inicio_disponible,in
             //como los status iran al final de la lista de particiones  si un part_status = 0
             //signifca que estos en las posiciones finales
             if(esp_total <= mbr->mbr_tamanio_disk)
-                add_lst_ajuste(ptr_ajuste,inicio_disponible,esp_total);
+            {
+                add_lst_ajuste(ptr_ajuste,inicio_disponible,mbr->mbr_tamanio_disk);
+            }
+
         }
     }
 }
