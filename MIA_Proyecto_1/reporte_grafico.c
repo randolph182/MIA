@@ -337,96 +337,132 @@ void reporte_disk_(char *path_archivo,char *path_disco, char *path_archivo_desti
     fseek(tmp,0,SEEK_SET);
     MBR mbr[1];
     fread(mbr,sizeof(MBR),1,tmp);
-
-    char *acum = (char*)malloc(sizeof(char) * 2048);
-    char *ptr_mbr = (char*)malloc(sizeof(char)*2048);
-
-    strcat(acum,"digraph top {\n");
-
-    strcat(ptr_mbr,"struct000 [shape=record,label = \" MBR \\n size: ");
-    char size_mbr[50];
-    sprintf(size_mbr,"%d",sizeof(*mbr));
-    strcat(ptr_mbr,&size_mbr);
-    strcat(ptr_mbr,"\"];\n");
-    strcat(acum,ptr_mbr);
     PTR particion[4];
-    particion[0] = mbr[0].mbr_partition_1;
-    particion[1] = mbr[0].mbr_partition_2;
-    particion[2] = mbr[0].mbr_partition_3;
-    particion[3] = mbr[0].mbr_partition_4;
-
-    ordenar_particiones(particion);
-
-    int size_ptr = sizeof(*mbr);
-    int itera = 0;
-    int prtConat =0;
-
-    char *enlace = (char*)malloc(sizeof(char) * 1024);
-    char *ranksame = (char*)malloc(sizeof(char) * 1024);
-
-    strcat(enlace,"struct000 -> ");
-    strcat(ranksame,"{rank=same; struct000 ");
-    concatenar_particion(size_ptr,*&acum,particion,itera,prtConat,*&enlace,*&ranksame);
-
-
-    int tmpSize = -1;
-    for (int var = 3; var >= 0; --var) {
-         if(particion[var].part_status != '0')
-         {
-             tmpSize = var;
-             break;
-         }
-     }
-    if(tmpSize != -1)
-     {
-         int sizeSobrante = mbr[0].mbr_tamanio_disk - (particion[tmpSize].part_start + particion[tmpSize].part_size);
-         if(sizeSobrante != 0)
-         {
-             strcat(ranksame,"struct0000 ");
-             strcat(acum," struct0000[shape=record,label = \" Libre \\n Espacio Libre:");
-             int ss[5];
-             sprintf(ss,"%d",sizeSobrante);
-             strcat(acum,&ss);
-             strcat(acum," \"];\n");
-             strcat(enlace, " struct0000");
-         }
-     }
-
-     strcat(ranksame,"}\n");
-     strcat(acum,"\n subgraph cluster_1\n {\n node [shape=record];\n ");
-     strcat(acum,ranksame);
-     strcat(acum,enlace);
-     strcat(acum,"[color=grey arrowhead=none];\n");
-     strcat(acum,"\n}\n}");
+    particion[0] = (mbr[0]).mbr_partition_1;
+    particion[1] = (mbr[0]).mbr_partition_2;
+    particion[2] = (mbr[0]).mbr_partition_3;
+    particion[3] = (mbr[0]).mbr_partition_4;
+    fclose(tmp);
 
     FILE *archivo;
-   archivo = fopen(path_archivo,"w+");
-   fputs(acum,archivo);
-   fclose(archivo);
+    archivo = fopen(path_archivo,"w+");
 
-   char *comando = (char*)malloc(sizeof(char)*100);
-   memset(comando,0,sizeof(comando));
-   strcat(comando,"dot ");
-   strcat(comando,path_archivo);
-   strcat(comando," -o ");
-   strcat(comando,path_archivo_destino);
+    fprintf(archivo,"digraph structs{\n");
+    fprintf(archivo,"node [shape=plaintext]\n");
+    fprintf(archivo,"struct1 [label=<\n");
+    fprintf(archivo,"<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\"> \n");
+    fprintf(archivo,"<TR>\n");
+
+    fprintf(archivo,"<TD ROWSPAN=\"3\"> MBR <BR/>");
+    char part_size[50];
+    sprintf(part_size,"%d",sizeof(mbr));
+    fprintf(archivo,part_size);
+    fprintf(archivo,"<BR/>");
+    int porc = sacar_porcentaje(mbr->mbr_tamanio_disk,sizeof(mbr));
+    char porcent[50];
+    sprintf(porcent,"%d",porc);
+    fprintf(archivo,"%%");
+    fprintf(archivo,porcent);
+    fprintf(archivo," </TD>\n");
+
+    ordenar_particiones(particion);
+    int itera = 0;
+    int acum = sizeof(mbr);
+    //concatenando las particiones del disk
+    acum_ptr_disk(archivo,particion,itera,mbr->mbr_tamanio_disk,acum);
+    fprintf(archivo,"</TR>\n");
+
+    fprintf(archivo,"</TABLE>>];\n");
+    fprintf(archivo,"}\n");
+
+    fclose(archivo);
+
+    char *comando = (char*)malloc(sizeof(char)*100);
+    memset(comando,0,sizeof(comando));
+    strcat(comando,"dot ");
+    strcat(comando,path_archivo);
+    strcat(comando," -o ");
+    strcat(comando,path_archivo_destino);
 
     if(strcasecmp(extension,"png") ==0)
-   {
-    strcat(comando," -Tpng");
-   }
-    else if(strcasecmp(extension,"jpg") ==0)
-   {
-    strcat(comando," -Tjpg");
-   }
-   else if(strcasecmp(extension,"pdf") ==0)
-   {
-    strcat(comando," -Tpdf");
-   }
- //  printf("%s\n",comando);
+    {
+        strcat(comando," -Tpng");
+    }
+        else if(strcasecmp(extension,"jpg") ==0)
+    {
+        strcat(comando," -Tjpg");
+    }
+    else if(strcasecmp(extension,"pdf") ==0)
+    {
+        strcat(comando," -Tpdf");
+    }
    int flag = system(comando);
    printf("Reporte Generado!\n\n");
 
+}
+
+void acum_ptr_disk(FILE *archivo,PTR particion[],int itera,int t_dsk,int acumulador)
+{
+    if(itera < 4)
+    {
+        if(particion[itera].part_status == '1')
+        {
+            if(particion[itera].part_type == 'p')
+            {
+                fprintf(archivo,"<TD ROWSPAN=\"3\"> Primaria <BR/>");
+                fprintf(archivo,"%s",particion[itera].part_name);
+                fprintf(archivo," <BR/>");
+                char part_start[50];
+                sprintf(part_start,"%d",particion[itera].part_start);
+                fprintf(archivo,part_start);
+                fprintf(archivo," <BR/>");
+                char part_size[50];
+                sprintf(part_size,"%d",particion[itera].part_size);
+                fprintf(archivo,part_size);
+                fprintf(archivo,"<BR/>");
+                int porc = sacar_porcentaje(t_dsk,particion[itera].part_size+1);
+                acumulador += particion[itera].part_size;
+                char porcent[50];
+                sprintf(porcent,"%d",porc);
+                fprintf(archivo,"%%");
+                fprintf(archivo,porcent);
+                fprintf(archivo," </TD>\n");
+            }
+            else if(particion[itera].part_type == 'e')
+            {
+                fprintf(archivo,"<TD ROWSPAN=\"3\"> Extendida <BR/>");
+                fprintf(archivo,"%s",particion[itera].part_name);
+                fprintf(archivo," <BR/>");
+                char part_start[50];
+                sprintf(part_start,"%d",particion[itera].part_start);
+                fprintf(archivo,part_start);
+                fprintf(archivo," <BR/>");
+                char part_size[50];
+                sprintf(part_size,"%d",particion[itera].part_size);
+                fprintf(archivo,part_size);
+                fprintf(archivo,"<BR/>");
+                int porc = sacar_porcentaje(t_dsk,particion[itera].part_size+1);
+                acumulador += particion[itera].part_size;
+                char porcent[50];
+                sprintf(porcent,"%d",porc);
+                fprintf(archivo,"%%");
+                fprintf(archivo,porcent);
+                fprintf(archivo," </TD>\n");
+            }
+        }
+        else
+        {
+            fprintf(archivo,"<TD ROWSPAN=\"3\"> LIBRE <BR/>\n");
+            char porcent[50];
+            int porc = sacar_porcentaje(t_dsk,t_dsk-acumulador);
+            sprintf(porcent,"%d",porc);
+            fprintf(archivo,"%%");
+            fprintf(archivo,porcent);
+            fprintf(archivo," </TD>\n");
+        }
+        itera++;
+        acum_ptr_disk(archivo,particion,itera,t_dsk,acumulador);
+    }
 }
 
 void concatenar_particion(int sizePtr,char *acum,PTR particiones[],int itera,int prtConcat,char *enlace,char *rs)
@@ -530,5 +566,12 @@ void concatenar_particion(int sizePtr,char *acum,PTR particiones[],int itera,int
             concatenar_particion(sizePtr,*&acum, particiones,itera,prtConcat,*&enlace,*&rs);
         }
     }
+}
+
+int sacar_porcentaje(int val_disco, int val_actual)
+{
+    int resultado = val_actual * 100;
+    resultado = resultado / val_disco;
+    return resultado;
 }
 

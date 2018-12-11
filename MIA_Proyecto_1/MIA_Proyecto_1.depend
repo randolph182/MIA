@@ -154,10 +154,10 @@
 	<string.h>
 	<stdio.h>
 
-1544477992 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/reporte_grafico.c
+1544487040 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/reporte_grafico.c
 	"reporte_grafico.h"
 
-1536210025 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/reporte_grafico.h
+1544486987 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/reporte_grafico.h
 	<string.h>
 	<stdio.h>
 	"admin_disco.h"
