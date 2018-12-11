@@ -420,7 +420,7 @@ void acum_ptr_disk(FILE *archivo,PTR particion[],int itera,int t_dsk,int acumula
                 sprintf(part_size,"%d",particion[itera].part_size);
                 fprintf(archivo,part_size);
                 fprintf(archivo,"<BR/>");
-                int porc = sacar_porcentaje(t_dsk,particion[itera].part_size+1);
+                int porc = sacar_porcentaje(t_dsk,particion[itera].part_size);
                 acumulador += particion[itera].part_size;
                 char porcent[50];
                 sprintf(porcent,"%d",porc);
@@ -441,7 +441,7 @@ void acum_ptr_disk(FILE *archivo,PTR particion[],int itera,int t_dsk,int acumula
                 sprintf(part_size,"%d",particion[itera].part_size);
                 fprintf(archivo,part_size);
                 fprintf(archivo,"<BR/>");
-                int porc = sacar_porcentaje(t_dsk,particion[itera].part_size+1);
+                int porc = sacar_porcentaje(t_dsk,particion[itera].part_size);
                 acumulador += particion[itera].part_size;
                 char porcent[50];
                 sprintf(porcent,"%d",porc);

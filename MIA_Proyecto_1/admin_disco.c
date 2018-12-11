@@ -179,9 +179,232 @@ void crear_particion(int size,char unit,char type,char fit[],char *path, char *n
     }
     else if(type == 'l')
     {
-        printf("Particion logica aun no definida\n");
+        //printf("Particion logica aun no definida\n");
+        crear_particion_logica(&mbr_tmp[0],size,unit,fit,path,name);
     }
 }
+
+void crear_particion_logica(MBR *mbr,int size,char unit,char fit[],char *path,char *name)
+{
+    PTR particiones[4];
+    particiones[0] = mbr->mbr_partition_1;
+    particiones[1] = mbr->mbr_partition_2;
+    particiones[2] = mbr->mbr_partition_3;
+    particiones[3] = mbr->mbr_partition_4;
+
+    int inicio_extendida =0;
+    int size_extendida =0;
+    char fit_ext[3];
+    int size_bytes = numero_bytes(unit,size);
+    int si_hay_ext = 0;
+    for(int i = 0; i < 4; i++)
+    {
+        if(particiones[i].part_status == '1')
+        {
+            if(particiones[i].part_type == 'e')
+            {
+                inicio_extendida = particiones[i].part_start;
+                size_extendida = particiones[i].part_size;
+                strcpy(fit_ext,particiones[i].part_fit);
+                si_hay_ext = 1;
+                break;
+            }
+        }
+    }
+
+    if(si_hay_ext == 1)
+    {
+        FILE *archivo = fopen(path,"rb+");
+        if(archivo != NULL)
+        {
+            fseek(archivo,inicio_extendida,SEEK_SET);
+            EBR ebr_raiz[1];
+            fread(ebr_raiz,sizeof(EBR),1,archivo);
+            if(ebr_raiz[0].part_status == '1') //si esta activa
+            {
+                if(ebr_raiz[0].part_next != -1)
+                {
+                    EBR ebr_tmp[1];
+                    fseek(archivo,ebr_raiz[0].part_next,SEEK_SET);
+                    fread(ebr_tmp,sizeof(EBR),1,archivo);
+                    while(ebr_tmp[0].part_next !=-1)
+                    {
+                        fseek(archivo,ebr_tmp[0].part_next,SEEK_SET);
+                        fread(ebr_tmp,sizeof(EBR),1,archivo);
+                    }
+
+                    int ini_log = sizeof(EBR);
+                    int esp_total_log = ebr_tmp[0].part_start + ini_log + size_bytes;
+                    if((inicio_extendida + size_extendida - esp_total_log) > 0 ) //es que si cabe
+                    {
+                        EBR ebr_nuevo;
+                        ebr_nuevo.part_status = '1';
+                        ebr_nuevo.part_start = esp_total_log + sizeof(EBR);
+                        ebr_nuevo.part_size = size_bytes;
+                        ebr_nuevo.part_next = -1;
+                        strcpy(ebr_nuevo.part_name,name);
+                        strcpy(ebr_nuevo.part_fit,fit);
+                        fseek(archivo,esp_total_log,SEEK_SET);
+                        fwrite(&ebr_nuevo,sizeof(EBR),1,archivo);
+
+                    }
+                    else
+                    {
+                        printf("ERROR: No hay espacio para una logica dentro de la particion extendida\n\n");
+                    }
+
+                }
+                else
+                {
+                    int ini_log = sizeof(EBR);
+                    int esp_total_log = ebr_raiz[0].part_start + ini_log + size_bytes;
+                    if((inicio_extendida + size_extendida - esp_total_log) > 0 ) //es que si cabe
+                    {
+                        EBR ebr_nuevo;
+                        ebr_nuevo.part_status = '1';
+                        ebr_nuevo.part_start = esp_total_log + sizeof(EBR);
+                        ebr_nuevo.part_size = size_bytes;
+                        ebr_nuevo.part_next = -1;
+                        strcpy(ebr_nuevo.part_name,name);
+                        strcpy(ebr_nuevo.part_fit,fit);
+                        fseek(archivo,esp_total_log,SEEK_SET);
+                        fwrite(&ebr_nuevo,sizeof(EBR),1,archivo);
+
+                    }
+                    else
+                    {
+                        printf("ERROR: No hay espacio para una logica dentro de la particion extendida\n\n");
+                    }
+                }
+                // LISTA_AJUSTE *ptr_ajuste = (LISTA_AJUSTE*)malloc(sizeof(LISTA_AJUSTE));
+                // inicializar_lst_ajuste(ptr_ajuste);
+                // buscar_espacio_logica(ebr_raiz,path,inicio_extendida + sizeof(EBR),size_bytes,size_extendida,ptr_ajuste);
+                
+                // if(ptr_ajuste->size != 0)
+                // {
+                //     int start = 0;
+                //     if(strcasecmp(fit_ext,"ff") == 0 )
+                //         start = ptr_ajuste->primero->tamanio_inicio;
+                //     else if(strcasecmp(fit_ext,"bf") == 0 )
+                //     {
+                //         ordenar_menor_mayor(ptr_ajuste);
+                //         start = ptr_ajuste->primero->tamanio_inicio;
+                //     }
+                //     else if(strcasecmp(fit_ext,"wf") == 0 )
+                //     {
+                //         ordenar_mayor_menor(ptr_ajuste);
+                //         start = ptr_ajuste->primero->tamanio_inicio;
+                //     }
+                    
+                //     int next = ebr_raiz->part_start + ebr_raiz->part_size;
+
+                //     if(next == start)
+                //     {
+
+                //     }
+                //     else
+                //     {
+                //         if(ebr_raiz->part_next != -1)
+                //         {
+
+                //         }
+                //         else
+                //         {
+
+                //         }
+                //     }
+
+
+                //     int next = ebr_raiz->part_next;
+                //     EBR *candidato  = ebr_raiz;
+                //     while(next != -1)
+                //     {
+                //         EBR ebr_tmp[1];
+                //         FILE *archivo2 = fopen(path,"rb");
+                //         fseek(archivo2,next,SEEK_SET);
+                //         fread(ebr_tmp,sizeof(EBR),1,archivo2);
+                //         fclose(archivo2);
+                        
+                //         if(ebr_tmp[0].part_next != -1) //q si esta al medio
+                //         {
+                //             if(start > next && start < ebr_tmp[0].part_next)
+                //             {
+                //                 encontrado
+                //             }
+                //                 break; //el next es el adecuado
+                //         }
+                //         else
+                //         {
+                //             next = ebr_tmp->part_start;
+                //         }
+                //     }
+                //     if(next == -1)
+                //     {
+
+                //     }
+                // }
+                // else
+                //     {
+                //         printf("ERROR: no se pudo crear la particion logica\n\n");
+                //     }
+
+
+            }
+            else
+            {
+                int ini_log = sizeof(EBR);
+                int esp_total_log = inicio_extendida + ini_log + size_bytes;
+                if((inicio_extendida + size_extendida - esp_total_log) > 0 ) //es que si cabe
+                {
+                    ebr_raiz[0].part_status = '1';
+                    ebr_raiz[0].part_start = inicio_extendida + sizeof(EBR);
+                    ebr_raiz[0].part_size = size_bytes;
+                    ebr_raiz[0].part_next = -1;
+                    strcpy(ebr_raiz[0].part_name,name);
+                    strcpy(ebr_raiz[0].part_fit,fit);
+                    fseek(archivo,inicio_extendida,SEEK_SET);
+                    fwrite(&ebr_raiz,sizeof(EBR),1,archivo);
+
+                }
+                else
+                {
+                    printf("ERROR: No hay espacio para una logica dentro de la particion extendida\n\n");
+                }
+            }
+            fclose(archivo);
+        }
+    }
+}
+
+void buscar_espacio_logica(EBR *ebr_actual,char *path,int inicio_disponible,int size_nuevo,int size_ext,LISTA_AJUSTE *const ptr_ajuste)
+{
+    if(ebr_actual->part_status != '0')
+    {
+        if(inicio_disponible < ebr_actual->part_start)
+        {
+            int esp_total = inicio_disponible + size_nuevo;
+            if(esp_total <= ebr_actual->part_start)
+                add_lst_ajuste(ptr_ajuste,inicio_disponible,esp_total);
+            inicio_disponible = ebr_actual->part_start + ebr_actual->part_size;
+            if(ebr_actual->part_next != -1)
+            {
+                EBR ebr_tmp[1];
+                FILE *archivo = fopen(path,"rb");
+                fseek(archivo,ebr_actual->part_next,SEEK_SET);
+                fread(ebr_tmp,sizeof(EBR),1,archivo);
+                fclose(archivo);
+                buscar_espacio_logica(&ebr_tmp,path,inicio_disponible,size_nuevo,ptr_ajuste);
+            }
+        }
+        else
+        {
+            int espacio_total = inicio_disponible + size_nuevo;
+            if(espacio_total <= size_ext)
+                add_lst_ajuste(ptr_ajuste,inicio_disponible,size_ext);
+        }
+    }
+}
+
 
 void crear_particion_(MBR *mbr,int size,char unit,char type,char fit[],char *path,char *name)
 {
@@ -244,12 +467,8 @@ void crear_particion_(MBR *mbr,int size,char unit,char type,char fit[],char *pat
                     //EBR *mi_ebr = (EBR*)malloc(sizeof(EBR));
                     EBR mi_ebr;
                     /*comprobando*/
-                    mi_ebr.part_next = 1;
-                    strcpy(mi_ebr.part_fit,"ff");
-                    strcpy(mi_ebr.part_name,"prueba");
+                    mi_ebr.part_status = '0';
                     int comp = sizeof(EBR) + extend.part_start;
-                    int total = extend.part_start + extend.part_size;
-                    int size_ebr = sizeof(EBR);
                     int inicio_ebr = extend.part_start;
                     if(comp <= (extend.part_start + extend.part_size))
                     {
@@ -527,7 +746,6 @@ int buscar_espacio_ff_disco(PTR particion_mbr[],int itera,int *inicio_disponible
         return 0;
     }
 }
-
 
 void buscar_particion_dispo(MBR *mbr,PTR **particion,int size_buscado,int *flag_ptr,int *ini_ptr,char *name,char type)
 {

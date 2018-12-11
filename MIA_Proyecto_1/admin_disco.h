@@ -58,6 +58,10 @@ void crearDisco(int size,char unit, char *path,char *disk_fit);
 void eliminar_disco(char *path);
 
 void crear_particion(int size,char unit,char type,char fit[],char *path, char *name);
+void crear_particion_logica(MBR *mbr,int size,char unit,char fit[],char *path,char *name);
+
+
+
 void crear_particion_(MBR *mbr,int size,char unit,char type,char fit[],char *path,char *name);
 void buscar_particion_dispo(MBR *mbr,PTR **particion,int size_buscado,int *flag_ptr,int *ini_ptr,char *name,char type);
 int buscar_particion_disponible(MBR *mbr,char *name,PTR **particion,char type);

@@ -154,7 +154,7 @@
 	<string.h>
 	<stdio.h>
 
-1544487040 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/reporte_grafico.c
+1544491013 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/reporte_grafico.c
 	"reporte_grafico.h"
 
 1544486987 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/reporte_grafico.h
@@ -165,7 +165,7 @@
 	<dirent.h>
 	<sys/stat.h>
 
-1544440413 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/admin_disco.h
+1544492006 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/admin_disco.h
 	<string.h>
 	<stdio.h>
 	<stdlib.h>
@@ -183,7 +183,7 @@
 
 1536458927 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/sistema_archivos.h
 
-1544460586 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/admin_disco.c
+1544494964 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/admin_disco.c
 	"admin_disco.h"
 
 1544476469 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/analizador.c
