@@ -59,7 +59,7 @@ void eliminar_disco(char *path);
 
 void crear_particion(int size,char unit,char type,char fit[],char *path, char *name);
 void crear_particion_logica(MBR *mbr,int size,char unit,char fit[],char *path,char *name);
-
+void buscar_espacio_logica(EBR *ebr_actual,char *path,int inicio_disponible,int size_nuevo,int size_ext,LISTA_AJUSTE *const ptr_ajuste);
 
 
 void crear_particion_(MBR *mbr,int size,char unit,char type,char fit[],char *path,char *name);

@@ -364,7 +364,6 @@ void crear_particion_logica(MBR *mbr,int size,char unit,char fit[],char *path,ch
                     strcpy(ebr_raiz[0].part_fit,fit);
                     fseek(archivo,inicio_extendida,SEEK_SET);
                     fwrite(&ebr_raiz,sizeof(EBR),1,archivo);
-
                 }
                 else
                 {
@@ -393,7 +392,7 @@ void buscar_espacio_logica(EBR *ebr_actual,char *path,int inicio_disponible,int 
                 fseek(archivo,ebr_actual->part_next,SEEK_SET);
                 fread(ebr_tmp,sizeof(EBR),1,archivo);
                 fclose(archivo);
-                buscar_espacio_logica(&ebr_tmp,path,inicio_disponible,size_nuevo,ptr_ajuste);
+                buscar_espacio_logica(&ebr_tmp,path,inicio_disponible,size_nuevo,size_ext,ptr_ajuste);
             }
         }
         else

@@ -165,7 +165,7 @@
 	<dirent.h>
 	<sys/stat.h>
 
-1544492006 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/admin_disco.h
+1544502247 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/admin_disco.h
 	<string.h>
 	<stdio.h>
 	<stdlib.h>
