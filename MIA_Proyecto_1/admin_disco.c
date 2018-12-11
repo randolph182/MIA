@@ -247,6 +247,10 @@ void crear_particion_logica(MBR *mbr,int size,char unit,char fit[],char *path,ch
                         fseek(archivo,esp_total_log,SEEK_SET);
                         fwrite(&ebr_nuevo,sizeof(EBR),1,archivo);
 
+                        ebr_tmp[0].part_next = esp_total_log;
+                        fseek(archivo,ebr_tmp[0].part_start - sizeof(EBR),SEEK_SET);
+                        fwrite(&ebr_tmp[0],sizeof(EBR),1,archivo);
+
                     }
                     else
                     {
@@ -270,85 +274,15 @@ void crear_particion_logica(MBR *mbr,int size,char unit,char fit[],char *path,ch
                         fseek(archivo,esp_total_log,SEEK_SET);
                         fwrite(&ebr_nuevo,sizeof(EBR),1,archivo);
 
+                        ebr_raiz[0].part_next = esp_total_log;
+                        fseek(archivo,ebr_raiz[0].part_start - sizeof(EBR),SEEK_SET);
+                        fwrite(&ebr_raiz[0],sizeof(EBR),1,archivo);
                     }
                     else
                     {
                         printf("ERROR: No hay espacio para una logica dentro de la particion extendida\n\n");
                     }
                 }
-                // LISTA_AJUSTE *ptr_ajuste = (LISTA_AJUSTE*)malloc(sizeof(LISTA_AJUSTE));
-                // inicializar_lst_ajuste(ptr_ajuste);
-                // buscar_espacio_logica(ebr_raiz,path,inicio_extendida + sizeof(EBR),size_bytes,size_extendida,ptr_ajuste);
-                
-                // if(ptr_ajuste->size != 0)
-                // {
-                //     int start = 0;
-                //     if(strcasecmp(fit_ext,"ff") == 0 )
-                //         start = ptr_ajuste->primero->tamanio_inicio;
-                //     else if(strcasecmp(fit_ext,"bf") == 0 )
-                //     {
-                //         ordenar_menor_mayor(ptr_ajuste);
-                //         start = ptr_ajuste->primero->tamanio_inicio;
-                //     }
-                //     else if(strcasecmp(fit_ext,"wf") == 0 )
-                //     {
-                //         ordenar_mayor_menor(ptr_ajuste);
-                //         start = ptr_ajuste->primero->tamanio_inicio;
-                //     }
-                    
-                //     int next = ebr_raiz->part_start + ebr_raiz->part_size;
-
-                //     if(next == start)
-                //     {
-
-                //     }
-                //     else
-                //     {
-                //         if(ebr_raiz->part_next != -1)
-                //         {
-
-                //         }
-                //         else
-                //         {
-
-                //         }
-                //     }
-
-
-                //     int next = ebr_raiz->part_next;
-                //     EBR *candidato  = ebr_raiz;
-                //     while(next != -1)
-                //     {
-                //         EBR ebr_tmp[1];
-                //         FILE *archivo2 = fopen(path,"rb");
-                //         fseek(archivo2,next,SEEK_SET);
-                //         fread(ebr_tmp,sizeof(EBR),1,archivo2);
-                //         fclose(archivo2);
-                        
-                //         if(ebr_tmp[0].part_next != -1) //q si esta al medio
-                //         {
-                //             if(start > next && start < ebr_tmp[0].part_next)
-                //             {
-                //                 encontrado
-                //             }
-                //                 break; //el next es el adecuado
-                //         }
-                //         else
-                //         {
-                //             next = ebr_tmp->part_start;
-                //         }
-                //     }
-                //     if(next == -1)
-                //     {
-
-                //     }
-                // }
-                // else
-                //     {
-                //         printf("ERROR: no se pudo crear la particion logica\n\n");
-                //     }
-
-
             }
             else
             {
