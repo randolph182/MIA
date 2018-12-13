@@ -178,7 +178,9 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
                         else if(strcasecmp(acum_comando,"l") == 0)
                             type = 'l';
                         else if(strcasecmp(acum_comando,"fast") == 0)
-                            strcpy(type_mkfs,acum_comando);
+                            strcpy(type_mkfs,"fast");
+                        else if(strcasecmp(acum_comando,"full") == 0)
+                        strcpy(type_mkfs,"full");
                         else
                             printf("ERROR: en Type de fdisk tiene que ser p(primaria) e(extendida) o l(logica)");
 
