@@ -182,8 +182,10 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
                         else if(strcasecmp(acum_comando,"full") == 0)
                         strcpy(type_mkfs,"full");
                         else
+                        {
                             printf("ERROR: en Type de fdisk tiene que ser p(primaria) e(extendida) o l(logica)");
-
+                            printf("\no full o fast en casod e de que se MKFS\n\n");
+                        }
                          flag_type =0;
                     }
                     else if(flag_fit == 1) //============================================== FIT
@@ -494,9 +496,41 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
                 printf("ERROR: el archivo que Exec quiere ejecutar no Existe\n");
             fclose(archivo);
         }
-        else if(flag_mkfs == 1)
+        else if(flag_mkfs == 1) //============================================== mkfs
         {
-            printf("Estoy en mkfs");
+            if(strcmp(id,"") != 0)
+            {
+                NODO_MOUNT *mount_particion = get_nodo_mount(id,ptr_mount);
+                if(mount_particion != NULL)
+                {
+                    FILE *archivo =fopen(mount_particion->path_mount,"r+b");
+
+                    if(archivo != NULL)
+                    {
+                        if(strcmp(type_mkfs,"") == 0)
+                        {
+                            memset(type_mkfs,0,sizeof(type_mkfs));
+                            strcpy(type_mkfs,"full");
+                        }
+                        generar_ext3(archivo,type_mkfs,mount_particion->name);
+                    }
+                    else
+                    {
+                     printf("ERROR: No se puede abrir el archivo de la particion:  ");
+                     printf("%s\n\n",id);
+                    }
+                    fclose(archivo);
+                }
+                else
+                {
+                     printf("ERROR: no se encunetra montada la articion:  ");
+                     printf("%s\n\n",id);
+                }
+            }
+            else
+            {
+                 printf("ERROR: Para ejecutar MKFS es necesario tener un ID\n");
+            }
         }
     }
 

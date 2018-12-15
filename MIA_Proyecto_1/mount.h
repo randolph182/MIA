@@ -40,5 +40,7 @@ int desmontar_particion(char *id_mount, LISTA_MOUNT *ptr_mount);
 
 char * get_path_mount(char *id_mount,LISTA_MOUNT *ptr_mount);
 
+NODO_MOUNT *get_nodo_mount(char *id_mount,LISTA_MOUNT *ptr_mount);
+
 
 #endif // MOUNT_H_INCLUDED

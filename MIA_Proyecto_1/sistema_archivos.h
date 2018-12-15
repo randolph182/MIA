@@ -1,8 +1,17 @@
 #ifndef SISTEMA_ARCHIVOS_H_INCLUDED
 #define SISTEMA_ARCHIVOS_H_INCLUDED
 
+#include "admin_disco.h"
+#include "lista_simple.h"
+#include <math.h>
+
 typedef struct SUPER_BLOQUE SB;
 typedef struct TABLA_INODOS TI;
+typedef struct JOURNALING LOG;
+typedef struct BLOQUE_CARPETAS BC;
+typedef struct CONTENT  CNT;
+typedef struct BLOQUE_ARCHIVOS  BA;
+typedef struct BLOQUE_APUNTADORES  BAP;
 
 
 struct SUPER_BLOQUE
@@ -12,8 +21,8 @@ struct SUPER_BLOQUE
     int s_blocks_count;     //Guarda el número total de bloques
     int s_free_blocks_count; //Contiene el número de bloques libres
     int s_free_inodes_count; //Contiene el número de inodos libres
-    int s_mtime;             //Ultima fecha en el que el sistema fue montado
-    int s_umtime;            //Ultima fecha en que el sistema fue desmontado
+    char s_mtime[16];             //Ultima fecha en el que el sistema fue montado
+    char s_umtime[16];            //Ultima fecha en que el sistema fue desmontado
     int s_mnt_count;         //Indica cuantas veces se ha montado el sistema
     int s_magic;             //Valor que identifica al sistema de archivos, tendrá el valor 0xEF53
     int s_inode_size;        //Tamaño del inodo
@@ -31,9 +40,9 @@ struct TABLA_INODOS
     int i_uid;              //UID del usuario propietario del archivo o carpeta
     int i_gid;              //GID del grupo al que pertenece el archivo o carpeta.
     int i_size;             //Tamaño del archivo en bytes
-    int i_atime;            //Última fecha en que se leyó el inodo sin modificarlo
-    int i_ctime;            //Fecha en la que se creó el inodo
-    int i_mtime;            //Úlitma fecha en la que se modificó el inodo
+    char i_atime[16];            //Última fecha en que se leyó el inodo sin modificarlo
+    char i_ctime[16];            //Fecha en la que se creó el inodo
+    char i_mtime[16];            //Úlitma fecha en la que se modificó el inodo
     int i_block[15];        /*Array en los que los primeros 12 registros son bloques directos.
                               *El 13 será el número del bloque simple indirecto
                               *El 14 será el número del bloque doble indirecto
@@ -54,5 +63,39 @@ struct TABLA_INODOS
                              - El tercer bit indica el permiso de ejecución X.
                             */
 };
+
+struct JOURNALING   
+{
+    char Journal_Tipo_Operacion;    //El tipo de operación a realizarse
+    char Journal_tipo;              //Si es Archivo(0), si es carpeta(1)
+    char Journal_nombre[12];        //Nombre archivo o directorio
+    char Journal_contenido[200];    //Si hay datos contenidos
+    char Journal_fecha[16];         //Fecha de la transacción
+    int Journal_propietario;        //Es el propietario archivo o directorio
+    int Journal_permisos;           //Son los permisos que tiene el archivo o directorio
+};
+
+struct CONTENT
+{
+    char b_name[12];    //Nombre de la carpeta o archivo
+    int b_inodo;        //Apuntador hacia un inodo asociado al archivo o carpeta
+};
+
+struct BLOQUE_CARPETAS 
+{
+    CNT b_content[4];   //Array con el contenido de la carpeta
+};
+
+struct BLOQUE_ARCHIVOS
+{
+    char b_content[64];  //Array con el contenido del archivo
+};
+
+struct BLOQUE_APUNTADORES
+{
+    int b_pointers[16]; //Array con los apuntadores hacia bloques (de archivo o carpeta)
+};
+
+void generar_ext3(FILE *archivo,char *type_mkfs,char *name_particion);
 
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED

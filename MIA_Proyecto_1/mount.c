@@ -173,3 +173,19 @@ char * get_path_mount(char *id_mount,LISTA_MOUNT *ptr_mount)
     }
     return NULL;
 }
+
+NODO_MOUNT *get_nodo_mount(char *id_mount,LISTA_MOUNT *ptr_mount)
+{
+    NODO_MOUNT *tmp = ptr_mount->primero;
+    while(tmp !=NULL)
+    {
+        if(strcasecmp(tmp->id_mount,id_mount)== 0)
+        {
+            char *pt = tmp->path_mount;
+            char *nm = tmp->name;
+            return  tmp;
+        }
+        tmp = tmp->siguiente;
+    }
+    return NULL;
+}
