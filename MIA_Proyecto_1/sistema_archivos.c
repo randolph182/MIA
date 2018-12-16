@@ -72,7 +72,7 @@ int crear_ext3(FILE *archivo,int size_particion,int inicio_particion,char *name_
     }
 }
 
-int crear_archivo_users(FILE *archivo,int size_particion,int inicio_particion,char *name_particion)
+void crear_archivo_users(FILE *archivo,int size_particion,int inicio_particion,char *name_particion)
 {
     double calculo_bloque = (size_particion - sizeof(SB))/(1 + sizeof(LOG)+3+sizeof(TI)+3*sizeof(BC));
     int n = floor(calculo_bloque);
@@ -186,10 +186,6 @@ int crear_archivo_users(FILE *archivo,int size_particion,int inicio_particion,ch
     fseek(archivo,inicio_particion,SEEK_SET);
     fwrite(sb_tmp,sizeof(SB),1,archivo);
 
-    // fseek(archivo,inicio_particion,SEEK_SET);
-    // fread(sb_tmp,sizeof(SB),1,archivo);
-    // int i;
-    // int b;
 }
 
 int generar_ext3_2(FILE *archivo,char *type_mkfs,char *name_particion,int *inicio_particion)
@@ -275,4 +271,14 @@ int inicializando_users(FILE *archivo, int inicio_particion)
 
 }
 
+void full_particion(FILE *archivo,int particion_start,int particion_size)
+{
+    fseek(archivo,particion_start,SEEK_SET);
+    SB sb_tmp[1];
+    fread(sb_tmp,sizeof(SB),1,archivo);
 
+    //limpiando bitmap de inodos y bloques
+    for(int i = sb_tmp[0].s_inode_start; i < particion_start + particion_size; i++)
+        fwrite("\0",sizeof(char),1,archivo);
+    
+}

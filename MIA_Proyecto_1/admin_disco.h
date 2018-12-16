@@ -92,5 +92,8 @@ int limpiar_path(char *path);
 int numero_bytes(char unit,int size);
 
 
+PTR buscar_particion(FILE *archivo,char *name);
+
+
 
 #endif // ADMIN_DISCO_H_INCLUDED

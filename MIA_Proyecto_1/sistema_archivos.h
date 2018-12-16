@@ -101,10 +101,12 @@ struct BLOQUE_APUNTADORES
 };
 
 int crear_ext3(FILE *archivo,int size_particion,int inicio_particion,char *name_particion);
-int crear_archivo_users(FILE *archivo,int size_particion,int inicio_particion,char *name_particion);
+void crear_archivo_users(FILE *archivo,int size_particion,int inicio_particion,char *name_particion);
 
 int generar_ext3_2(FILE *archivo,char *type_mkfs,char *name_particion,int *inicio_particion);
 int inicializando_users(FILE *archivo, int inicio_particion);
+
+void full_particion(FILE *archivo,int particion_start,int particion_size);
 
 
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED

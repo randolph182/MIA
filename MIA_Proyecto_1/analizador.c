@@ -513,11 +513,25 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
                             strcpy(type_mkfs,"full");
                         }
                         int inicio_particion =0;
-                      //  if(generar_ext3(archivo,type_mkfs,mount_particion->name,&inicio_particion) == 1) //exito en la creacion de ext3
-                       // {
-                            //comienza la configuracion de users.txt
-                      //  }
-                        
+                        PTR particion = buscar_particion(archivo,mount_particion->name);
+
+                        if(particion.part_status == '1')
+                        {
+                            //crear_ext3 automaticamente realiza un Fast con los bitmap
+                            if(crear_ext3(archivo,particion.part_size,particion.part_start,particion.part_name) == 1)
+                             {
+                                 if(strcasecmp(type_mkfs,"full") == 0)
+                                     full_particion(archivo,particion.part_start,particion.part_size);
+                                 else if(strcmp(type_mkfs,"") == 0)
+                                    full_particion(archivo,particion.part_start,particion.part_size);
+                                 crear_archivo_users(archivo,particion.part_size,particion.part_start,particion.part_name);
+                                 printf("Se ha creado un sistema de archivos EXT3 en la particion: %s\n\n",mount_particion->name);
+                             }
+                        }
+                        else
+                        {
+                            printf("ERROR:hay problemas con encontrar la particion con nombre: %s\n\n",mount_particion->name);
+                        }
                     }
                     else
                     {

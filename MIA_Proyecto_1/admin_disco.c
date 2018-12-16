@@ -420,18 +420,7 @@ void crear_particion_(MBR *mbr,int size,char unit,char type,char fit[],char *pat
                 fclose(archivo2);
             }
             else
-            {
                 printf("Se ha Creado una particion Primaria\n\n");
-                FILE *archivo = fopen(path,"r+b");
-                if(crear_ext3(archivo,size_particion,ini_part,name) == 1)
-                {
-                    //printf("Se ha creado un sistema de archivos EXT3 en la particion %s\n\n",name);
-                    crear_archivo_users(archivo,size_particion,ini_part,name);
-                }
-                else
-                    printf("ERROR: No se ha podido crear un EXT3 en la particion %s\n\n",name);
-                fclose(archivo);
-            }
 
         }
         else
@@ -1270,4 +1259,28 @@ int numero_bytes(char unit,int size)
         return size;
     }
     return -1;
+}
+
+PTR buscar_particion(FILE *archivo,char *name)
+{
+    //sacado el mbr
+    fseek(archivo,0,SEEK_SET);
+    MBR mbr_tmp[1];
+    fread(mbr_tmp,sizeof(MBR),1,archivo);
+    //buscando la particion
+    PTR particion;
+    //buscando el iterador que contiene la particion
+    if(strcmp(mbr_tmp[0].mbr_partition_1.part_name,name) ==0 )
+        return mbr_tmp[0].mbr_partition_1;
+    else if(strcmp(mbr_tmp[0].mbr_partition_2.part_name,name) ==0 )
+        return mbr_tmp[0].mbr_partition_2;
+    else if(strcmp(mbr_tmp[0].mbr_partition_3.part_name,name) ==0 )
+        return mbr_tmp[0].mbr_partition_3;
+    else if(strcmp(mbr_tmp[0].mbr_partition_3.part_name,name) ==0 )
+        return mbr_tmp[0].mbr_partition_4;
+    else
+    {
+        printf("ERROR: Hay problemas con encontrar el nombre de la particion en el ambito de generar_ext3");
+        return particion;
+    }
 }
