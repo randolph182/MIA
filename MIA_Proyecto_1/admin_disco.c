@@ -426,7 +426,7 @@ void crear_particion_(MBR *mbr,int size,char unit,char type,char fit[],char *pat
                 if(crear_ext3(archivo,size_particion,ini_part,name) == 1)
                 {
                     //printf("Se ha creado un sistema de archivos EXT3 en la particion %s\n\n",name);
-                    crear_archivo_users(archivo,ini_part,name);
+                    crear_archivo_users(archivo,size_particion,ini_part,name);
                 }
                 else
                     printf("ERROR: No se ha podido crear un EXT3 en la particion %s\n\n",name);
