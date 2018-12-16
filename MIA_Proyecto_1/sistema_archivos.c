@@ -77,43 +77,32 @@ int crear_archivo_users(FILE *archivo,int size_particion,int inicio_particion,ch
     double calculo_bloque = (size_particion - sizeof(SB))/(1 + sizeof(LOG)+3+sizeof(TI)+3*sizeof(BC));
     int n = floor(calculo_bloque);
 
-    //obteniendo super bloque
-    fseek(archivo,inicio_particion,SEEK_SET);
-    SB sb_tmp[1];
-    fread(sb_tmp,sizeof(SB),1,archivo);
-    //creando el primer inodo
-    TI inodo_carp;
-    //inicializando el puntero de los bloques directos e indirectos
-    for(int i = 0; i < 15; i++)
-        inodo_carp.i_block[i] = -1;
-
-    //creando el primer bloque_carpeta
-    BC bloque_carp;
-    //inicializando el contenido del bloque de carpeta
-    for(int i = 0; i < 4; i++)
-    {
-        bloque_carp.b_content[i].b_name[0] = '0'; //mas adelante me servira compararlo con ascii 48 para denotar que esta vacio
-        bloque_carp.b_content[i].b_inodo = -1; //vacio
-    }
-    //configurando la primer tabla de inodos;
-    inodo_carp.i_uid = 0;
-    inodo_carp.i_gid = 0;
-    inodo_carp.i_size = 0;
-    inodo_carp.i_atime[0] = '0';
-
-
-    /*calculando el time de creacion de la tabla de inodos*/
+    //:::::::::::::::::::::::::::::::::::::::::::::::::::: FECHA
      time_t tiempo = time(0);
      struct tm *tlocal = localtime(&tiempo);
      char fecha[16];
     strftime(fecha,16,"%d/%m/%y",tlocal);
 
+    //:::::::::::::::::::::::::::::::::::::::::::::::::::: SUPER BLOQUE
+    fseek(archivo,inicio_particion,SEEK_SET);
+    SB sb_tmp[1];
+    fread(sb_tmp,sizeof(SB),1,archivo);
 
+    //:::::::::::::::::::::::::::::::::::::::::::::::::::::: INODO 1
+    TI inodo_carp;
+    //inicializando punteros
+    for(int i = 0; i < 15; i++)
+        inodo_carp.i_block[i] = -1;
+
+    inodo_carp.i_uid = 1; //usurio root
+    inodo_carp.i_gid = 1; //grupo root
+    inodo_carp.i_size = 29; //total de bytes en archivos
+    inodo_carp.i_atime[0] = '0';
     strcpy(inodo_carp.i_ctime,fecha);
     strcpy(inodo_carp.i_mtime,fecha);
     inodo_carp.i_type = '0';
-    inodo_carp.i_perm = 000000000;
-    inodo_carp.i_block[0] = sb_tmp[0].s_block_start;
+    inodo_carp.i_perm = 777;
+    inodo_carp.i_block[0] = 0; //bitmap
     //escribiendo la tabla de inodos y actualizando su bitmap
     int espacio_inodos_libre = sb_tmp[0].s_first_ino;
     fseek(archivo,espacio_inodos_libre,SEEK_SET);
@@ -125,14 +114,35 @@ int crear_archivo_users(FILE *archivo,int size_particion,int inicio_particion,ch
     fwrite("1",sizeof(char),1,archivo);
     sb_tmp[0].s_first_ino = espacio_inodos_libre + sizeof(TI); //actualizando SB
 
+
+    //BLOQUE 1
+    BC bloque_carp;
+    //inicializando el contenido del bloque de carpeta
+    for(int i = 0; i < 4; i++)
+    {
+        bloque_carp.b_content[i].b_name[0] = '0'; //mas adelante me servira compararlo con ascii 48 para denotar que esta vacio
+        bloque_carp.b_content[i].b_inodo = -1; //vacio
+    }
+
+    
+
+
+    
+
+
+    
+   
+    
+
     //escribiendo el primer bloque de carpetas y actualizando su bitmap
-    char nombre_padre[12];
-    strcpy(nombre_padre,".");
-    strcpy(bloque_carp.b_content[0].b_name,nombre_padre);
-    bloque_carp.b_content[0].b_inodo = espacio_inodos_libre;
     char nombre_block_actual[12];
-    strcpy(nombre_block_actual,"..");
-    strcpy(bloque_carp.b_content[1].b_name,nombre_block_actual);
+    strcpy(nombre_block_actual,".");
+    memset(bloque_carp.b_content[0].b_name,0,sizeof(bloque_carp.b_content[0].b_name));
+    strcpy(bloque_carp.b_content[0].b_name,nombre_block_actual);
+    bloque_carp.b_content[0].b_inodo = espacio_inodos_libre;
+    char nombre_padre[12];
+    strcpy(nombre_padre,"..");
+    strcpy(bloque_carp.b_content[0].b_name,nombre_padre);
     bloque_carp.b_content[1].b_inodo = sb_tmp[0].s_block_start;
     char nombre_carpeta_raiz[12];
     strcpy(nombre_carpeta_raiz,"/");
