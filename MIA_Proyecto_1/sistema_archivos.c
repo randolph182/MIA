@@ -119,8 +119,8 @@ int crear_archivo_users(FILE *archivo,int size_particion,int inicio_particion,ch
     fseek(archivo,espacio_inodos_libre,SEEK_SET);
     fwrite(&inodo_carp,sizeof(TI),1,archivo);
     //actualizando bitmap
-    int size_ocupado_ti = sb_tmp[0].s_first_ino - sb_tmp[0].s_inode_start;
-    int bm_inodo_libre = espacio_inodos_libre - size_ocupado_ti - (3 * n) - n;
+    int size_ocupado_ti =  sb_tmp[0].s_first_ino - sb_tmp[0].s_inode_start;
+    int bm_inodo_libre = espacio_inodos_libre - size_ocupado_ti - (3*n) - sb_tmp[0].s_free_inodes_count;
     fseek(archivo,bm_inodo_libre,SEEK_SET);
     fwrite("1",sizeof(char),1,archivo);
     sb_tmp[0].s_first_ino = espacio_inodos_libre + sizeof(TI); //actualizando SB
@@ -140,8 +140,8 @@ int crear_archivo_users(FILE *archivo,int size_particion,int inicio_particion,ch
     //escribiendo
     fseek(archivo,sb_tmp[0].s_block_start,SEEK_SET);
     fwrite(&bloque_carp,sizeof(BC),1,archivo);
-    int size_ocupado_block = sb_tmp[0].s_first_blo - sb_tmp[0].s_block_start;
-    int bm_block_free = sb_tmp[0].s_first_blo - size_ocupado_block -(n*sizeof(TI)) - (3*n) - n;
+    int size_ocupado_block =  sb_tmp[0].s_first_blo - sb_tmp[0].s_block_start;
+    int bm_block_free = sb_tmp[0].s_first_blo - size_ocupado_block -(n*sizeof(TI)) - sb_tmp[0].s_free_blocks_count;
     fseek(archivo,bm_block_free,SEEK_SET);
     fwrite("1",sizeof(char),1,archivo);
     sb_tmp[0].s_first_blo = sb_tmp[0].s_block_start + sizeof(BC);  //actualizando SB
@@ -164,14 +164,14 @@ int crear_archivo_users(FILE *archivo,int size_particion,int inicio_particion,ch
     fseek(archivo,sb_tmp[0].s_first_ino,SEEK_SET);
     fwrite(&inodo_archivo,sizeof(TI),1,archivo);
     //actualizando su bitmap de tabla de inodos
-    size_ocupado_ti = sb_tmp[0].s_first_ino - sb_tmp[0].s_inode_start;
-    bm_inodo_libre = sb_tmp[0].s_first_ino - size_ocupado_ti - (3 * n) - n;
-    fseek(archivo,sb_tmp[0].s_bm_inode_start,SEEK_SET);
+    size_ocupado_ti = sb_tmp[0].s_first_ino - sb_tmp[0].s_inode_start ;
+    bm_inodo_libre = sb_tmp[0].s_first_ino - size_ocupado_ti - (3*n) - sb_tmp[0].s_free_inodes_count;
+    fseek(archivo,bm_inodo_libre ,SEEK_SET);
     fwrite("1",sizeof(char),1,archivo);
     //actualizando sb
     sb_tmp[0].s_first_ino = sb_tmp[0].s_first_ino + sizeof(TI);
     sb_tmp[0].s_free_inodes_count = sb_tmp[0].s_free_inodes_count -1;
-    
+
     //crando bloque de archivos
     BA bloque_archivo;
     char users[64];
@@ -180,8 +180,8 @@ int crear_archivo_users(FILE *archivo,int size_particion,int inicio_particion,ch
     fseek(archivo,sb_tmp[0].s_first_blo,SEEK_SET);
     fwrite(&bloque_archivo,sizeof(BA),1,archivo);
     //actualizando su bitmap
-    size_ocupado_block = sb_tmp[0].s_first_blo - sb_tmp[0].s_block_start;
-    bm_block_free = sb_tmp[0].s_first_blo - size_ocupado_block -(n*sizeof(TI)) - (3*n) - n;
+    size_ocupado_block =  sb_tmp[0].s_first_blo - sb_tmp[0].s_block_start ;
+    bm_block_free = sb_tmp[0].s_first_blo - size_ocupado_block -(n*sizeof(TI)) - sb_tmp[0].s_free_blocks_count;
     fseek(archivo,bm_block_free,SEEK_SET);
     fwrite("1",sizeof(char),1,archivo);
     //actualizando sb
@@ -191,7 +191,7 @@ int crear_archivo_users(FILE *archivo,int size_particion,int inicio_particion,ch
     //escribiendo sb
     fseek(archivo,inicio_particion,SEEK_SET);
     fwrite(sb_tmp,sizeof(SB),1,archivo);
-    
+
     fseek(archivo,inicio_particion,SEEK_SET);
     fread(sb_tmp,sizeof(SB),1,archivo);
     int i;
