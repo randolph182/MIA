@@ -4,6 +4,9 @@
 #include "admin_disco.h"
 #include "lista_simple.h"
 #include <math.h>
+#include <string.h>
+#include <stdio.h>
+#include <ctype.h>
 
 typedef struct SUPER_BLOQUE SB;
 typedef struct TABLA_INODOS TI;
@@ -96,6 +99,13 @@ struct BLOQUE_APUNTADORES
     int b_pointers[16]; //Array con los apuntadores hacia bloques (de archivo o carpeta)
 };
 
-void generar_ext3(FILE *archivo,char *type_mkfs,char *name_particion);
+int crear_ext3(FILE *archivo,int size_particion,int inicio_particion,char *name_particion);
+int crear_archivo_users(FILE *archivo,int inicio_particion,char *name_particion);
+
+int generar_ext3_2(FILE *archivo,char *type_mkfs,char *name_particion,int *inicio_particion);
+int inicializando_users(FILE *archivo, int inicio_particion);
+
+
+
 
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED

@@ -14,6 +14,7 @@
 
 #include "mount.h"
 #include "lista_ajuste.h"
+#include "sistema_archivos.h"
 
 typedef struct MASTER_BOOT_RECORD MBR;
 typedef struct PARTICION PTR;

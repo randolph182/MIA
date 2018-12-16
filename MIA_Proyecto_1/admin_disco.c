@@ -363,7 +363,8 @@ void crear_particion_(MBR *mbr,int size,char unit,char type,char fit[],char *pat
             particion->part_type = type;
             strcpy(particion->part_fit,fit);
             particion->part_start = ini_part;
-            particion->part_size = numero_bytes(unit,size);
+            int size_particion = numero_bytes(unit,size);
+            particion->part_size = size_particion;
             strcpy(particion->part_name,name);
 
             FILE *archivo = fopen(path,"r+b");
@@ -419,7 +420,19 @@ void crear_particion_(MBR *mbr,int size,char unit,char type,char fit[],char *pat
                 fclose(archivo2);
             }
             else
+            {
                 printf("Se ha Creado una particion Primaria\n\n");
+                FILE *archivo = fopen(path,"r+b");
+                if(crear_ext3(archivo,size_particion,ini_part,name) == 1)
+                {
+                    //printf("Se ha creado un sistema de archivos EXT3 en la particion %s\n\n",name);
+                    crear_archivo_users(archivo,ini_part,name);
+                }
+                else
+                    printf("ERROR: No se ha podido crear un EXT3 en la particion %s\n\n",name);
+                fclose(archivo);
+            }
+
         }
         else
             printf("ERROR: no se ha podido crear la particion\n\n");

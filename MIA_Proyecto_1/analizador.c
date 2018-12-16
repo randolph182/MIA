@@ -512,7 +512,12 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
                             memset(type_mkfs,0,sizeof(type_mkfs));
                             strcpy(type_mkfs,"full");
                         }
-                        generar_ext3(archivo,type_mkfs,mount_particion->name);
+                        int inicio_particion =0;
+                      //  if(generar_ext3(archivo,type_mkfs,mount_particion->name,&inicio_particion) == 1) //exito en la creacion de ext3
+                       // {
+                            //comienza la configuracion de users.txt
+                      //  }
+                        
                     }
                     else
                     {
