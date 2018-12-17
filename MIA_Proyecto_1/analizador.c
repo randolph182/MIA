@@ -25,6 +25,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
     char flag_unmount =0;   //UNMOUNT
 
     char flag_mkfs =0;   //MKFS -> formato completo
+    int flag_login =0;
 
     int size = 0;
     char unit= 'k'; //en kilobytes por defecto
@@ -51,7 +52,12 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
 
     char *fit = (char*)malloc(sizeof(char)*3);
      memset(fit,0,sizeof(fit));
-    // strcpy(fit,"ff");
+
+    //FASE2
+    char *usr =(char*)malloc(sizeof(char)*10); //10 porque es el limite
+    memset(usr,0,12);
+    char *pwd = (char*)malloc(sizeof(char)*10); // 10 porque es el limite
+    memset(pwd,0,12);
 
 /*=================== VARIABLES GENERALES ==================*/
 
@@ -79,6 +85,9 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
 
     int flag_sign_mayor = 0;
     int flag_cmlla_db = 0;
+    //FASE2
+    int flag_usr =0;
+    int flag_pwd =0;
 
 
     while((lista[index_lst] != NULL))    //:::::::::::::::::::::::::::::::::: INICIO DEL WHILE
@@ -144,6 +153,12 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
             else if(strcasecmp(acum_comando,"mkfs")==0)
             {
                 flag_mkfs =1;
+                index_lst++;
+                memset(acum_comando,0,sizeof(acum_comando));
+            }
+            else if(strcasecmp(acum_comando,"login")==0)
+            {
+                flag_login =1;
                 index_lst++;
                 memset(acum_comando,0,sizeof(acum_comando));
             }
@@ -230,6 +245,16 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
                         strcpy(fs,acum_comando);
                         flag_fs = 0;
                     }
+                    else if(flag_usr == 1)
+                    {
+                        strcpy(usr,acum_comando);
+                        flag_usr = 0;
+                    }
+                    else if(flag_pwd == 1)
+                    {
+                        strcpy(pwd,acum_comando);
+                        flag_pwd =0;
+                    }
                     if((lista[index_lst] != '\n') && (lista[index_lst] != '\r')) //salto de linea o un return
                         index_lst++;
 
@@ -299,6 +324,10 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
                      flag_id = 1;
                 else if(strcasecmp(acum_comando,"fs") == 0)
                      flag_fs = 1;
+                else if(strcasecmp(acum_comando,"usr") == 0)
+                     flag_usr = 1;
+                else if(strcasecmp(acum_comando,"pwd") == 0)
+                     flag_pwd = 1;
                 else
                 {
                     printf("ERROR: hubo problemas con el parametro: ");
@@ -355,6 +384,38 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
                     index_lst++; //quitamos las comillas dobles del analisis
                 }
             }
+            else if(flag_sign_mayor == 1 ) // > quitamos las comillas dobles
+            {
+                memset(acum_comando,0,sizeof(acum_comando)); //limpiamos
+                index_lst++;
+                while(lista[index_lst] != 34)
+                {
+                    if(lista[index_lst] == NULL) //por las moscas si llega al final
+                    {
+                        flag_error = 1;
+                        break;
+                    }
+                    caracter[0] = lista[index_lst];
+                    strcat(acum_comando,caracter);
+                    index_lst++;
+                }
+                if(lista[index_lst] == 34)
+                {   //:::::::::::::::::::::::::::agregamos a parametros con comillas dobles
+                    flag_sign_mayor = 0;
+                    if(flag_usr == 1)
+                    {
+                        strcpy(usr,acum_comando);
+                        flag_usr = 0;
+                    }
+                    else if(flag_pwd == 1)
+                    {
+                        strcpy(pwd,acum_comando);
+                        flag_pwd = 0;
+                    }
+                    memset(acum_comando,0,sizeof(acum_comando));
+                    index_lst++; //quitamos las comillas dobles del analisis
+                }
+            }
             else
             {
                 printf("Error: viene una comilla doble sin utilizarse\n\n");
@@ -375,7 +436,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
             }
        }
         //::::Concatenacion::::::
-        if((lista[index_lst] != NULL) && (lista[index_lst] != 10) && (lista[index_lst] != '\r') && (lista[index_lst] != "")) // 10 -> salto de linea ; No concatenamos lo que hay en la cond
+        if((lista[index_lst] != NULL) && (lista[index_lst] != 10) && (lista[index_lst] != '\r') && (lista[index_lst] != 32)) // 10 -> salto de linea ; No concatenamos lo que hay en la cond
         {
             caracter[0] = lista[index_lst];
             strcat(acum_comando,caracter);
@@ -551,6 +612,15 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
                  printf("ERROR: Para ejecutar MKFS es necesario tener un ID\n");
             }
         }
+        else if(flag_login == 1)
+        {
+            if(strcmp(usr,"") != 0 && strcmp(pwd,"")!=0 && strcmp(id,"")!=0)
+            {
+                printf("Estoy aqui en login/n/n");
+            }
+            else
+                printf("ERROR: Para ejecutar LOGIN es necesario tener un ID , un password y un usuario\n");
+        }
     }
 
     /*SE LIBERA LA MEMORIA DE LOS REGISTROS*/
@@ -568,8 +638,13 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
     id = NULL;
     free(caracter);
     caracter=NULL;
+    free(usr);
+    usr = NULL;
+    free(pwd);
+    pwd = NULL;
     //reseteando flag_error
     flag_error = 0;
+
 
 }
 

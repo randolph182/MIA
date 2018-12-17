@@ -179,7 +179,7 @@
 	"lista_ajuste.h"
 	"sistema_archivos.h"
 
-1544995658 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/sistema_archivos.c
+1545002279 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/sistema_archivos.c
 	"sistema_archivos.h"
 
 1545002279 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/sistema_archivos.h
@@ -194,7 +194,7 @@
 1544993539 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/admin_disco.c
 	"admin_disco.h"
 
-1544995967 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/analizador.c
+1545012114 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/analizador.c
 	"analizador.h"
 	"admin_disco.h"
 
@@ -225,5 +225,12 @@
 	<string.h>
 	<stdlib.h>
 	<ctype.h>
+	<stdio.h>
+
+1545007328 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/lista_users.c
+	"lista_users.h"
+
+1545007327 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/lista_users.h
+	<string.h>
 	<stdio.h>
 
