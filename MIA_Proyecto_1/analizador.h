@@ -7,6 +7,7 @@
 #include "mount.h"
 #include "reporte_grafico.h"
 #include "sistema_archivos.h"
+#include "lista_users.h"
 /* convierte cadenas que contienen mayusculas a minusulas*/
 void mayus_cnv_minus_lst(char *lista);
 

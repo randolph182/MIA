@@ -3,6 +3,7 @@
 
 #include "admin_disco.h"
 #include "lista_simple.h"
+#include "lista_users.h"
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -103,10 +104,10 @@ struct BLOQUE_APUNTADORES
 int crear_ext3(FILE *archivo,int size_particion,int inicio_particion,char *name_particion);
 void crear_archivo_users(FILE *archivo,int size_particion,int inicio_particion,char *name_particion);
 
-int generar_ext3_2(FILE *archivo,char *type_mkfs,char *name_particion,int *inicio_particion);
-int inicializando_users(FILE *archivo, int inicio_particion);
-
 void full_particion(FILE *archivo,int particion_start,int particion_size);
 
+void consultar_usuarios(FILE *archivo,int ini_particion,LISTA_USR *const lst_usr);
+
+//int get_dir_block(int inicio_bm_block,int pos_bm,)
 
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED

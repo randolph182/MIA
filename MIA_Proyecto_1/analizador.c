@@ -616,7 +616,28 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
         {
             if(strcmp(usr,"") != 0 && strcmp(pwd,"")!=0 && strcmp(id,"")!=0)
             {
-                printf("Estoy aqui en login/n/n");
+                LISTA_USR *lst_usr = (LISTA_USR*)malloc(sizeof(LISTA_USR));
+                NODO_USR *logeado;
+                 NODO_MOUNT *mount_particion = get_nodo_mount(id,ptr_mount);
+                 if(mount_particion!=NULL)
+                 {
+                     FILE *archivo =fopen(mount_particion->path_mount,"r+b");
+                     if(archivo !=NULL)
+                     {
+                         
+                     }
+                     else
+                    {
+                     printf("ERROR: No se puede abrir el archivo de la particion:  ");
+                     printf("%s\n\n",id);
+                    }
+                    fclose(archivo);
+                 }
+                 else
+                {
+                     printf("ERROR: no se encunetra montada la articion:  ");
+                     printf("%s\n\n",id);
+                }
             }
             else
                 printf("ERROR: Para ejecutar LOGIN es necesario tener un ID , un password y un usuario\n");
