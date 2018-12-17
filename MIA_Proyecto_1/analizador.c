@@ -2,9 +2,9 @@
 #include "admin_disco.h"
 
 
-
 void mayus_cnv_minus_lst(char *lista)
 {
+
     int k =0;
 
     while(lista[k] != NULL)
@@ -14,7 +14,7 @@ void mayus_cnv_minus_lst(char *lista)
     }
 }
 
-void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
+void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const usuario_logeado)
 {
     int flag_mkdisk = 0;  //MKDISK
     int flag_exec =0;      //EXEC
@@ -275,7 +275,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
                         while(fgets(linea,1024,archivo)) //obtengo linea por linea con \n al final
                         {
                             if(linea[0] != '#')         //no tomamos en cuenta los comentarios
-                                iniciar_analisis(linea,ptr_mount);
+                                iniciar_analisis(linea,ptr_mount,usuario_logeado);
                         }
                     }
                     else
@@ -550,7 +550,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
                 while(fgets(linea,1024,archivo)) //obtengo linea por linea con \n al final
                 {
                     if(linea[0] != '#')         //no tomamos en cuenta los comentarios
-                        iniciar_analisis(linea,ptr_mount);
+                        iniciar_analisis(linea,ptr_mount,usuario_logeado);
                 }
             }
             else
@@ -612,11 +612,17 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
                  printf("ERROR: Para ejecutar MKFS es necesario tener un ID\n");
             }
         }
-        else if(flag_login == 1)
+        else if(flag_login == 1) //========================================================= login
         {
-            if(strcmp(usr,"") != 0 && strcmp(pwd,"")!=0 && strcmp(id,"")!=0)
+            if(usuario_logeado->id != 0)
+            {
+                 printf("ERROR: No se puede Iniciar sesion porque hay una cuenta activa \n");
+                 printf("La cuenta activa es: %s\n\n",usuario_logeado->nombre_usr);
+            }
+             else if(strcmp(usr,"") != 0 && strcmp(pwd,"")!=0 && strcmp(id,"")!=0)
             {
                 LISTA_USR *lst_usr = (LISTA_USR*)malloc(sizeof(LISTA_USR));
+                inicializar_lst_usr(lst_usr);
                 NODO_USR *logeado;
                  NODO_MOUNT *mount_particion = get_nodo_mount(id,ptr_mount);
                  if(mount_particion!=NULL)
@@ -624,7 +630,44 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
                      FILE *archivo =fopen(mount_particion->path_mount,"r+b");
                      if(archivo !=NULL)
                      {
-                         
+                         PTR particion = buscar_particion(archivo,mount_particion->name);
+                         if(particion.part_status == '1')
+                         {
+                            consultar_usuarios(archivo,particion.part_start,particion.part_size,lst_usr);
+                            if(lst_usr->size !=0)
+                            {
+                                NODO_USR *usr_nodo = usuario_login(lst_usr,usr,pwd);
+                                if(usr_nodo != NULL)
+                                {
+                                   // usuario_logeado =  (NODO_USR*)malloc(sizeof(NODO_USR));
+                                    usuario_logeado->id  = usr_nodo->id;
+                                    usuario_logeado->tipo  = usr_nodo->tipo;
+                                    usuario_logeado->inicio_particion = usr_nodo->inicio_particion;
+                                    usuario_logeado->size_particion  = usr_nodo->size_particion;
+                                    strcpy(usuario_logeado->nombre_grupo,usr_nodo->nombre_grupo);
+                                    strcpy(usuario_logeado->nombre_usr,usr_nodo->nombre_usr);
+                                    strcpy(usuario_logeado->password_usr,usr_nodo->password_usr);
+
+                                    printf("Exito se ha logeado!!\n\n");
+                                }
+                                else
+                                {
+                                    printf("ERROR: No se encuntran registrado el usuario: %s con password: %s ",usr,pwd);
+                                }
+                            }
+                            else
+                                printf("ERROR: En el archivo de Usuarios no hay informacion ");
+                           //char *cadena[3];
+                           //cadena[0] = "hola";
+                           //cadena[1] = "mundo";
+                           //cadena[2] = "pendejos";
+                           //printf("las cadenas son %s %s %s",cadena[0],cadena[1],cadena[2]);
+                         }
+                         else
+                         {
+                            printf("ERROR:hay problemas con encontrar la particion con nombre: %s en login \n\n",mount_particion->name);
+                         }
+
                      }
                      else
                     {
@@ -638,6 +681,8 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount)
                      printf("ERROR: no se encunetra montada la articion:  ");
                      printf("%s\n\n",id);
                 }
+                free(lst_usr);
+                lst_usr =NULL;
             }
             else
                 printf("ERROR: Para ejecutar LOGIN es necesario tener un ID , un password y un usuario\n");

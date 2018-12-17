@@ -150,6 +150,8 @@ void crear_archivo_users(FILE *archivo,int size_particion,int inicio_particion,c
 
     //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: INODO 2
     TI inodo_archivo;
+    for(int i = 0; i < 15; i++)
+        inodo_archivo.i_block[i] = -1;
     inodo_archivo.i_uid = 1;
     inodo_archivo.i_gid = 1;
     inodo_archivo.i_size = 29;
@@ -197,10 +199,10 @@ void full_particion(FILE *archivo,int particion_start,int particion_size)
     //limpiando bitmap de inodos y bloques
     for(int i = sb_tmp[0].s_inode_start; i < particion_start + particion_size; i++)
         fwrite("\0",sizeof(char),1,archivo);
-    
+
 }
 
-void consultar_usuarios(FILE *archivo,int ini_particion,LISTA_USR *const lst_usr)
+void consultar_usuarios(FILE *archivo,int ini_particion,int size_particion,LISTA_USR *const lst_usr)
 {
     //sacando el sb
     SB sb_tmp[1];
@@ -209,23 +211,62 @@ void consultar_usuarios(FILE *archivo,int ini_particion,LISTA_USR *const lst_usr
     //nos hubicamos en el archivo carpeta de la raiz
     fseek(archivo,sb_tmp[0].s_bm_inode_start+1,SEEK_SET);
     char ti_verif;
-    fread(ti_verif,sizeof(char),1,archivo);
+    fread(&ti_verif,sizeof(char),1,archivo);
     if(ti_verif == '1') //es porque si hay un inodo
     {
-        fseek(archivo,sb_tmp[0].s_bm_inode_start+1,SEEK_SET); //+1 porque es el segundo 1 del bitmap de inodos donde esta el archivo
+        int n = sb_tmp[0].s_inodes_count;   // ya que los inodos solo pesan n
+        int pos_byte_ti = sb_tmp[0].s_bm_inode_start + sizeof(TI) + n +(3*n); //aqui ya se que el bm esta en la pos 1 entonces solo se hace un sizeof
+        fseek(archivo,pos_byte_ti,SEEK_SET); //+1 porque es el segundo 1 del bitmap de inodos donde esta el archivo
         TI ti_tmp[1];
         fread(ti_tmp,sizeof(TI),1,archivo);
         //consultando punteros archivos
-        for(int i = 0; i < 15; i++)
+        int bytes_archivo = ti_tmp[0].i_size;
+        char *acum_archivo = (char*)malloc(sizeof(char)*ti_tmp[0].i_size); //maximo por cadena
+        memset(acum_archivo,0,sizeof(acum_archivo));
+        for(int i = 0; i < 12; i++)
         {
             if(ti_tmp[0].i_block[i] != -1)
             {
-                //obtener direccion de bloque
+                //posicion del bitmap * 64 que pesan todos los bloques  + espacio del bm de bloques + espacio de la tabla de inodos
+                int pos_byte_block = sb_tmp[0].s_bm_block_start +  ti_tmp[0].i_block[i] * 64 + (3*n) + n*sizeof(TI);
+                BA block_archivo;
+                fseek(archivo,pos_byte_block,SEEK_SET);
+                fread(&block_archivo,sizeof(BA),1,archivo);
+                strcat(acum_archivo,&block_archivo.b_content);
+                if(bytes_archivo > 64)
+                    bytes_archivo = bytes_archivo - 64;
             }
         }
-        
+        listar_usuarios(ini_particion,size_particion,acum_archivo,ti_tmp[0].i_size,lst_usr);
     }
-
-
-
 }
+
+void listar_usuarios(int inicio_particion,int size_particion,char *acum_usr,int size_bytes,LISTA_USR *const lst_usr)
+{
+    char *acum2 = (char*)malloc(sizeof(char)*40);
+    memset(acum2,0,sizeof(acum2));
+    char *caracter = (char*)malloc(sizeof(char) * 1);
+    memset(caracter,0,sizeof(caracter));
+    int pos =0;
+    int salir =0;
+    while(salir != 1)
+    {
+        caracter[0] = acum_usr[pos];
+        if(caracter[0] == NULL)
+        {
+            salir = 1;
+            break;
+        }
+        if(caracter[0] == '\n' )
+        {
+            add_lst_usr_cadena(lst_usr,acum2,inicio_particion,size_particion);
+            memset(acum2,0,sizeof(acum2));
+        }
+        else
+            strcat(acum2,caracter);
+        pos++;
+    }
+}
+
+
+

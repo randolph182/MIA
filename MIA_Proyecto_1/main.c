@@ -6,12 +6,14 @@
 #include <unistd.h>
 
 #include "mount.h"
-
+#include "lista_users.h"
 int main()
 {
 
     LISTA_MOUNT *ptr_mount = (LISTA_MOUNT*)malloc(sizeof(LISTA_MOUNT));
     inicializar_lst_mount(ptr_mount);
+    NODO_USR * usuario_logeado = (NODO_USR*)malloc(sizeof(NODO_USR));
+    usuario_logeado->id =0;// = NULL;
     /* Entrada por teclado de las sentencias*/
     char *comando;
     int flag =0;
@@ -35,7 +37,7 @@ int main()
             }
         }
         else
-            iniciar_analisis(comando,ptr_mount);
+            iniciar_analisis(comando,ptr_mount,usuario_logeado);
 
         free(comando);
         comando =NULL;

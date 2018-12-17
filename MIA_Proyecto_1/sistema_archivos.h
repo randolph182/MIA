@@ -69,7 +69,7 @@ struct TABLA_INODOS
                             */
 };
 
-struct JOURNALING   
+struct JOURNALING
 {
     char Journal_Tipo_Operacion;    //El tipo de operación a realizarse
     char Journal_tipo;              //Si es Archivo(0), si es carpeta(1)
@@ -86,7 +86,7 @@ struct CONTENT
     int b_inodo;        //Apuntador hacia un inodo asociado al archivo o carpeta
 };
 
-struct BLOQUE_CARPETAS 
+struct BLOQUE_CARPETAS
 {
     CNT b_content[4];   //Array con el contenido de la carpeta
 };
@@ -106,8 +106,7 @@ void crear_archivo_users(FILE *archivo,int size_particion,int inicio_particion,c
 
 void full_particion(FILE *archivo,int particion_start,int particion_size);
 
-void consultar_usuarios(FILE *archivo,int ini_particion,LISTA_USR *const lst_usr);
-
-//int get_dir_block(int inicio_bm_block,int pos_bm,)
-
+void consultar_usuarios(FILE *archivo,int ini_particion,int size_particion,LISTA_USR *const lst_usr);
+//void read_file_ap_ind(FILE *archivo,int pos_bm_ap_ind,SB sb,char tipo_ap_ind,char *acumlador);
+void listar_usuarios(int inicio_particion,int size_particion,char *acum_usr,int size_bytes,LISTA_USR *const lst_usr);
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED

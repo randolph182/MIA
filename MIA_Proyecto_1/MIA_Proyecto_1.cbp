@@ -43,6 +43,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="lista_ajuste.h" />
+		<Unit filename="lista_users.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="lista_users.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
