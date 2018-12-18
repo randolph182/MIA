@@ -106,7 +106,13 @@ void crear_archivo_users(FILE *archivo,int size_particion,int inicio_particion,c
 
 void full_particion(FILE *archivo,int particion_start,int particion_size);
 
-void consultar_usuarios(FILE *archivo,int ini_particion,int size_particion,LISTA_USR *const lst_usr);
+void consultar_usuarios(FILE *archivo,int ini_particion,int size_particion,char *path,LISTA_USR *const lst_usr);
 //void read_file_ap_ind(FILE *archivo,int pos_bm_ap_ind,SB sb,char tipo_ap_ind,char *acumlador);
-void listar_usuarios(int inicio_particion,int size_particion,char *acum_usr,int size_bytes,LISTA_USR *const lst_usr);
+void listar_usuarios(int inicio_particion,int size_particion,char *acum_usr,int size_bytes,char *path,LISTA_USR *const lst_usr);
+
+int registrar_usuario(FILE *archivo,int ini_particion,char *nomb_usr,char *nomb_grp,char *pass_usr);
+
+int numero_mayor_file_usr(FILE *archivo,int pos_byte_block,char tipo);
+
+
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED

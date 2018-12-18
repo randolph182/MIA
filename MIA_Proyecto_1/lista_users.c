@@ -7,7 +7,7 @@ void inicializar_lst_usr(LISTA_USR *const ptr_usr)
     ptr_usr->size = 0;
 }
 
-void inicializar_nodo_usr(NODO_USR *const ini,int id,int ini_part,int size_part,char tipo,char *nombre_grupo,char *nombre_usr,char *password_usr)
+void inicializar_nodo_usr(NODO_USR *const ini,int id,int ini_part,int size_part,char tipo,char *nombre_grupo,char *nombre_usr,char *password_usr,char *path)
 {
     ini->siguiente = NULL;
     ini->id = id;
@@ -17,12 +17,13 @@ void inicializar_nodo_usr(NODO_USR *const ini,int id,int ini_part,int size_part,
     strcpy(ini->nombre_grupo,nombre_grupo);
     strcpy(ini->nombre_usr,nombre_usr);
     strcpy(ini->password_usr,password_usr);
+    strcpy(ini->path_particion,path);
 }
 
-void add_lst_usr(LISTA_USR *const add,int id,int ini_part,int size_part,char tipo,char *nombre_grupo,char *nombre_usr,char *password_usr)
+void add_lst_usr(LISTA_USR *const add,int id,int ini_part,int size_part,char tipo,char *nombre_grupo,char *nombre_usr,char *password_usr,char *path)
 {
     NODO_USR *nuevo = (NODO_USR*)malloc(sizeof(NODO_USR));
-    inicializar_nodo_usr(nuevo,id,ini_part,size_part,tipo,nombre_grupo,nombre_usr,password_usr);
+    inicializar_nodo_usr(nuevo,id,ini_part,size_part,tipo,nombre_grupo,nombre_usr,password_usr,path);
     if(add->primero == NULL)
     {
         add->primero = nuevo;
@@ -37,7 +38,7 @@ void add_lst_usr(LISTA_USR *const add,int id,int ini_part,int size_part,char tip
     }
 }
 
-void add_lst_usr_cadena(LISTA_USR *const add,char *cadena,int ini_part, int size_part)
+void add_lst_usr_cadena(LISTA_USR *const add,char *cadena,int ini_part, int size_part,char *path)
 {
     //lso tipos de orden que hay
     //GID, Tipo, Grupo
@@ -89,7 +90,7 @@ void add_lst_usr_cadena(LISTA_USR *const add,char *cadena,int ini_part, int size
     }
     inicio_particion = ini_part;
     size_particion = size_part;
-    add_lst_usr(add,id,inicio_particion,size_particion,tipo,nombre_grupo,nombre_usr,password_usr);
+    add_lst_usr(add,id,inicio_particion,size_particion,tipo,nombre_grupo,nombre_usr,password_usr,path);
 }
 
 NODO_USR *usuario_login(LISTA_USR *const usrs,char *nombre,char *password)
@@ -109,4 +110,24 @@ NODO_USR *usuario_login(LISTA_USR *const usrs,char *nombre,char *password)
         tmp = tmp->siguiente;
     }
     return NULL;
+}
+
+//si retorn 0 no existe si retorna 1 si existe
+int verif_usr_rep_grp(LISTA_USR *const usrs,char *nombre_usr,char *nombre_grp)
+{
+    NODO_USR *tmp = usrs->primero;
+    while(tmp !=NULL)
+    {
+        if(tmp->id !=0 && tmp->tipo == 'U') //si esta activo el usuario y es tipo usuario
+        {
+            if(strcmp(tmp->nombre_grupo,nombre_grp) ==0)
+            {
+                if(strcmp(tmp->nombre_usr,nombre_usr) == 0)
+                    return 1; //si existe
+            }
+        }
+
+        tmp = tmp->siguiente;
+    }
+    return 0; //no existe
 }

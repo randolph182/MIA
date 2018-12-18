@@ -647,7 +647,6 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             {
                 LISTA_USR *lst_usr = (LISTA_USR*)malloc(sizeof(LISTA_USR));
                 inicializar_lst_usr(lst_usr);
-                NODO_USR *logeado;
                  NODO_MOUNT *mount_particion = get_nodo_mount(id,ptr_mount);
                  if(mount_particion!=NULL)
                  {
@@ -657,7 +656,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                          PTR particion = buscar_particion(archivo,mount_particion->name);
                          if(particion.part_status == '1')
                          {
-                            consultar_usuarios(archivo,particion.part_start,particion.part_size,lst_usr);
+                            consultar_usuarios(archivo,particion.part_start,particion.part_size,mount_particion->path_mount,lst_usr);
                             if(lst_usr->size !=0)
                             {
                                 NODO_USR *usr_nodo = usuario_login(lst_usr,usr,pwd);
@@ -671,6 +670,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                                     strcpy(usuario_logeado->nombre_grupo,usr_nodo->nombre_grupo);
                                     strcpy(usuario_logeado->nombre_usr,usr_nodo->nombre_usr);
                                     strcpy(usuario_logeado->password_usr,usr_nodo->password_usr);
+                                    strcpy(usuario_logeado->path_particion,usr_nodo->path_particion);
 
                                     printf("Exito se ha logeado!!\n\n");
                                 }
@@ -681,11 +681,6 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                             }
                             else
                                 printf("ERROR: En el archivo de Usuarios no hay informacion ");
-                           //char *cadena[3];
-                           //cadena[0] = "hola";
-                           //cadena[1] = "mundo";
-                           //cadena[2] = "pendejos";
-                           //printf("las cadenas son %s %s %s",cadena[0],cadena[1],cadena[2]);
                          }
                          else
                          {
@@ -730,7 +725,34 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             if(strcmp(usr,"") != 0 && strcmp(pwd,"")!=0 && strcmp(grp,"")!=0)
             {
                 //verificando si existe el nuevo usuario a registrar
-                //consultar_usuarios(FILE *archivo,int ini_particion,int size_particion,LISTA_USR *const lst_usr)
+                FILE *archivo = fopen(usuario_logeado->path_particion,"r+b");
+                if(archivo!=NULL)
+                {
+                    LISTA_USR *lst_usr = (LISTA_USR*)malloc(sizeof(LISTA_USR));
+                    inicializar_lst_usr(lst_usr);
+                    consultar_usuarios(archivo,usuario_logeado->inicio_particion,usuario_logeado->size_particion,usuario_logeado->path_particion,lst_usr);
+                    if(lst_usr->size !=0)
+                    {
+                        int verif = verif_usr_rep_grp(lst_usr,usr,grp);
+                        if(verif == 0)
+                        {
+                            int result = registrar_usuario(archivo,usuario_logeado->inicio_particion,usr,grp,pwd);
+                            if(result !=0)
+                            {
+                                printf("HOLA");
+                            }
+                            else
+                                printf("Error: no se pudo registrar el usuario por problemas en la actualizacion del archivo\n\n");
+                        }
+                        else
+                            printf("Error: el usuario: %s ya pertenece al grupo: %s",usr,grp);
+                    }
+                    else
+                        printf("Error: no se pudo obtener lista de usuarios en MKUSR");
+                    fclose(archivo);
+                }
+                else
+                    printf("ERROR: no se puede acceder al path: %s en el estado de MKUSR\n\n",usuario_logeado->path_particion);
             }
             else
                  printf("ERROR: Para ejecutar MKUSR es necesario tener un grp , un password y un usuario\n");

@@ -202,7 +202,7 @@ void full_particion(FILE *archivo,int particion_start,int particion_size)
 
 }
 
-void consultar_usuarios(FILE *archivo,int ini_particion,int size_particion,LISTA_USR *const lst_usr)
+void consultar_usuarios(FILE *archivo,int ini_particion,int size_particion,char *path,LISTA_USR *const lst_usr)
 {
     //sacando el sb
     SB sb_tmp[1];
@@ -237,11 +237,11 @@ void consultar_usuarios(FILE *archivo,int ini_particion,int size_particion,LISTA
                     bytes_archivo = bytes_archivo - 64;
             }
         }
-        listar_usuarios(ini_particion,size_particion,acum_archivo,ti_tmp[0].i_size,lst_usr);
+        listar_usuarios(ini_particion,size_particion,acum_archivo,ti_tmp[0].i_size,path,lst_usr);
     }
 }
 
-void listar_usuarios(int inicio_particion,int size_particion,char *acum_usr,int size_bytes,LISTA_USR *const lst_usr)
+void listar_usuarios(int inicio_particion,int size_particion,char *acum_usr,int size_bytes,char *path,LISTA_USR *const lst_usr)
 {
     char *acum2 = (char*)malloc(sizeof(char)*40);
     memset(acum2,0,sizeof(acum2));
@@ -259,7 +259,7 @@ void listar_usuarios(int inicio_particion,int size_particion,char *acum_usr,int 
         }
         if(caracter[0] == '\n' )
         {
-            add_lst_usr_cadena(lst_usr,acum2,inicio_particion,size_particion);
+            add_lst_usr_cadena(lst_usr,acum2,inicio_particion,size_particion,path);
             memset(acum2,0,sizeof(acum2));
         }
         else
@@ -268,5 +268,138 @@ void listar_usuarios(int inicio_particion,int size_particion,char *acum_usr,int 
     }
 }
 
+int registrar_usuario(FILE *archivo,int ini_particion,char *nomb_usr,char *nomb_grp,char *pass_usr)
+{
+    //sacando el sb
+    SB sb_tmp[1];
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(sb_tmp,sizeof(SB),1,archivo);
+    //nos hubicamos en el archivo carpeta de la raiz
+    fseek(archivo,sb_tmp[0].s_bm_inode_start+1,SEEK_SET);
+    char ti_verif;
+    fread(&ti_verif,sizeof(char),1,archivo);
+    if(ti_verif == '1') //es porque si hay un inodo
+    {
+        int n = sb_tmp[0].s_inodes_count;   // ya que los inodos solo pesan n
+        int pos_byte_ti = sb_tmp[0].s_bm_inode_start + sizeof(TI) + n +(3*n); //aqui ya se que el bm esta en la pos 1 entonces solo se hace un sizeof
+        fseek(archivo,pos_byte_ti,SEEK_SET); //+1 porque es el segundo 1 del bitmap de inodos donde esta el archivo
+        //tabla de archivos
+        TI ti_tmp[1];
+        fread(ti_tmp,sizeof(TI),1,archivo);
+        int size_actual_achivo = ti_tmp[0].i_size;
+        //la idea es encontrar un espacio para guardar el nuevo usuario
+        //Primero consultamos sus apuntadores directos
+        float cantidad_mover_bloques = size_actual_achivo / 64; //ya que 64 mide cada bloque
+        int pos_bm_block =0;
+        if(cantidad_mover_bloques <= 0) //utilizo el solo el primer bloque
+        {
+            int pos_byte_block = sb_tmp[0].s_bm_block_start +  ti_tmp[0].i_block[0] * 64 + (3*n) + n*sizeof(TI);
+            int numero_mayor_bloque = numero_mayor_file_usr(archivo,pos_byte_block,'U');
+            if(numero_mayor_bloque != 0)
+            {
+                //calculando el numero de bytes que llevara la siguiente cadena en el archivo
+                int numero_total_bytes = 0;
+                numero_mayor_bloque++; //ya seria el dato que le toca
+                if(numero_mayor_bloque > 9)
+                    numero_total_bytes +=2; //dos digitos
+                else if(numero_mayor_bloque>99)
+                    numero_total_bytes += 3;
+                else
+                    numero_total_bytes += 1;
+                numero_total_bytes += strlen(nomb_usr);
+                numero_total_bytes += strlen(nomb_grp);
+                numero_total_bytes += strlen(pass_usr);
+                numero_total_bytes += 5; //incluye 4 comas y el tipo
+
+                int numero_total_bytes_final = size_actual_achivo + numero_total_bytes;
+                if(numero_total_bytes_final > 64) //significa que se necesita otro bloque porque en este ya no cabe
+                {
+
+                }
+                else //aun cabe la informacion en el bloque
+                {
+                    char *info_final = (char*)malloc(sizeof(char)*numero_total_bytes);
+                    memset(info_final,0,sizeof(info_final));
+                    char str[12];
+                    sprintf(str, "%d", numero_mayor_bloque);
+                    strcat(info_final,str);
+                    strcat(info_final,",");
+                    strcat(info_final,"U");
+                    strcat(info_final,",");
+                    strcat(info_final,nomb_grp);
+                    strcat(info_final,",");
+                    strcat(info_final,nomb_usr);
+                    strcat(info_final,",");
+                    strcat(info_final,pass_usr);
+                    strcat(info_final,"\n");
+                    BA bloque_archivo;
+                    fseek(archivo,pos_byte_block,SEEK_SET);
+                    fread(&bloque_archivo,sizeof(BA),1,archivo);
+                    strcat(&bloque_archivo.b_content,info_final);
+                    //escribiendo el bloque actualizado
+                    fseek(archivo,pos_byte_block,SEEK_SET);
+                    fwrite(&bloque_archivo,sizeof(BA),1,archivo);
+                    //actualizando y escribiendo tabla de archivos
+                    ti_tmp[0].i_size = numero_total_bytes_final;
+                    fseek(archivo,pos_byte_ti,SEEK_SET);
+                    fwrite(ti_tmp,sizeof(TI),1,archivo);
+                    TI ti_tmp2[1];
+                    fseek(archivo,pos_byte_ti,SEEK_SET);
+                    fread(ti_tmp2,sizeof(TI),1,archivo);
+                    int i =0;
+                    int j = 2;
+                    return 1;
+                }
+
+            }
+            else
+                return 0;
 
 
+        }
+        else if(cantidad_mover_bloques > 0)// tengo que moverme n cantidad de bloques
+        {
+            cantidad_mover_bloques = floor(cantidad_mover_bloques); //me da un dato mas exacto a moverme
+            if(cantidad_mover_bloques +1 < 12)//significa que aun me puedo mover en los apuntadores directos
+            {
+
+            }
+        }
+
+    }
+}
+
+int numero_mayor_file_usr(FILE *archivo,int pos_byte_block,char tipo)
+{
+    BA block_archivo;
+    fseek(archivo,pos_byte_block,SEEK_SET);
+    fread(&block_archivo,sizeof(BA),1,archivo);
+    char *info_archivo = (char*)malloc(sizeof(char)*65);
+    memset(info_archivo,0,65);
+    strcat(info_archivo,&block_archivo.b_content);
+    char *token_salto;
+    char *token_coma;
+
+    int pos_actual = 0;
+    int id_mayor = 0;
+    int id_actual =0;
+    while((token_salto = strtok_r(info_archivo, "\n", &info_archivo)))
+    {
+        pos_actual = 1;
+        while((token_coma = strtok_r(token_salto, ",", &token_salto)))
+        {
+            if(pos_actual == 1)
+                id_actual = atoi(token_coma);
+            else if(pos_actual == 2)
+            {
+                if(tipo == token_coma[0])
+                {
+                    if(id_actual > id_mayor)
+                        id_mayor = id_actual;
+                }
+            }
+            pos_actual++;
+        }
+    }
+    return id_mayor;
+}
