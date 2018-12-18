@@ -195,7 +195,7 @@
 1544993539 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/admin_disco.c
 	"admin_disco.h"
 
-1545090023 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/analizador.c
+1545095495 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/analizador.c
 	"analizador.h"
 	"admin_disco.h"
 
@@ -230,7 +230,7 @@
 	<ctype.h>
 	<stdio.h>
 
-1545090147 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/lista_users.c
+1545090606 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/lista_users.c
 	"lista_users.h"
 
 1545085212 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/lista_users.h

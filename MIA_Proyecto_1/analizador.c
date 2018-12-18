@@ -24,8 +24,10 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     char flag_mount =0;     //MOUNT
     char flag_unmount =0;   //UNMOUNT
 
-    char flag_mkfs =0;   //MKFS -> formato completo
+    int flag_mkfs =0;   //MKFS -> formato completo
     int flag_login =0;
+    int flag_logout =0;
+    int flag_mkusr =0;
 
     int size = 0;
     char unit= 'k'; //en kilobytes por defecto
@@ -55,9 +57,11 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
 
     //FASE2
     char *usr =(char*)malloc(sizeof(char)*10); //10 porque es el limite
-    memset(usr,0,12);
+    memset(usr,0,10);
     char *pwd = (char*)malloc(sizeof(char)*10); // 10 porque es el limite
-    memset(pwd,0,12);
+    memset(pwd,0,10);
+    char *grp = (char*)malloc(sizeof(char)*10);
+    memset(grp,0,10);
 
 /*=================== VARIABLES GENERALES ==================*/
 
@@ -88,7 +92,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     //FASE2
     int flag_usr =0;
     int flag_pwd =0;
-
+    int flag_grp =0;
 
     while((lista[index_lst] != NULL))    //:::::::::::::::::::::::::::::::::: INICIO DEL WHILE
    {
@@ -159,6 +163,19 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             else if(strcasecmp(acum_comando,"login")==0)
             {
                 flag_login =1;
+                index_lst++;
+                memset(acum_comando,0,sizeof(acum_comando));
+            }
+            else if(strcasecmp(acum_comando,"logout")==0)
+            {
+                flag_logout =1;
+                index_lst++;
+                memset(acum_comando,0,sizeof(acum_comando));
+                break; //porque ya no deberia de haber mas
+            }
+            else if(strcasecmp(acum_comando,"mkusr")==0)
+            {
+                flag_mkusr =1;
                 index_lst++;
                 memset(acum_comando,0,sizeof(acum_comando));
             }
@@ -245,15 +262,20 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                         strcpy(fs,acum_comando);
                         flag_fs = 0;
                     }
-                    else if(flag_usr == 1)
+                    else if(flag_usr == 1) //============================================== usr
                     {
                         strcpy(usr,acum_comando);
                         flag_usr = 0;
                     }
-                    else if(flag_pwd == 1)
+                    else if(flag_pwd == 1) //============================================== pwd
                     {
                         strcpy(pwd,acum_comando);
                         flag_pwd =0;
+                    }
+                    else if(flag_grp == 1) //============================================== grp
+                    {
+                        strcpy(grp,acum_comando);
+                        flag_grp =0;
                     }
                     if((lista[index_lst] != '\n') && (lista[index_lst] != '\r')) //salto de linea o un return
                         index_lst++;
@@ -328,6 +350,8 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                      flag_usr = 1;
                 else if(strcasecmp(acum_comando,"pwd") == 0)
                      flag_pwd = 1;
+                else if(strcasecmp(acum_comando,"grp") == 0)
+                     flag_grp = 1;
                 else
                 {
                     printf("ERROR: hubo problemas con el parametro: ");
@@ -686,6 +710,30 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             }
             else
                 printf("ERROR: Para ejecutar LOGIN es necesario tener un ID , un password y un usuario\n");
+        }
+        else if(flag_logout == 1) //========================================================= LOGOUT
+        {
+            if(usuario_logeado->id != 0)
+            {
+                usuario_logeado->id =0;
+                printf("Se ha cerrado la sesion con nombre %s\n\n",usuario_logeado->nombre_usr);
+            }
+            else
+                printf("ERROR: no se puede aplicar logout porque no hay sesion activa\n\n");
+        }
+        else if(flag_mkusr == 1) //========================================================= MKUSR
+        {
+            if(strcasecmp(usuario_logeado->nombre_usr,"root") !=0)
+            {
+                printf("ERROR: No se puede hacer uso de mkusr porque se necesita una sesion activa como root\n\n");
+            }
+            if(strcmp(usr,"") != 0 && strcmp(pwd,"")!=0 && strcmp(grp,"")!=0)
+            {
+                //verificando si existe el nuevo usuario a registrar
+                //consultar_usuarios(FILE *archivo,int ini_particion,int size_particion,LISTA_USR *const lst_usr)
+            }
+            else
+                 printf("ERROR: Para ejecutar MKUSR es necesario tener un grp , un password y un usuario\n");
         }
     }
 

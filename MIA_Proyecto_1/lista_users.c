@@ -97,7 +97,7 @@ NODO_USR *usuario_login(LISTA_USR *const usrs,char *nombre,char *password)
     NODO_USR *tmp = usrs->primero;
     while(tmp !=NULL)
     {
-        if(tmp->id !=0) //si esta activo el usuario
+        if(tmp->id !=0 && tmp->tipo == 'U') //si esta activo el usuario y es tipo usuario
         {
             if(strcmp(tmp->nombre_usr,nombre) == 0)
             {
