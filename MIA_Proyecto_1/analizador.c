@@ -739,7 +739,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                             int result = registrar_usuario(archivo,usuario_logeado->inicio_particion,usr,grp,pwd);
                             if(result !=0)
                             {
-                                printf("HOLA");
+                                printf("EXITO el usuario fue registrado!!");
                             }
                             else
                                 printf("Error: no se pudo registrar el usuario por problemas en la actualizacion del archivo\n\n");

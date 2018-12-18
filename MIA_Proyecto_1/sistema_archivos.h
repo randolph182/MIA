@@ -111,8 +111,8 @@ void consultar_usuarios(FILE *archivo,int ini_particion,int size_particion,char 
 void listar_usuarios(int inicio_particion,int size_particion,char *acum_usr,int size_bytes,char *path,LISTA_USR *const lst_usr);
 
 int registrar_usuario(FILE *archivo,int ini_particion,char *nomb_usr,char *nomb_grp,char *pass_usr);
-
 int numero_mayor_file_usr(FILE *archivo,int pos_byte_block,char tipo);
 
+void crear_bloque_archivo(FILE *archivo,int ini_particion,int *new_pos_bm,int *new_pos_byte);
 
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED
