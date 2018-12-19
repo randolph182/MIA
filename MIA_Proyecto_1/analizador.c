@@ -29,6 +29,8 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     int flag_logout =0;
     int flag_mkusr =0;
     int flag_mkgrp = 0;
+    int flag_rmgrp = 0;
+    int flag_rmusr = 0;
 
     int size = 0;
     char unit= 'k'; //en kilobytes por defecto
@@ -183,6 +185,18 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             else if(strcasecmp(acum_comando,"mkgrp")==0)
             {
                 flag_mkgrp =1;
+                index_lst++;
+                memset(acum_comando,0,sizeof(acum_comando));
+            }
+            else if(strcasecmp(acum_comando,"rmgrp")==0)
+            {
+                flag_rmgrp =1;
+                index_lst++;
+                memset(acum_comando,0,sizeof(acum_comando));
+            }
+            else if(strcasecmp(acum_comando,"rmusr")==0)
+            {
+                flag_rmusr =1;
                 index_lst++;
                 memset(acum_comando,0,sizeof(acum_comando));
             }
@@ -684,7 +698,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                                     strcpy(usuario_logeado->password_usr,usr_nodo->password_usr);
                                     strcpy(usuario_logeado->path_particion,usr_nodo->path_particion);
 
-                                    printf("Exito se ha logeado!!\n\n");
+                                    printf("Exito se ha logeado con el usuario: %s!!\n",usr);
                                 }
                                 else
                                 {
@@ -753,10 +767,10 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                                 int verif_grp = verificar_grp_existe(lst_usr,grp);
                                 if(verif_grp == 1)
                                 {
-                                    int result = registrar_usuario(archivo,usuario_logeado->inicio_particion,usr,grp,pwd);
+                                    int result = registrar_en_archivo(archivo,usuario_logeado->inicio_particion,usr,grp,pwd,'U');
                                     if(result !=0)
                                     {
-                                        printf("EXITO el usuario %s fue registrado!!\n",usr);
+                                        printf("EXITO el usuario %s fue registrado!! en el grupo %s \n",usr,grp);
                                     }
                                     else
                                         printf("Error: no se pudo registrar el usuario por problemas en la actualizacion del archivo\n\n");
@@ -783,7 +797,6 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
         }
         else if(flag_mkgrp == 1) //========================================================= MKGRP
         {
-            
             if(strcasecmp(usuario_logeado->nombre_usr,"root") == 0)
             {
                 if(strcmp(name,"") != 0)
@@ -801,7 +814,13 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                                 int verif = verificar_grp_existe(lst_usr,name);
                                 if(verif != 1)
                                 {
-                                    
+                                    int result = registrar_en_archivo(archivo,usuario_logeado->inicio_particion,"",name,"",'G');
+                                    if(result !=0)
+                                    {
+                                        printf("EXITO el grupo %s fue registrado!!\n",name);
+                                    }
+                                    else
+                                        printf("Error: no se pudo registrar el grupo por problemas en la actualizacion del archivo\n\n");
                                 }
                                 else
                                     printf("Error: no se puede crear el grupo:  %s  por que ya existe en la particion\n",name);
@@ -814,14 +833,42 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                             printf("ERROR: no se puede acceder al path: %s en el estado de MKGRP\n\n",usuario_logeado->path_particion);
                     }
                     else
-                        printf("ERROR: el name: %s posee mas de 10 caracteres\n",name); 
+                        printf("ERROR: el name: %s posee mas de 10 caracteres\n",name);
                 }
                 else
-                printf("ERROR: Para ejecutar MKGRP es necesario tener name\n"); 
+                    printf("ERROR: Para ejecutar MKGRP es necesario tener name\n");
             }
             else
                 printf("ERROR: No se puede hacer uso de mkgrp porque se necesita una sesion activa como root\n");
-           
+
+        }
+        else if(flag_rmgrp == 1) //========================================================= RMGRP
+        {
+            if(strcasecmp(usuario_logeado->nombre_usr,"root") == 0)
+            {
+                 if(strcmp(name,"") != 0)
+                {
+                    printf("ADVERTENCIA: EL COMANDO RMGRP NO HA SIDO CONFIGURADO\n");
+                }
+                 else
+                    printf("ERROR: Para ejecutar RMGRP es necesario tener name\n");
+            }
+            else
+                printf("ERROR: No se puede hacer uso de RMGRP porque se necesita una sesion activa como root\n");
+        }
+        else if(flag_rmusr == 1) //========================================================= RMUSR
+        {
+            if(strcasecmp(usuario_logeado->nombre_usr,"root") == 0)
+            {
+                 if(strcmp(usr,"") != 0)
+                {
+                    printf("ADVERTENCIA: EL COMANDO RMGRP NO HA SIDO CONFIGURADO\n");
+                }
+                 else
+                    printf("ERROR: Para ejecutar RMUSR es necesario tener usr\n");
+            }
+            else
+                printf("ERROR: No se puede hacer uso de RMUSR porque se necesita una sesion activa como root\n");
         }
     }
 

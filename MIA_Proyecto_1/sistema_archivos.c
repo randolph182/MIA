@@ -277,7 +277,7 @@ void listar_usuarios(int inicio_particion, int size_particion, char *acum_usr, i
     }
 }
 
-int registrar_usuario(FILE *archivo, int ini_particion, char *nomb_usr, char *nomb_grp, char *pass_usr)
+int registrar_en_archivo(FILE *archivo, int ini_particion, char *nomb_usr, char *nomb_grp, char *pass_usr,char tipo)
 {
     //sacando el sb
     SB sb_tmp[1];
@@ -326,7 +326,16 @@ int registrar_usuario(FILE *archivo, int ini_particion, char *nomb_usr, char *no
 
         }
         int pos_byte_block = sb_tmp[0].s_bm_block_start + ti_tmp[0].i_block[ap_block_int] * 64 + (3 * n) + n * sizeof(TI);
-        int numero_mayor_bloque = numero_mayor_file_usr(archivo, ini_particion, 'U');
+
+        
+        int numero_mayor_bloque =0 ;
+
+        if(tipo == 'U')
+        {
+            numero_mayor_bloque = numero_mayor_file_usr(archivo, ini_particion, 'U');
+        }
+        else if(tipo == 'G')
+            numero_mayor_bloque = numero_mayor_file_usr(archivo, ini_particion, 'G');
 
         if (numero_mayor_bloque != 0)
         {
@@ -341,10 +350,18 @@ int registrar_usuario(FILE *archivo, int ini_particion, char *nomb_usr, char *no
             else
                 numero_total_bytes += 1;
 
-            numero_total_bytes += strlen(nomb_usr);
-            numero_total_bytes += strlen(nomb_grp);
-            numero_total_bytes += strlen(pass_usr);
-            numero_total_bytes += 6; //incluye 4 comas y el tipo y saltolinea
+            if(tipo == 'U')
+            {
+                numero_total_bytes += strlen(nomb_usr);
+                numero_total_bytes += strlen(nomb_grp);
+                numero_total_bytes += strlen(pass_usr);
+                numero_total_bytes += 6; //incluye 4 comas y el tipo y saltolinea
+            }
+            else
+            {
+                numero_total_bytes += strlen(nomb_grp);
+                numero_total_bytes += 4; //incluye 2 comas y el tipo y saltolinea
+            }
 
             char *info_final = (char *)malloc(sizeof(char) * numero_total_bytes);
             memset(info_final, 0, sizeof(info_final));
@@ -353,15 +370,28 @@ int registrar_usuario(FILE *archivo, int ini_particion, char *nomb_usr, char *no
             char str[12];
             sprintf(str, "%d", numero_mayor_bloque);
             strcat(info_final, str);
-            strcat(info_final, ",");
-            strcat(info_final, "U");
-            strcat(info_final, ",");
-            strcat(info_final, nomb_grp);
-            strcat(info_final, ",");
-            strcat(info_final, nomb_usr);
-            strcat(info_final, ",");
-            strcat(info_final, pass_usr);
-            strcat(info_final, "\n");
+
+            if(tipo == 'U')
+            {
+                strcat(info_final, ",");
+                strcat(info_final, "U");
+                strcat(info_final, ",");
+                strcat(info_final, nomb_grp);
+                strcat(info_final, ",");
+                strcat(info_final, nomb_usr);
+                strcat(info_final, ",");
+                strcat(info_final, pass_usr);
+                strcat(info_final, "\n");
+            }
+            else
+            {
+                strcat(info_final, ",");
+                strcat(info_final, "G");
+                strcat(info_final, ",");
+                strcat(info_final, nomb_grp);
+                strcat(info_final, "\n");
+            }
+            
 
             BA bloque_archivo;
             fseek(archivo, pos_byte_block, SEEK_SET);

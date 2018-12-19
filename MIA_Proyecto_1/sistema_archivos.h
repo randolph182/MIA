@@ -110,7 +110,7 @@ void consultar_usuarios(FILE *archivo,int ini_particion,int size_particion,char 
 //void read_file_ap_ind(FILE *archivo,int pos_bm_ap_ind,SB sb,char tipo_ap_ind,char *acumlador);
 void listar_usuarios(int inicio_particion,int size_particion,char *acum_usr,int size_bytes,char *path,LISTA_USR *const lst_usr);
 
-int registrar_usuario(FILE *archivo,int ini_particion,char *nomb_usr,char *nomb_grp,char *pass_usr);
+int registrar_en_archivo(FILE *archivo,int ini_particion,char *nomb_usr,char *nomb_grp,char *pass_usr,char tipo);
 int numero_mayor_file_usr(FILE *archivo,int ini_particion,char tipo);
 
 void crear_bloque_archivo(FILE *archivo,int ini_particion,int *new_pos_bm,int *new_pos_byte);
