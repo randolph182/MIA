@@ -722,37 +722,49 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             {
                 printf("ERROR: No se puede hacer uso de mkusr porque se necesita una sesion activa como root\n\n");
             }
-            if(strcmp(usr,"") != 0 && strcmp(pwd,"")!=0 && strcmp(grp,"")!=0)
+            else if(strcmp(usr,"") != 0 && strcmp(pwd,"")!=0 && strcmp(grp,"")!=0)
             {
-                //verificando si existe el nuevo usuario a registrar
-                FILE *archivo = fopen(usuario_logeado->path_particion,"r+b");
-                if(archivo!=NULL)
+                if(strlen(usr) < 11 && strlen(pwd) < 11)
                 {
-                    LISTA_USR *lst_usr = (LISTA_USR*)malloc(sizeof(LISTA_USR));
-                    inicializar_lst_usr(lst_usr);
-                    consultar_usuarios(archivo,usuario_logeado->inicio_particion,usuario_logeado->size_particion,usuario_logeado->path_particion,lst_usr);
-                    if(lst_usr->size !=0)
+                    //verificando si existe el nuevo usuario a registrar
+                    FILE *archivo = fopen(usuario_logeado->path_particion,"r+b");
+                    if(archivo!=NULL)
                     {
-                        int verif = verif_usr_rep_grp(lst_usr,usr,grp);
-                        if(verif == 0)
+                        LISTA_USR *lst_usr = (LISTA_USR*)malloc(sizeof(LISTA_USR));
+                        inicializar_lst_usr(lst_usr);
+                        consultar_usuarios(archivo,usuario_logeado->inicio_particion,usuario_logeado->size_particion,usuario_logeado->path_particion,lst_usr);
+                        if(lst_usr->size !=0)
                         {
-                            int result = registrar_usuario(archivo,usuario_logeado->inicio_particion,usr,grp,pwd);
-                            if(result !=0)
+                            int verif = verif_usr_rep_grp(lst_usr,usr,grp);
+                            if(verif == 0)
                             {
-                                printf("EXITO el usuario fue registrado!!\n");
+                                int verif_grp = verificar_grp_existe(lst_usr,grp);
+                                if(verif_grp == 1)
+                                {
+                                    int result = registrar_usuario(archivo,usuario_logeado->inicio_particion,usr,grp,pwd);
+                                    if(result !=0)
+                                    {
+                                        printf("EXITO el usuario %s fue registrado!!\n",usr);
+                                    }
+                                    else
+                                        printf("Error: no se pudo registrar el usuario por problemas en la actualizacion del archivo\n\n");
+                                }
+                                else
+                                     printf("Error: el grupo: %s no existe en la particion\n",grp);
                             }
                             else
-                                printf("Error: no se pudo registrar el usuario por problemas en la actualizacion del archivo\n\n");
+                                printf("Error: el usuario: %s ya pertenece al grupo: %s\n",usr,grp);
                         }
                         else
-                            printf("Error: el usuario: %s ya pertenece al grupo: %s",usr,grp);
+                            printf("Error: no se pudo obtener lista de usuarios en MKUSR\n");
+                        fclose(archivo);
                     }
                     else
-                        printf("Error: no se pudo obtener lista de usuarios en MKUSR");
-                    fclose(archivo);
+                        printf("ERROR: no se puede acceder al path: %s en el estado de MKUSR\n\n",usuario_logeado->path_particion);
                 }
                 else
-                    printf("ERROR: no se puede acceder al path: %s en el estado de MKUSR\n\n",usuario_logeado->path_particion);
+                    printf("ERROR: no se puede crear nombres de usuarios o passwords con mas de 10 caracteres\n");
+
             }
             else
                  printf("ERROR: Para ejecutar MKUSR es necesario tener un grp , un password y un usuario\n");

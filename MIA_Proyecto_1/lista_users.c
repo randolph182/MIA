@@ -131,3 +131,19 @@ int verif_usr_rep_grp(LISTA_USR *const usrs,char *nombre_usr,char *nombre_grp)
     }
     return 0; //no existe
 }
+
+int verificar_grp_existe(LISTA_USR *const usrs,char *nombre_grp)
+{
+    NODO_USR *tmp = usrs->primero;
+    while(tmp !=NULL)
+    {
+        if(tmp->id !=0 && tmp->tipo == 'G') //si esta activo el usuario y es tipo usuario
+        {
+            if(strcmp(tmp->nombre_grupo,nombre_grp) ==0)
+                return 1; //si existe
+        }
+
+        tmp = tmp->siguiente;
+    }
+    return 0; //no existe
+}

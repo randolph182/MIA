@@ -38,4 +38,5 @@ void add_lst_usr_cadena(LISTA_USR *const add,char *cadena,int ini_part, int size
 NODO_USR *usuario_login(LISTA_USR *const usrs,char *nombre,char *password);
 
 int verif_usr_rep_grp(LISTA_USR *const usrs,char *nombre_usr,char *nombre_grp);
+int verificar_grp_existe(LISTA_USR *const usrs,char *nombre_grp);
 #endif // LISTA_USERS_H_INCLUDED
