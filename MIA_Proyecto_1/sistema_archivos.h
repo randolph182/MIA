@@ -117,4 +117,10 @@ void crear_bloque_archivo(FILE *archivo,int ini_particion,int *new_pos_bm,int *n
 
 int contar_bytes_block(FILE *archivo,int pos_byte_block);
 
+int ejecutar_mkdir(FILE *archivo,int ini_particion,char *path,int p); //falta agregar id usr & id grp
+
+void verificar_carpeta(FILE *archivo,int ini_particion,char *nombre_c,int bm_padre,int *bm_hijo);
+
+void crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_padre,int *new_bm);
+
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED

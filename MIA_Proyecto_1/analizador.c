@@ -31,6 +31,8 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     int flag_mkgrp = 0;
     int flag_rmgrp = 0;
     int flag_rmusr = 0;
+    int flag_mkdir = 0;
+    int flag_p_mkdir = 0;
 
     int size = 0;
     char unit= 'k'; //en kilobytes por defecto
@@ -200,6 +202,19 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                 index_lst++;
                 memset(acum_comando,0,sizeof(acum_comando));
             }
+            else if(strcasecmp(acum_comando,"mkdir")==0)
+            {
+                flag_mkdir =1;
+                index_lst++;
+                memset(acum_comando,0,sizeof(acum_comando));
+            }
+            else if(strcasecmp(acum_comando,"p")==0)
+            {
+                flag_p_mkdir =1;
+                index_lst++;
+                memset(acum_comando,0,sizeof(acum_comando));
+                cont_sign_mnos_cmd = 0;
+            }
             else
             {
                 if(flag_sign_mayor == 1) // ->  //agregar informacion a variables
@@ -343,8 +358,10 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                     printf("ERROR: hay problemas con un signo negativo, ya que se esperaba que perteneciera a un add \n\n");
                 }
             }
-            else if(cont_sign_mnos_cmd == 0) //el objetivo -size- entonces inicia -
+            else if(cont_sign_mnos_cmd == 0) //el objetivo -size- entonces inicia - tambien puede venir un p
+            {
                 cont_sign_mnos_cmd++;
+            }
             else if(cont_sign_mnos_cmd == 1) //ya hay otro - entonces cierra -size-
             {
                 if( strcasecmp(acum_comando,"size") == 0)
@@ -869,6 +886,25 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             }
             else
                 printf("ERROR: No se puede hacer uso de RMUSR porque se necesita una sesion activa como root\n");
+        }
+        else if(flag_p_mkdir == 1) //========================================================= MKDIR
+        {
+            if(strcmp(path,"") !=0)
+            {
+                FILE *archivo = fopen(usuario_logeado->path_particion,"r+b");
+                if(archivo!=NULL)
+                {
+                    if(flag_p_mkdir == 1)
+                    {
+                        ejecutar_mkdir(archivo,usuario_logeado->inicio_particion,path,1);
+                    }
+                    fclose(archivo);
+                }
+                else
+                    printf("ERROR: no se puede acceder al path: %s en el estado de MKDIR\n\n",usuario_logeado->path_particion);
+            }
+            else
+                printf("ERROR: No se ejecutar mkdir porque hace falta path\n");
         }
     }
 
