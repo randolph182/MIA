@@ -28,6 +28,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     int flag_login =0;
     int flag_logout =0;
     int flag_mkusr =0;
+    int flag_mkgrp = 0;
 
     int size = 0;
     char unit= 'k'; //en kilobytes por defecto
@@ -176,6 +177,12 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             else if(strcasecmp(acum_comando,"mkusr")==0)
             {
                 flag_mkusr =1;
+                index_lst++;
+                memset(acum_comando,0,sizeof(acum_comando));
+            }
+            else if(strcasecmp(acum_comando,"mkgrp")==0)
+            {
+                flag_mkgrp =1;
                 index_lst++;
                 memset(acum_comando,0,sizeof(acum_comando));
             }
@@ -435,6 +442,11 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                     {
                         strcpy(pwd,acum_comando);
                         flag_pwd = 0;
+                    }
+                    else if(flag_name == 1)
+                    {
+                        strcpy(name,acum_comando);
+                        flag_name == 0;
                     }
                     memset(acum_comando,0,sizeof(acum_comando));
                     index_lst++; //quitamos las comillas dobles del analisis
@@ -768,6 +780,48 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             }
             else
                  printf("ERROR: Para ejecutar MKUSR es necesario tener un grp , un password y un usuario\n");
+        }
+        else if(flag_mkgrp == 1) //========================================================= MKGRP
+        {
+            
+            if(strcasecmp(usuario_logeado->nombre_usr,"root") == 0)
+            {
+                if(strcmp(name,"") != 0)
+                {
+                    if(strlen(name) < 11)
+                    {
+                        FILE *archivo = fopen(usuario_logeado->path_particion,"r+b");
+                        if(archivo!=NULL)
+                        {
+                            LISTA_USR *lst_usr = (LISTA_USR*)malloc(sizeof(LISTA_USR));
+                            inicializar_lst_usr(lst_usr);
+                            consultar_usuarios(archivo,usuario_logeado->inicio_particion,usuario_logeado->size_particion,usuario_logeado->path_particion,lst_usr);
+                            if(lst_usr->size !=0)
+                            {
+                                int verif = verificar_grp_existe(lst_usr,name);
+                                if(verif != 1)
+                                {
+                                    
+                                }
+                                else
+                                    printf("Error: no se puede crear el grupo:  %s  por que ya existe en la particion\n",name);
+                            }
+                            else
+                                printf("Error: no se pudo obtener lista de grupos en MKGRP\n");
+                            fclose(archivo);
+                        }
+                        else
+                            printf("ERROR: no se puede acceder al path: %s en el estado de MKGRP\n\n",usuario_logeado->path_particion);
+                    }
+                    else
+                        printf("ERROR: el name: %s posee mas de 10 caracteres\n",name); 
+                }
+                else
+                printf("ERROR: Para ejecutar MKGRP es necesario tener name\n"); 
+            }
+            else
+                printf("ERROR: No se puede hacer uso de mkgrp porque se necesita una sesion activa como root\n");
+           
         }
     }
 
