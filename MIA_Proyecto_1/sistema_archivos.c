@@ -223,6 +223,8 @@ void consultar_usuarios(FILE *archivo,int ini_particion,int size_particion,char 
         int bytes_archivo = ti_tmp[0].i_size;
         char *acum_archivo = (char*)malloc(sizeof(char)*ti_tmp[0].i_size); //maximo por cadena
         memset(acum_archivo,0,sizeof(acum_archivo));
+        char *acum = (char*)malloc(sizeof(char));
+        memset(acum,0,sizeof(acum));
         for(int i = 0; i < 12; i++)
         {
             if(ti_tmp[0].i_block[i] != -1)
@@ -232,9 +234,20 @@ void consultar_usuarios(FILE *archivo,int ini_particion,int size_particion,char 
                 BA block_archivo;
                 fseek(archivo,pos_byte_block,SEEK_SET);
                 fread(&block_archivo,sizeof(BA),1,archivo);
-                strcat(acum_archivo,&block_archivo.b_content);
-                if(bytes_archivo > 64)
-                    bytes_archivo = bytes_archivo - 64;
+
+                int i = 0;
+                while(i < 64)
+                {
+                    acum[0] = block_archivo.b_content[i];
+                    if(acum[0] == NULL)
+                        break;
+                    strcat(acum_archivo,acum);
+                    i++;
+                }
+                //strcpy(acum_archivo2,&block_archivo.b_content);
+                //strcat(acum_archivo,acum_archivo2);
+                //if(bytes_archivo > 64)
+                //    bytes_archivo = bytes_archivo - 64;
             }
         }
         listar_usuarios(ini_particion,size_particion,acum_archivo,ti_tmp[0].i_size,path,lst_usr);
@@ -289,141 +302,136 @@ int registrar_usuario(FILE *archivo,int ini_particion,char *nomb_usr,char *nomb_
         int size_actual_achivo = ti_tmp[0].i_size;
         //la idea es encontrar un espacio para guardar el nuevo usuario
         //Primero consultamos sus apuntadores directos
-        float cantidad_mover_bloques = size_actual_achivo / 64; //ya que 64 mide cada bloque
-        int pos_bm_block =0;
-        if(cantidad_mover_bloques <= 0) //utilizo el solo el primer bloque
+        int cantidad_mover_bloques = size_actual_achivo / 64; //ya que 64 mide cada bloque
+        int pos_bm_block =cantidad_mover_bloques;
+        if(cantidad_mover_bloques > 0) //utilizo el solo el primer bloque
         {
-            int pos_byte_block = sb_tmp[0].s_bm_block_start +  ti_tmp[0].i_block[0] * 64 + (3*n) + n*sizeof(TI);
-            int numero_mayor_bloque = numero_mayor_file_usr(archivo,pos_byte_block,'U');
-
-
-            if(numero_mayor_bloque != 0)
+            pos_bm_block++;
+            if(pos_bm_block > 11)
             {
-                //calculando el numero de bytes que llevara la siguiente cadena en el archivo
-                int numero_total_bytes = 0;
-                numero_mayor_bloque++; //ya seria el dato que le toca
-                if(numero_mayor_bloque > 9)
-                    numero_total_bytes +=2; //dos digitos
-                else if(numero_mayor_bloque>99)
-                    numero_total_bytes += 3;
-                else
-                    numero_total_bytes += 1;
-                numero_total_bytes += strlen(nomb_usr);
-                numero_total_bytes += strlen(nomb_grp);
-                numero_total_bytes += strlen(pass_usr);
-                numero_total_bytes += 6; //incluye 4 comas y el tipo y saltolinea
+                printf("ADVERTENCIA: aun no se ha declarado bloques indirectos\n\n");
+                return 0;
+            }
+        }
+        int pos_byte_block = sb_tmp[0].s_bm_block_start +  ti_tmp[0].i_block[pos_bm_block] * 64 + (3*n) + n*sizeof(TI);
+        int numero_mayor_bloque = numero_mayor_file_usr(archivo,pos_byte_block,'U');
 
-                char *info_final = (char*)malloc(sizeof(char)*numero_total_bytes);
-                memset(info_final,0,sizeof(info_final));
-                char *acum_char =(char*)malloc(sizeof(char)*1);
-                memset(acum_char,0,sizeof(acum_char));
-                char str[12];
-                sprintf(str, "%d", numero_mayor_bloque);
-                strcat(info_final,str);
-                strcat(info_final,",");
-                strcat(info_final,"U");
-                strcat(info_final,",");
-                strcat(info_final,nomb_grp);
-                strcat(info_final,",");
-                strcat(info_final,nomb_usr);
-                strcat(info_final,",");
-                strcat(info_final,pass_usr);
-                strcat(info_final,"\n");
+        if(numero_mayor_bloque != 0)
+        {
+            //calculando el numero de bytes que llevara la siguiente cadena en el archivo
+            int numero_total_bytes = 0;
+            numero_mayor_bloque++; //ya seria el dato que le toca
+            if(numero_mayor_bloque > 9)
+                numero_total_bytes +=2; //dos digitos
+            else if(numero_mayor_bloque>99)
+                numero_total_bytes += 3;
+            else
+                numero_total_bytes += 1;
+            numero_total_bytes += strlen(nomb_usr);
+            numero_total_bytes += strlen(nomb_grp);
+            numero_total_bytes += strlen(pass_usr);
+            numero_total_bytes += 6; //incluye 4 comas y el tipo y saltolinea
 
-                BA bloque_archivo;
-                fseek(archivo,pos_byte_block,SEEK_SET);
-                fread(&bloque_archivo,sizeof(BA),1,archivo);
+            char *info_final = (char*)malloc(sizeof(char)*numero_total_bytes);
+            memset(info_final,0,sizeof(info_final));
+            char *acum_char =(char*)malloc(sizeof(char)*1);
+            memset(acum_char,0,sizeof(acum_char));
+            char str[12];
+            sprintf(str, "%d", numero_mayor_bloque);
+            strcat(info_final,str);
+            strcat(info_final,",");
+            strcat(info_final,"U");
+            strcat(info_final,",");
+            strcat(info_final,nomb_grp);
+            strcat(info_final,",");
+            strcat(info_final,nomb_usr);
+            strcat(info_final,",");
+            strcat(info_final,pass_usr);
+            strcat(info_final,"\n");
 
-                int numero_total_bytes_final = size_actual_achivo + numero_total_bytes;
-                if(numero_total_bytes_final > 64) //significa que se necesita otro bloque porque en este ya no cabe
+            BA bloque_archivo;
+            fseek(archivo,pos_byte_block,SEEK_SET);
+            fread(&bloque_archivo,sizeof(BA),1,archivo);
+
+            int numero_total_bytes_final = size_actual_achivo + numero_total_bytes;
+            if(numero_total_bytes_final > 64) //significa que se necesita otro bloque porque en este ya no cabe
+            {
+                //llenamos el bloque actual hasta donde le quepa la informacion
+                int no_caract_restantes =  numero_total_bytes_final - 64;
+                int no_caract_escribir = numero_total_bytes - no_caract_restantes;
+                for(int i = 0; i < no_caract_escribir; i++)
                 {
-                    //llenamos el bloque actual hasta donde le quepa la informacion
-                    int no_caract_restantes =  numero_total_bytes_final - 64;
-                    int no_caract_escribir = numero_total_bytes - no_caract_restantes;
-                    for(int i = 0; i < no_caract_escribir; i++)
+                    acum_char[0] = info_final[i];
+                    strcat(&bloque_archivo.b_content,acum_char);
+                }
+                //escribiendo el bloque actualizado
+                fseek(archivo,pos_byte_block,SEEK_SET);
+                fwrite(&bloque_archivo,sizeof(BA),1,archivo);
+                //actualizando y escribiendo tabla de archivos
+                int new_bm_block = -1;
+                int new_byte_block = -1;
+                crear_bloque_archivo(archivo,ini_particion,&new_bm_block,&new_byte_block);
+
+                if(new_bm_block != -1)
+                {
+                    //ahora ingresamos la informacion restante;
+                    BA new_block;
+                    fseek(archivo,new_byte_block,SEEK_SET);
+                    fread(&new_block,sizeof(BA),1,archivo);
+
+                    for(int i = no_caract_escribir ; i < numero_total_bytes; i++)
                     {
                         acum_char[0] = info_final[i];
-                        strcat(&bloque_archivo.b_content,acum_char);
+                        strcat(&new_block.b_content,acum_char);
                     }
-                    //escribiendo el bloque actualizado
-                    fseek(archivo,pos_byte_block,SEEK_SET);
-                    fwrite(&bloque_archivo,sizeof(BA),1,archivo);
-                    //actualizando y escribiendo tabla de archivos
-                    int new_bm_block = -1;
-                    int new_byte_block = -1;
-                    crear_bloque_archivo(archivo,ini_particion,&new_bm_block,&new_byte_block);
-                    if(new_bm_block != -1)
+                    //escribiendo el nuevo bloque
+                    fseek(archivo,new_byte_block,SEEK_SET);
+                    fwrite(&new_block,sizeof(BA),1,archivo);
+
+                    //buscando nueva posicino en la tabla de inodos para el bloque
+
+                    for(int i = 0; i < 12; i++)
                     {
-                        //ahora ingresamos la informacion restante;
-                        BA new_block;
-                        fseek(archivo,new_byte_block,SEEK_SET);
-                        fread(&new_block,sizeof(BA),1,archivo);
-
-                        for(int i = no_caract_escribir ; i < numero_total_bytes; i++)
+                        if(ti_tmp[0].i_block[i] == -1)
                         {
-                            acum_char[0] = info_final[i];
-                            strcat(&new_block.b_content,acum_char);
+                            ti_tmp[0].i_block[i] = new_bm_block;
+                            break;
                         }
-                        //escribiendo el nuevo bloque
-                        fseek(archivo,new_byte_block,SEEK_SET);
-                        fwrite(&new_block,sizeof(BA),1,archivo);
-
-                        //buscando nueva posicino en la tabla de inodos para el bloque
-
-                        for(int i = 0; i < 12; i++)
-                        {
-                            if(ti_tmp[0].i_block[i] == -1)
-                            {
-                                ti_tmp[0].i_block[i] = new_bm_block;
-                                break;
-                            }
-                        }
-                        //preguntar si luego se necesita utilizar los extendidos
-
-                        //actualizando datos en inodo de archivos
-                        ti_tmp[0].i_size = numero_total_bytes_final;
-                        fseek(archivo,pos_byte_ti,SEEK_SET);
-                        fwrite(ti_tmp,sizeof(TI),1,archivo);
                     }
-                    else{
-                        printf("ERROR: No se puede crear otro bloque en el bitmap\n\n");
-                        return 0;
-                    }
+                    //preguntar si luego se necesita utilizar los extendidos
 
-                }
-                else //aun cabe la informacion en el bloque
-                {
-                    strcat(&bloque_archivo.b_content,info_final);
-                    //escribiendo el bloque actualizado
-                    fseek(archivo,pos_byte_block,SEEK_SET);
-                    fwrite(&bloque_archivo,sizeof(BA),1,archivo);
-                    //actualizando y escribiendo tabla de archivos
+                    //actualizando datos en inodo de archivos
                     ti_tmp[0].i_size = numero_total_bytes_final;
                     fseek(archivo,pos_byte_ti,SEEK_SET);
                     fwrite(ti_tmp,sizeof(TI),1,archivo);
-                    TI ti_tmp2[1];
-                    fseek(archivo,pos_byte_ti,SEEK_SET);
-                    fread(ti_tmp2,sizeof(TI),1,archivo);
-                    int i =0;
-                    int j = 2;
-                    return 1;
+                }
+                else{
+                    printf("ERROR: No se puede crear otro bloque en el bitmap\n\n");
+                    return 0;
                 }
 
             }
-            else
-                return 0;
-
-
-        }
-        else if(cantidad_mover_bloques > 0)// tengo que moverme n cantidad de bloques
-        {
-            cantidad_mover_bloques = floor(cantidad_mover_bloques); //me da un dato mas exacto a moverme
-            if(cantidad_mover_bloques +1 < 12)//significa que aun me puedo mover en los apuntadores directos
+            else //aun cabe la informacion en el bloque
             {
-
+                strcat(&bloque_archivo.b_content,info_final);
+                //escribiendo el bloque actualizado
+                fseek(archivo,pos_byte_block,SEEK_SET);
+                fwrite(&bloque_archivo,sizeof(BA),1,archivo);
+                //actualizando y escribiendo tabla de archivos
+                ti_tmp[0].i_size = numero_total_bytes_final;
+                fseek(archivo,pos_byte_ti,SEEK_SET);
+                fwrite(ti_tmp,sizeof(TI),1,archivo);
+                TI ti_tmp2[1];
+                fseek(archivo,pos_byte_ti,SEEK_SET);
+                fread(ti_tmp2,sizeof(TI),1,archivo);
+                int i =0;
+                int j = 2;
+                return 1;
             }
-        }
 
+        }
+        else
+            return 0;
     }
 }
 

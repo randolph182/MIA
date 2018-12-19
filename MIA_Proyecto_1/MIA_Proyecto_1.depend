@@ -179,7 +179,7 @@
 	"lista_ajuste.h"
 	"sistema_archivos.h"
 
-1545171138 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/sistema_archivos.c
+1545177128 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/sistema_archivos.c
 	"sistema_archivos.h"
 
 1545167847 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/sistema_archivos.h
@@ -195,7 +195,7 @@
 1544993539 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/admin_disco.c
 	"admin_disco.h"
 
-1545139545 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/analizador.c
+1545176478 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/analizador.c
 	"analizador.h"
 	"admin_disco.h"
 
