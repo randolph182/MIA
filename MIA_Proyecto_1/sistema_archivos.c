@@ -608,24 +608,53 @@ int contar_bytes_block(FILE *archivo,int pos_byte_block)
 
 int ejecutar_mkdir(FILE *archivo,int ini_particion,char *path,int p)
 {
-    char *carpeta;
-    int padre = 0; //padre siempre inicia en el inodo 1
-    int hijo = -1;
-    while ((carpeta = strtok_r(path, "/", &path)))
+    //primero listamos todas las carpetas
+    CHAR_ARRAY carpetas[30];
+    int contador_carpeta = 0;
+    char *path_tmp ;
+    char *nombre_carpeta;
+    while ((nombre_carpeta = strtok_r(path, "/", &path_tmp))) //nos movemos carpeta por carpeta
     {
-        verificar_carpeta(archivo,ini_particion,carpeta,padre,&hijo);
-        if(hijo != -1 ) //consultamos si existe la carpeta
+        strcpy(carpetas[contador_carpeta].info,nombre_carpeta);
+        carpetas[contador_carpeta].estado = 1;
+        contador_carpeta++;
+    }
+
+    int crear = estado_crear_carpeta(archivo,ini_particion,carpetas,contador_carpeta,p);
+
+    if(crear == 1)
+    {
+        int padre = 0; //padre siempre inicia en el inodo 1
+        int hijo = -1;
+
+        for(int i = 0; i < contador_carpeta; i++)
         {
-            padre = hijo;
-            hijo = -1;
-        }
-        else if(hijo == -1) //no existe entonces la creamos
-        {
-            int new_bm = 0;
-           crear_carpeta_mkdir(archivo,ini_particion,carpeta, padre,&new_bm);
-           break;
+            verificar_carpeta(archivo,ini_particion,&carpetas[i],padre,&hijo);
+            if(hijo != -1 ) //consultamos si existe la carpeta
+            {
+                padre = hijo;
+                hijo = -1;
+            }
+            else if(hijo == -1) //no existe entonces la creamos
+            {
+                int new_bm = 0;
+                int exito = crear_carpeta_mkdir(archivo,ini_particion,&carpetas[i], padre,&new_bm);
+                if(exito !=0 )
+                {
+                    padre = new_bm;
+                    hijo = -1;
+                }
+                else
+                {
+                    printf("ERROR: no se pudo seguir con la secuencia de creacion de carpetas con path: %s\n",path_tmp);
+                    break;
+                }
+            }
         }
     }
+    else
+        printf("Problemas con el path  %s\n",path_tmp);
+
 }
 
 void verificar_carpeta(FILE *archivo,int ini_particion,char *nombre_c,int bm_padre,int *bm_hijo)
@@ -635,17 +664,17 @@ void verificar_carpeta(FILE *archivo,int ini_particion,char *nombre_c,int bm_pad
     fseek(archivo, ini_particion, SEEK_SET);
     fread(sb_tmp, sizeof(SB), 1, archivo);
 
+    //posicion en byte en inodo padre
     int pos_byte_ip = sb_tmp[0].s_bm_inode_start + sb_tmp[0].s_inodes_count + (3 * sb_tmp[0].s_inodes_count) + bm_padre * sizeof(TI);
-    //hubicacion en el bitmap padre
     TI inodo_padre[1];
     fseek(archivo,pos_byte_ip,SEEK_SET);
     fread(inodo_padre,sizeof(TI),1,archivo);
 
     //recorremos sus apuntadores directos
-    int pos_byte_bh;
+    int pos_byte_bh; //BLOQUE HIJO
     for(int i = 0; i < 12; i++)
     {
-         if(inodo_padre[0].i_block[i] != -1)
+         if(inodo_padre[0].i_block[i] != -1) //accedemos a su apuntador de contenido
          {
             //accedems al bloque hijo verificando si existe
             pos_byte_bh = sb_tmp[0].s_bm_block_start + (3 * sb_tmp[0].s_inodes_count) + ( sb_tmp[0].s_inodes_count * sizeof(TI)) + inodo_padre[0].i_block[i] * 64;
@@ -668,7 +697,7 @@ void verificar_carpeta(FILE *archivo,int ini_particion,char *nombre_c,int bm_pad
    *bm_hijo = -1;
 }
 
-void crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_padre,int *new_bm)
+int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_padre,int *new_bm)
 {
      //sacando el sb
     SB sb_tmp[1];
@@ -683,7 +712,6 @@ void crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_pa
 
     //recorremos sus apuntadores directos
     int pos_byte_bh;
-    int flag_crear_inodo = 0;
     for(int i = 0; i < 12; i++)
     {
          if(inodo_padre[0].i_block[i] != -1)
@@ -698,77 +726,187 @@ void crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_pa
             {
                 if(bloque_carpeta.b_content[j].b_inodo == -1) //significa que hay espacio para un apuntador
                 {
-                    strcpy(bloque_carpeta.b_content[j].b_name,nombre); //comenzamos escribiendo el nombre
-
-                    int inicio_bm_ino = sb_tmp[0].s_bm_inode_start;
-                    int fin_bm_ino = inicio_bm_ino + sb_tmp[0].s_inodes_count; //lo que abarca el bm de inodos
-                    int count_bm_i = 0;
-                    for (int i = inicio_bm_ino; i < fin_bm_ino; i++)
+                    int ap_bm_inodo = crear_inodo_carpeta(archivo,ini_particion);
+                    if(ap_bm_inodo != -1)
                     {
-                        char bit;
-                        fseek(archivo, i, SEEK_SET);
-                        fread(&bit, sizeof(char), 1, archivo);
-                        if (bit == '0')
-                        {
-                            fseek(archivo, i, SEEK_SET);
-                            fwrite("1", sizeof(char), 1, archivo); //inodo
-                            int pos_inodo = inicio_bm_ino + sb_tmp[0].s_inodes_count + (3 * sb_tmp[0].s_inodes_count) +  count_bm_i * sizeof(TI);
-                            TI inodo_nuevo;
-                            //creando un nuevo bloque de careptas
-                            int limite_bm_block = sb_tmp[0].s_bm_block_start + 3 * sb_tmp[0].s_inodes_count;
-                            int ini_bm_block = sb_tmp[0].s_bm_block_start;
-
-                            int count_bm_b = 0;
-                            for (int j = ini_bm_block; j < limite_bm_block; j++)
-                            {
-                                char bit2;
-                                fseek(archivo, j, SEEK_SET);
-                                fread(&bit2, sizeof(char), 1, archivo);
-                                if (bit2 == '0')
-                                {
-                                    fseek(archivo, j, SEEK_SET);
-                                    fwrite("1", sizeof(char), 1, archivo); //bm bloque
-                                    int posicion_bloque = ini_bm_block + (3 * sb_tmp[0].s_inodes_count) + (sizeof(TI) * sb_tmp[0].s_inodes_count) + 64 * count_bm_b;
-                                    fseek(archivo, posicion_bloque, SEEK_SET);
-                                    BC nuevo_bloque;
-                                    strcpy(nuevo_bloque.b_content[0].b_name,".");
-                                    nuevo_bloque.b_content[0].b_inodo = count_bm_b;
-                                    strcpy(nuevo_bloque.b_content[1].b_name,"..");
-                                    nuevo_bloque.b_content[1].b_inodo = count_bm_i;
-                                    fwrite(&nuevo_bloque, sizeof(BC), 1, archivo);
-                                    nuevo_bloque.b_content[2].b_inodo = -1;
-                                    nuevo_bloque.b_content[3].b_inodo = -1;
-                                    break;
-                                }
-                                count_bm_b++;
-                            }
-                            //escribiendo bloque carpeta
-                            bloque_carpeta.b_content[j].b_inodo = count_bm_i;
-                            fseek(archivo,pos_byte_bh,SEEK_SET);
-                            fwrite(&bloque_carpeta,sizeof(BC),1,archivo);
-
-
-                            inodo_nuevo.i_block[0] = count_bm_b;
-                            fseek(archivo, pos_inodo, SEEK_SET);
-                            fwrite(&inodo_nuevo, sizeof(BA), 1, archivo);
-                            break;
-                        }
-                        count_bm_i++;
+                        memset(bloque_carpeta.b_content[j].b_name,0,sizeof(bloque_carpeta.b_content[j].b_name));
+                        strcpy(bloque_carpeta.b_content[j].b_name,nombre); //comenzamos escribiendo el nombre
+                        bloque_carpeta.b_content[j].b_inodo = ap_bm_inodo;
+                        *new_bm = ap_bm_inodo;
+                        //RE-ESCRIBIENDO EL BLOQUE CARPETA
+                        fseek(archivo,pos_byte_bh,SEEK_SET);
+                        fwrite(&bloque_carpeta,sizeof(BC),1,archivo);
+                        return 1;
                     }
+                    else
+                        return 0; //ya no hace los respectivos procesos de crear
 
-                    flag_crear_inodo = 1;
-                    *new_bm = count_bm_i;
-                    break;
                 }
             }
          }
-         else
+         else // significa que hay espacio para un nuevo bloque pero solo que este es distinto
          {
+            int pos_bm_bloque = crear_bloque_carpeta_bm(archivo,ini_particion);
+            if(pos_bm_bloque != -1)
+            {
+                int ap_bm_inodo = crear_inodo_carpeta(archivo,ini_particion);
+                if(ap_bm_inodo == -1)
+                    return 0;
+                //CONFIGURANDO EL NUEVO BLQOUE DE CARPETA
+                BC nuevo_bloque;
+                memset(nuevo_bloque.b_content[0].b_name,0,sizeof(nuevo_bloque.b_content[0].b_name));
+                strcpy(nuevo_bloque.b_content[0].b_name,nombre);
+                nuevo_bloque.b_content[0].b_inodo = ap_bm_inodo;
+                int posicion_bloque = sb_tmp[0].s_bm_block_start + (3 * sb_tmp[0].s_inodes_count) + (sizeof(TI) * sb_tmp[0].s_inodes_count) + 64 * pos_bm_bloque;
+                nuevo_bloque.b_content[1].b_inodo = -1;
+                nuevo_bloque.b_content[2].b_inodo = -1;
+                nuevo_bloque.b_content[3].b_inodo = -1;
+                fseek(archivo, posicion_bloque, SEEK_SET);
+                fwrite(&nuevo_bloque, sizeof(BC), 1, archivo);
 
-         }
-         if(flag_crear_inodo == 1)
-         {
-            break;
-         }
+                return 1;
+            }
+            else
+            {
+                printf("ERROR: El bitmap de bloque se quedo sin espacio para uno nuevo\n");
+                return 0;
+            }
+        }
     }
+}
+
+int estado_crear_carpeta(FILE *archivo,int ini_particion,CHAR_ARRAY carpetas[],int contador_carpetas,int p)
+{
+    int contador_2 =0;
+    int padre = 0; //padre siempre inicia en el inodo 1
+    int hijo = -1;
+
+    for(int i = 0; i < contador_carpetas; i++)
+    {
+        verificar_carpeta(archivo,ini_particion,&carpetas[i],padre,&hijo);
+        if(hijo != -1 ) //si es distinto  a  -1 es porque si encontro un hijo con el nombre
+        {
+            padre = hijo;
+            hijo = -1;
+            contador_2++;
+        }
+        else if(hijo == -1) //no existe la carpeta
+            break;
+    }
+
+    if(p == 1) //si esta activa de crear todas las carpetas
+    {
+        if(contador_2  == contador_carpetas)
+        {
+            printf("ADVERTENCIA: no se puede crear la serie de carpetas porque ya existen\n\n");
+            return 0;
+        }
+        return 1;
+    }
+    else{ //sino entonces significa que no esta activa
+        int result = contador_carpetas - contador_2;
+        if(result == 1) //si sobra 1 es porque la ultima carpeta no existe y como no esta activa p entonces si se puede crear
+            return 1;
+        printf("ERROR: el path no puede ser creado porque no existen todas las carpetas y no esta activa -p para crearlas\n");
+        return 0;
+    }
+
+}
+
+int crear_inodo_carpeta(FILE *archivo,int ini_particion)
+{
+    //sacando el sb
+    SB sb[1];
+    fseek(archivo, ini_particion, SEEK_SET);
+    fread(sb, sizeof(SB), 1, archivo);
+
+    int inicio_bm_inodos = sb[0].s_bm_inode_start;
+    int fin_bm_inodos = inicio_bm_inodos + sb[0].s_inodes_count; //lo que abarca el bm de inodos
+    int count_bm_inodo = 0;
+    //buscando su posicion en el bitmap
+    int hubo_bm_inodo = 0;
+    for (int i = inicio_bm_inodos; i < fin_bm_inodos; i++)
+    {
+        char bit;
+        fseek(archivo, i, SEEK_SET);
+        fread(&bit, sizeof(char), 1, archivo);
+        if (bit == '0')
+        {
+            //escribiendo en el bm de inodos
+            fseek(archivo, i, SEEK_SET);
+            fwrite("1", sizeof(char), 1, archivo); //inodo
+            hubo_bm_inodo = 1;
+            break;
+        }
+        count_bm_inodo++;
+    }
+
+    if(hubo_bm_inodo == 1)
+    {
+
+        //::::::::::::::::::::::AHORA SE HACE EL PROCESO DE CREAR UN BLOUE DE CARPETAS
+        int pos_bm_bloque = crear_bloque_carpeta_bm(archivo,ini_particion);
+        if(pos_bm_bloque != -1)
+        {
+                //CONFIGURANDO EL NUEVO BLQOUE DE CARPETA
+                BC nuevo_bloque;
+                memset(nuevo_bloque.b_content[0].b_name,0,sizeof(nuevo_bloque.b_content[0].b_name));
+                strcpy(nuevo_bloque.b_content[0].b_name,".");
+                nuevo_bloque.b_content[0].b_inodo = pos_bm_bloque; //apuntador a el mismo
+                memset(nuevo_bloque.b_content[1].b_name,0,sizeof(nuevo_bloque.b_content[0].b_name));
+                strcpy(nuevo_bloque.b_content[1].b_name,"..");
+                nuevo_bloque.b_content[1].b_inodo = count_bm_inodo;
+                nuevo_bloque.b_content[2].b_inodo = -1;
+                nuevo_bloque.b_content[3].b_inodo = -1;
+                int posicion_bloque = sb[0].s_bm_block_start + (3 * sb[0].s_inodes_count) + (sizeof(TI) * sb[0].s_inodes_count) + 64 * pos_bm_bloque;
+                fseek(archivo, posicion_bloque, SEEK_SET);
+                fwrite(&nuevo_bloque, sizeof(BC), 1, archivo);
+
+        }
+        else
+        {
+            printf("ERROR: El bitmap de bloque se quedo sin espacio para uno nuevo\n");
+            return -1;
+        }
+
+        //::::::::::::::::::::::::: ESCRIBIENDO INFORMACION EN EL  INODO :::::::::::::::::::
+        int pos_inodo = inicio_bm_inodos + sb[0].s_inodes_count + (3 * sb[0].s_inodes_count) +  count_bm_inodo * sizeof(TI);
+        TI inodo_nuevo;
+        inodo_nuevo.i_block[0] = pos_bm_bloque;
+        fseek(archivo, pos_inodo, SEEK_SET);
+        fwrite(&inodo_nuevo, sizeof(BA), 1, archivo);
+        return count_bm_inodo; //retornamos el bitmap
+    }
+    else
+    {
+        printf("ERROR: El bitmap de inodos se quedo sin espacio para uno nuevo\n");
+        return -1;
+    }
+}
+
+int  crear_bloque_carpeta_bm(FILE *archivo,int ini_particion)
+{
+    SB sb[1];
+    fseek(archivo, ini_particion, SEEK_SET);
+    fread(sb, sizeof(SB), 1, archivo);
+
+    int limite_bm_block = sb[0].s_bm_block_start + 3 * sb[0].s_inodes_count;
+    int ini_bm_block = sb[0].s_bm_block_start;
+
+    int count_bm_bloque = 0;
+    int hubo_bm_bloque = 0;
+    for (int i = ini_bm_block; i < limite_bm_block; i++)
+    {
+        char bit;
+        fseek(archivo, i, SEEK_SET);
+        fread(&bit, sizeof(char), 1, archivo);
+        if (bit == '0')
+        {
+            fseek(archivo, i, SEEK_SET);
+            fwrite("1", sizeof(char), 1, archivo); //bm bloque
+            return count_bm_bloque;
+        }
+        count_bm_bloque++;
+    }
+    return -1;
 }

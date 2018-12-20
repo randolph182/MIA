@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <time.h>
+#include "vector_lst.h"
 
 typedef struct SUPER_BLOQUE SB;
 typedef struct TABLA_INODOS TI;
@@ -121,6 +122,11 @@ int ejecutar_mkdir(FILE *archivo,int ini_particion,char *path,int p); //falta ag
 
 void verificar_carpeta(FILE *archivo,int ini_particion,char *nombre_c,int bm_padre,int *bm_hijo);
 
-void crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_padre,int *new_bm);
+int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_padre,int *new_bm);
 
+int estado_crear_carpeta(FILE *archivo,int ini_particion,CHAR_ARRAY carpetas[],int contador_carpetas,int p);
+
+int crear_inodo_carpeta(FILE *archivo,int ini_particion);
+
+int crear_bloque_carpeta_bm(FILE *archivo,int ini_particion);
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED
