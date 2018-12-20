@@ -610,7 +610,7 @@ int contar_bytes_block(FILE *archivo,int pos_byte_block)
     return contador;
 }
 
-int ejecutar_mkdir(FILE *archivo,int ini_particion,char *path,int p)
+int ejecutar_mkdir(FILE *archivo,NODO_USR *usr_logeado,char *path,int p)
 {
     //primero listamos todas las carpetas
     CHAR_ARRAY carpetas[30];
@@ -624,8 +624,7 @@ int ejecutar_mkdir(FILE *archivo,int ini_particion,char *path,int p)
         carpetas[contador_carpeta].estado = 1;
         contador_carpeta++;
     }
-
-    int crear = estado_crear_carpeta(archivo,ini_particion,carpetas,contador_carpeta,p);
+    int crear = estado_crear_carpeta(archivo,usr_logeado->inicio_particion,carpetas,contador_carpeta,p);
 
     if(crear == 1)
     {
@@ -634,7 +633,7 @@ int ejecutar_mkdir(FILE *archivo,int ini_particion,char *path,int p)
 
         for(int i = 0; i < contador_carpeta; i++)
         {
-            verificar_carpeta(archivo,ini_particion,&carpetas[i],padre,&hijo);
+            verificar_carpeta(archivo,usr_logeado->inicio_particion,&carpetas[i],padre,&hijo);
             if(hijo != -1 ) //consultamos si existe la carpeta
             {
                 padre = hijo;
@@ -643,7 +642,7 @@ int ejecutar_mkdir(FILE *archivo,int ini_particion,char *path,int p)
             else if(hijo == -1) //no existe entonces la creamos
             {
                 int new_bm = 0;
-                int exito = crear_carpeta_mkdir(archivo,ini_particion,&carpetas[i], padre,&new_bm);
+                int exito = crear_carpeta_mkdir(archivo,usr_logeado->inicio_particion,&carpetas[i], padre,&new_bm,usr_logeado->id,usr_logeado->id_grp);
                 if(exito !=0 )
                 {
                     padre = new_bm;
@@ -702,7 +701,7 @@ void verificar_carpeta(FILE *archivo,int ini_particion,char *nombre_c,int bm_pad
    *bm_hijo = -1;
 }
 
-int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_padre,int *new_bm)
+int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_padre,int *new_bm,int id_usr,int id_grp)
 {
      //sacando el sb
     SB sb_tmp[1];
@@ -731,7 +730,7 @@ int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_pad
             {
                 if(bloque_carpeta.b_content[j].b_inodo == -1) //significa que hay espacio para un apuntador
                 {
-                    int ap_bm_inodo = crear_inodo_carpeta(archivo,ini_particion);
+                    int ap_bm_inodo = crear_inodo_carpeta(archivo,ini_particion,id_usr,id_grp);
                     if(ap_bm_inodo != -1)
                     {
                         memset(bloque_carpeta.b_content[j].b_name,0,sizeof(bloque_carpeta.b_content[j].b_name));
@@ -818,7 +817,7 @@ int estado_crear_carpeta(FILE *archivo,int ini_particion,CHAR_ARRAY carpetas[],i
 
 }
 
-int crear_inodo_carpeta(FILE *archivo,int ini_particion)
+int crear_inodo_carpeta(FILE *archivo,int ini_particion,int id_usr,int id_grp)
 {
     //sacando el sb
     SB sb[1];
@@ -877,6 +876,21 @@ int crear_inodo_carpeta(FILE *archivo,int ini_particion)
         //::::::::::::::::::::::::: ESCRIBIENDO INFORMACION EN EL  INODO :::::::::::::::::::
         int pos_inodo = inicio_bm_inodos + sb[0].s_inodes_count + (3 * sb[0].s_inodes_count) +  count_bm_inodo * sizeof(TI);
         TI inodo_nuevo;
+        
+        for(int pos = 0; pos < 15; pos++)
+            inodo_nuevo.i_block[pos] = -1;
+        inodo_nuevo.i_uid = id_usr;
+        inodo_nuevo.i_gid = id_grp;
+        inodo_nuevo.i_perm = 664;
+        inodo_nuevo.i_size =0; 
+        inodo_nuevo.i_type = '0';
+        time_t tiempo = time(0);
+        struct tm *tlocal = localtime(&tiempo);
+        char fecha[16];
+        strftime(fecha, 16, "%d/%m/%y", tlocal);
+        strcpy(inodo_nuevo.i_ctime, fecha);
+        strcpy(inodo_nuevo.i_mtime, fecha);
+        inodo_nuevo.i_atime[0] = '0';
         inodo_nuevo.i_block[0] = pos_bm_bloque;
         fseek(archivo, pos_inodo, SEEK_SET);
         fwrite(&inodo_nuevo, sizeof(BA), 1, archivo);

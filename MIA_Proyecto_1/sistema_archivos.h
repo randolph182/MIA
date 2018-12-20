@@ -118,15 +118,15 @@ void crear_bloque_archivo(FILE *archivo,int ini_particion,int *new_pos_bm,int *n
 
 int contar_bytes_block(FILE *archivo,int pos_byte_block);
 
-int ejecutar_mkdir(FILE *archivo,int ini_particion,char *path,int p); //falta agregar id usr & id grp
+int ejecutar_mkdir(FILE *archivo,NODO_USR *usr_logeado,char *path,int p); //falta agregar id usr & id grp
 
 void verificar_carpeta(FILE *archivo,int ini_particion,char *nombre_c,int bm_padre,int *bm_hijo);
 
-int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_padre,int *new_bm);
+int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_padre,int *new_bm,int id_usr,int id_grp);
 
 int estado_crear_carpeta(FILE *archivo,int ini_particion,CHAR_ARRAY carpetas[],int contador_carpetas,int p);
 
-int crear_inodo_carpeta(FILE *archivo,int ini_particion);
+int crear_inodo_carpeta(FILE *archivo,int ini_particion,int id_usr,int id_grp);
 
 int crear_bloque_carpeta_bm(FILE *archivo,int ini_particion);
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED

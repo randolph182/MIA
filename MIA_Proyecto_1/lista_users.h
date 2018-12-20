@@ -11,6 +11,7 @@ typedef struct LISTA_USR LISTA_USR;
 struct NODO_USR
 {
     int id;
+    int id_grp;
     int inicio_particion;
     int size_particion;
     char tipo;

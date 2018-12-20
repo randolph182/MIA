@@ -11,6 +11,7 @@ void inicializar_nodo_usr(NODO_USR *const ini,int id,int ini_part,int size_part,
 {
     ini->siguiente = NULL;
     ini->id = id;
+    ini->id_grp =0;
     ini->inicio_particion = ini_part;
     ini->size_particion = size_part;
     ini->tipo = tipo;

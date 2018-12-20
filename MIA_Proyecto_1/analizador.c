@@ -652,7 +652,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                                      full_particion(archivo,particion.part_start,particion.part_size);
                                  else if(strcmp(type_mkfs,"") == 0)
                                     full_particion(archivo,particion.part_start,particion.part_size);
-                                    
+
                                  crear_archivo_users(archivo,particion.part_size,particion.part_start,particion.part_name);
                                  printf("Se ha creado un sistema de archivos EXT3 en la particion: %s\n\n",mount_particion->name);
                              }
@@ -715,7 +715,8 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                                     strcpy(usuario_logeado->nombre_usr,usr_nodo->nombre_usr);
                                     strcpy(usuario_logeado->password_usr,usr_nodo->password_usr);
                                     strcpy(usuario_logeado->path_particion,usr_nodo->path_particion);
-
+                                    int id_grp = get_id_grp(lst_usr,usr_nodo->nombre_grupo);
+                                    usuario_logeado->id_grp = id_grp;
                                     printf("Exito se ha logeado con el usuario: %s!!\n",usr);
                                 }
                                 else
@@ -897,7 +898,6 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                 {
                     if(flag_p_mkdir == 1)
                     {
-
                         ejecutar_mkdir(archivo,usuario_logeado->inicio_particion,path,1);
                     }
                     else
