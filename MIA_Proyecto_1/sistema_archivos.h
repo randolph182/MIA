@@ -108,7 +108,7 @@ void crear_archivo_users(FILE *archivo,int size_particion,int inicio_particion,c
 void full_particion(FILE *archivo,int particion_start,int particion_size);
 
 void consultar_usuarios(FILE *archivo,int ini_particion,int size_particion,char *path,LISTA_USR *const lst_usr);
-//void read_file_ap_ind(FILE *archivo,int pos_bm_ap_ind,SB sb,char tipo_ap_ind,char *acumlador);
+
 void listar_usuarios(int inicio_particion,int size_particion,char *acum_usr,int size_bytes,char *path,LISTA_USR *const lst_usr);
 
 int registrar_en_archivo(FILE *archivo,int ini_particion,char *nomb_usr,char *nomb_grp,char *pass_usr,char tipo);
@@ -126,7 +126,15 @@ int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_pad
 
 int estado_crear_carpeta(FILE *archivo,int ini_particion,CHAR_ARRAY carpetas[],int contador_carpetas,int p);
 
-int crear_inodo_carpeta(FILE *archivo,int ini_particion,int id_usr,int id_grp);
+int crear_inodo_carpeta(FILE *archivo,int ini_particion,int id_usr,int id_grp,int bm_padre);
+
 
 int crear_bloque_carpeta_bm(FILE *archivo,int ini_particion);
+
+void buscar_hijo_carpeta_simple(FILE *archivo,int ini_particion,char *nombre_c,int bm_bap,int *bm_hijo);
+void buscar_hijo_carpeta_doble(FILE *archivo,int ini_particion,char *nombre_c,int bm_bap,int *bm_hijo);
+void buscar_hijo_carpeta_triple(FILE *archivo,int ini_particion,char *nombre_c,int bm_bap,int *bm_hijo);
+
+
+
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED
