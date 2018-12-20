@@ -887,7 +887,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             else
                 printf("ERROR: No se puede hacer uso de RMUSR porque se necesita una sesion activa como root\n");
         }
-        else if(flag_p_mkdir == 1) //========================================================= MKDIR
+        else if(flag_mkdir == 1) //========================================================= MKDIR
         {
             if(strcmp(path,"") !=0)
             {
@@ -896,9 +896,11 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                 {
                     if(flag_p_mkdir == 1)
                     {
-                        
+
                         ejecutar_mkdir(archivo,usuario_logeado->inicio_particion,path,1);
                     }
+                    else
+                         ejecutar_mkdir(archivo,usuario_logeado->inicio_particion,path,0);
                     fclose(archivo);
                 }
                 else

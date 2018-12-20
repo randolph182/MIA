@@ -610,10 +610,11 @@ int ejecutar_mkdir(FILE *archivo,int ini_particion,char *path,int p)
 {
     //primero listamos todas las carpetas
     CHAR_ARRAY carpetas[30];
+
     int contador_carpeta = 0;
     char *path_tmp ;
     char *nombre_carpeta;
-    while ((nombre_carpeta = strtok_r(path, "/", &path_tmp))) //nos movemos carpeta por carpeta
+    while ((nombre_carpeta = strtok_r(path, "/", &path))) //nos movemos carpeta por carpeta
     {
         strcpy(carpetas[contador_carpeta].info,nombre_carpeta);
         carpetas[contador_carpeta].estado = 1;
@@ -646,14 +647,14 @@ int ejecutar_mkdir(FILE *archivo,int ini_particion,char *path,int p)
                 }
                 else
                 {
-                    printf("ERROR: no se pudo seguir con la secuencia de creacion de carpetas con path: %s\n",path_tmp);
+                    printf("ERROR: no se pudo seguir con la secuencia de creacion de carpetas con path: %s\n",path);
                     break;
                 }
             }
         }
     }
     else
-        printf("Problemas con el path  %s\n",path_tmp);
+        printf("Problemas con el path  %s\n",path);
 
 }
 
@@ -686,8 +687,8 @@ void verificar_carpeta(FILE *archivo,int ini_particion,char *nombre_c,int bm_pad
             {
                 if(strcmp(bloque_carpeta.b_content[j].b_name,nombre_c) == 0)
                 {
-                    *bm_hijo == bloque_carpeta.b_content[j].b_inodo;
-                    return;
+                    *bm_hijo = bloque_carpeta.b_content[j].b_inodo;
+                    return ;
                 }
             }
 
