@@ -652,6 +652,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                                      full_particion(archivo,particion.part_start,particion.part_size);
                                  else if(strcmp(type_mkfs,"") == 0)
                                     full_particion(archivo,particion.part_start,particion.part_size);
+                                    
                                  crear_archivo_users(archivo,particion.part_size,particion.part_start,particion.part_name);
                                  printf("Se ha creado un sistema de archivos EXT3 en la particion: %s\n\n",mount_particion->name);
                              }

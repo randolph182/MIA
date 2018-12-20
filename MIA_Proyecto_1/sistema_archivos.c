@@ -193,9 +193,13 @@ void full_particion(FILE *archivo, int particion_start, int particion_size)
     SB sb_tmp[1];
     fread(sb_tmp, sizeof(SB), 1, archivo);
 
-    //limpiando bitmap de inodos y bloques
+    //limpiando bytes de inodos y bloques
     for (int i = sb_tmp[0].s_inode_start; i < particion_start + particion_size; i++)
+    {
+        fseek(archivo,i,SEEK_SET);
         fwrite("\0", sizeof(char), 1, archivo);
+    }
+        
 }
 
 void consultar_usuarios(FILE *archivo, int ini_particion, int size_particion, char *path, LISTA_USR *const lst_usr)
