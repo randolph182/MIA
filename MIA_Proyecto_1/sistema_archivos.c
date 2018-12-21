@@ -108,7 +108,6 @@ void crear_archivo_users(FILE *archivo, int size_particion, int inicio_particion
     fseek(archivo, sb_tmp[0].s_bm_inode_start, SEEK_SET);
     fwrite("1", sizeof(char), 1, archivo);
     sb_tmp[0].s_first_ino = sb_tmp[0].s_first_ino + sizeof(TI); //actualizando SB
-
     //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: BLOQUE 1
     BC bloque_carp;
     //inicializando el contenido del bloque de carpeta
@@ -141,7 +140,6 @@ void crear_archivo_users(FILE *archivo, int size_particion, int inicio_particion
     fwrite("1", sizeof(char), 1, archivo);
     sb_tmp[0].s_first_blo = sb_tmp[0].s_block_start + sizeof(BC); //actualizando SB
     //actualizando el primer puntero de la tabla de indos carpeta;
-
     //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: ACTUALIZANDO SUPER BLOQUE
     sb_tmp[0].s_free_inodes_count = sb_tmp[0].s_free_inodes_count - 1;
     sb_tmp[0].s_free_blocks_count = sb_tmp[0].s_free_blocks_count - 1;
@@ -244,10 +242,6 @@ void consultar_usuarios(FILE *archivo, int ini_particion, int size_particion, ch
                     strcat(acum_archivo, acum);
                     i++;
                 }
-                //strcpy(acum_archivo2,&block_archivo.b_content);
-                //strcat(acum_archivo,acum_archivo2);
-                //if(bytes_archivo > 64)
-                //    bytes_archivo = bytes_archivo - 64;
             }
         }
         listar_usuarios(ini_particion, size_particion, acum_archivo, ti_tmp[0].i_size, path, lst_usr);
@@ -329,7 +323,7 @@ int registrar_en_archivo(FILE *archivo, int ini_particion, char *nomb_usr, char 
                 }
 
         }
-        int pos_byte_block = sb_tmp[0].s_bm_block_start + ti_tmp[0].i_block[ap_block_int] * 64 + (3 * n) + n * sizeof(TI);
+        int pos_byte_block = sb_tmp[0].s_block_start + ti_tmp[0].i_block[ap_block_int] * 64;
 
 
         int numero_mayor_bloque =0 ;
@@ -471,11 +465,6 @@ int registrar_en_archivo(FILE *archivo, int ini_particion, char *nomb_usr, char 
                 ti_tmp[0].i_size = numero_total_bytes_final;
                 fseek(archivo, pos_byte_ti, SEEK_SET);
                 fwrite(ti_tmp, sizeof(TI), 1, archivo);
-                TI ti_tmp2[1];
-                fseek(archivo, pos_byte_ti, SEEK_SET);
-                fread(ti_tmp2, sizeof(TI), 1, archivo);
-                int i = 0;
-                int j = 2;
                 return 1;
             }
         }
@@ -578,12 +567,15 @@ void crear_bloque_archivo(FILE *archivo, int ini_particion, int *new_pos_bm, int
         {
             fseek(archivo, i, SEEK_SET);
             fwrite("1", sizeof(char), 1, archivo);
-            int posicion_bloque = ini_bm_block + (3 * sb[0].s_inodes_count) + (sizeof(TI) * sb[0].s_inodes_count) + 64 * count_bm;
-            fseek(archivo, posicion_bloque, SEEK_SET);
+            int posicion_bloque = sb[0].s_block_start + 64 * count_bm;
             BA nuevo_bloque;
             memset(&nuevo_bloque.b_content, 0, sizeof(BA));
+            fseek(archivo, posicion_bloque, SEEK_SET);
             fwrite(&nuevo_bloque, sizeof(BA), 1, archivo);
-
+            //actualizando el SUPER BLOQUE
+            sb[0].s_free_blocks_count--;
+            fseek(archivo, ini_particion, SEEK_SET);
+            fwrite(sb, sizeof(sb), 1, archivo);
             *new_pos_bm = count_bm;
             *new_pos_byte = posicion_bloque;
             break;
@@ -683,11 +675,11 @@ void verificar_carpeta(FILE *archivo,int ini_particion,char *nombre_c,int bm_pad
          if(inodo_padre[0].i_block[i] != -1) //accedemos a su apuntador de contenido
          {
             if(i == 12) //revisamos en los bloques de apuntadores simples
-                buscar_hijo_carpeta_apid(archivo,ini_particion,nombre_c,inodo_padre[0].i_block[i],bm_hijo,1);
+                buscar_hijo_carpeta_apid(archivo,ini_particion,nombre_c,inodo_padre[0].i_block[i],&*bm_hijo,1);
             else if(i == 13)
-                buscar_hijo_carpeta_apid(archivo,ini_particion,nombre_c,inodo_padre[0].i_block[i],bm_hijo,2);
+                buscar_hijo_carpeta_apid(archivo,ini_particion,nombre_c,inodo_padre[0].i_block[i],&*bm_hijo,2);
             else if(i == 14)
-                buscar_hijo_carpeta_apid(archivo,ini_particion,nombre_c,inodo_padre[0].i_block[i],bm_hijo,3);
+                buscar_hijo_carpeta_apid(archivo,ini_particion,nombre_c,inodo_padre[0].i_block[i],&*bm_hijo,3);
             else{
                 //sacamos posicion BLOQUE CARPETA
                 pos_byte_bh = sb_tmp[0].s_block_start +  inodo_padre[0].i_block[i] * 64;
@@ -722,8 +714,7 @@ int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_pad
     TI inodo_padre[1];
     fseek(archivo,pos_byte_ip,SEEK_SET);
     fread(inodo_padre,sizeof(TI),1,archivo);
-
-    //recorremos sus apuntadores directos
+    //:::::::::::::::::: SE RECORREN SUS APUNTADORES
     int pos_byte_bh;
     int i =0;
     for(i = 0; i < 15; i++)
@@ -731,10 +722,10 @@ int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_pad
         if(i == 12)
         {
             if(inodo_padre[0].i_block[i] != -1)
-                return crear_bc_bap(archivo,nombre,ini_particion,inodo_padre[0].i_block[i],bm_padre,id_usr,id_grp,*new_bm,1);
+                return crear_bc_bap(archivo,nombre,ini_particion,inodo_padre[0].i_block[i],bm_padre,id_usr,id_grp,&*new_bm,1);
              else
              {
-                 int bm_block_ap = crear_carpeta_bloque_ap(archivo,nombre,ini_particion,bm_padre,id_usr,id_grp,*new_bm,1);
+                 int bm_block_ap = crear_carpeta_bloque_ap(archivo,nombre,ini_particion,bm_padre,id_usr,id_grp,&*new_bm,1);
                  if(bm_block_ap != -1)
                  {
                      inodo_padre[0].i_block[i] = bm_block_ap ;
@@ -753,10 +744,10 @@ int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_pad
         else if(i == 13)
         {
              if(inodo_padre[0].i_block[i] != -1)
-                 return crear_bc_bap(archivo,nombre,ini_particion,inodo_padre[0].i_block[i],bm_padre,id_usr,id_grp,*new_bm,2);
+                 return crear_bc_bap(archivo,nombre,ini_particion,inodo_padre[0].i_block[i],bm_padre,id_usr,id_grp,&*new_bm,2);
              else
              {
-                 int bm_block_ap = crear_carpeta_bloque_ap(archivo,nombre,ini_particion,bm_padre,id_usr,id_grp,*new_bm,2);
+                 int bm_block_ap = crear_carpeta_bloque_ap(archivo,nombre,ini_particion,bm_padre,id_usr,id_grp,&*new_bm,2);
                  if(bm_block_ap != -1)
                  {
                      inodo_padre[0].i_block[i] = bm_block_ap ;
@@ -775,10 +766,10 @@ int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_pad
         else if(i == 14)
         {
              if(inodo_padre[0].i_block[i] != -1)
-                 return crear_bc_bap(archivo,nombre,ini_particion,inodo_padre[0].i_block[i],bm_padre,id_usr,id_grp,*new_bm,3);
+                 return crear_bc_bap(archivo,nombre,ini_particion,inodo_padre[0].i_block[i],bm_padre,id_usr,id_grp,&*new_bm,3);
              else
              {
-                 int bm_block_ap = crear_carpeta_bloque_ap(archivo,nombre,ini_particion,bm_padre,id_usr,id_grp,*new_bm,3);
+                 int bm_block_ap = crear_carpeta_bloque_ap(archivo,nombre,ini_particion,bm_padre,id_usr,id_grp,&*new_bm,3);
                  if(bm_block_ap != -1)
                  {
                      inodo_padre[0].i_block[i] = bm_block_ap ;
@@ -851,7 +842,10 @@ int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_pad
                     *new_bm = ap_bm_inodo;
                     fseek(archivo, posicion_bloque, SEEK_SET);
                     fwrite(&nuevo_bloque, sizeof(BC), 1, archivo);
-
+                    //:::::::::ACTUALIZANDO EL SUPER BLOQUE
+                    sb_tmp[0].s_free_blocks_count--;
+                    fseek(archivo, ini_particion, SEEK_SET);
+                    fwrite(sb_tmp, sizeof(SB), 1, archivo);
 
                     inodo_padre[0].i_block[i] = pos_bm_bloque;
                     // :::::::::::::::: RE - ESCRIBIENDO INODO
@@ -960,7 +954,10 @@ int crear_inodo_carpeta(FILE *archivo,int ini_particion,int id_usr,int id_grp,in
                 int posicion_bloque = sb[0].s_block_start + 64 * pos_bm_bloque;
                 fseek(archivo, posicion_bloque, SEEK_SET);
                 fwrite(&nuevo_bloque, sizeof(BC), 1, archivo);
-
+                //ACTUALIZANDO EL SB
+                sb[0].s_free_blocks_count--;
+                fseek(archivo, ini_particion, SEEK_SET);
+                fwrite(sb, sizeof(SB), 1, archivo);
         }
         else
         {
@@ -970,7 +967,7 @@ int crear_inodo_carpeta(FILE *archivo,int ini_particion,int id_usr,int id_grp,in
 
         //::::::::::::::::::::::::: ESCRIBIENDO INFORMACION EN EL  INODO :::::::::::::::::::
         int pos_inodo = sb[0].s_inode_start +  count_bm_inodo * sizeof(TI);
-        
+
         TI inodo_nuevo;
 
         for(int pos = 0; pos < 15; pos++)
@@ -991,6 +988,10 @@ int crear_inodo_carpeta(FILE *archivo,int ini_particion,int id_usr,int id_grp,in
         inodo_nuevo.i_block[0] = pos_bm_bloque;
         fseek(archivo, pos_inodo, SEEK_SET);
         fwrite(&inodo_nuevo, sizeof(TI), 1, archivo);
+        //ACTUALIZANDO EL SUPER BLOQUE
+        sb[0].s_free_inodes_count--;
+        fseek(archivo, ini_particion, SEEK_SET);
+        fwrite(sb, sizeof(SB), 1, archivo);
         return count_bm_inodo; //retornamos el bitmap
     }
     else
@@ -1060,18 +1061,16 @@ void  buscar_hijo_carpeta_apid(FILE *archivo,int ini_particion,char *nombre_c,in
             }
             else if(nivel == 2)
             {
-                buscar_hijo_carpeta_apid(archivo,ini_particion,nombre_c,bap.b_pointers[i],*bm_hijo,1);
+                buscar_hijo_carpeta_apid(archivo,ini_particion,nombre_c,bap.b_pointers[i],&*bm_hijo,1);
                 if(*bm_hijo != -1)
                     return ;
             }
             else if(nivel == 3)
             {
-                buscar_hijo_carpeta_apid(archivo,ini_particion,nombre_c,bap.b_pointers[i],*bm_hijo,2);
+                buscar_hijo_carpeta_apid(archivo,ini_particion,nombre_c,bap.b_pointers[i],&*bm_hijo,2);
                     if(*bm_hijo != -1)
                         return ;
             }
-
-
         }
     }
     *bm_hijo = -1;
@@ -1113,7 +1112,7 @@ int crear_carpeta_bloque_ap(FILE *archivo,char *nombre_c,int ini_particion,int b
         //;;;;;;;;;;;;;;;;;;;;;;;;; CONFIGURANDO EL TIPO DE APUNTADOR
         if(tipo_bap == 3)
         {
-            int bm_bap3 = crear_carpeta_bloque_ap(archivo,nombre_c,ini_particion,cont_bm_bap,id_usr,id_grp,*new_bm,2);
+            int bm_bap3 = crear_carpeta_bloque_ap(archivo,nombre_c,ini_particion,cont_bm_bap,id_usr,id_grp,&*new_bm,2);
             if(bm_bap3 != -1)
             {
                 //::::::::::::::::::::CONFIGURANDO EL NUEVO BLQOUE DE APUNTADORES SIMPLE
@@ -1131,7 +1130,7 @@ int crear_carpeta_bloque_ap(FILE *archivo,char *nombre_c,int ini_particion,int b
         }
         else if(tipo_bap == 2)
         {
-            int bm_bap2 = crear_carpeta_bloque_ap(archivo,nombre_c,ini_particion,cont_bm_bap,id_usr,id_grp,*new_bm,1);
+            int bm_bap2 = crear_carpeta_bloque_ap(archivo,nombre_c,ini_particion,cont_bm_bap,id_usr,id_grp,&*new_bm,1);
             if(bm_bap2 != -1)
             {
                 //::::::::::::::::::::CONFIGURANDO EL NUEVO BLQOUE DE APUNTADORES SIMPLE
@@ -1186,6 +1185,10 @@ int crear_carpeta_bloque_ap(FILE *archivo,char *nombre_c,int ini_particion,int b
             int pos_bytes_bap = sb_tmp[0].s_block_start + (cont_bm_bap * sizeof(BAP));
             fseek(archivo,pos_bytes_bap,SEEK_SET);
             fwrite(&nbap,sizeof(BAP),1,archivo);
+            //ACTUALIZANDO EL SUBPER BLOQUE
+            sb_tmp[0].s_free_blocks_count--;
+            fseek(archivo, ini_particion, SEEK_SET);
+            fwrite(sb_tmp, sizeof(SB), 1, archivo);
             *new_bm = pos_bm_bc;
             return cont_bm_bap;
         }
@@ -1215,7 +1218,7 @@ int crear_bc_bap(FILE *archivo,char *nombre_c,int ini_particion,int bm_bap_padre
         {
             if(tipo_bap == 3) //finalidad crear otro BAP
             {
-                int bm_new_bap = crear_carpeta_bloque_ap(archivo,nombre_c,ini_particion,bm_padre,id_usr,id_grp,*new_bm,2);
+                int bm_new_bap = crear_carpeta_bloque_ap(archivo,nombre_c,ini_particion,bm_padre,id_usr,id_grp,&*new_bm,2);
                 if(bm_new_bap != 1)
                 {
                     //::::::::::::::::::::Re-escribiedo EL  BLQOUE DE APUNTADORES
@@ -1234,7 +1237,7 @@ int crear_bc_bap(FILE *archivo,char *nombre_c,int ini_particion,int bm_bap_padre
             }
             else if(tipo_bap == 2) //finalidad crear otro BAP
             {
-                int bm_new_bap = crear_carpeta_bloque_ap(archivo,nombre_c,ini_particion,bm_padre,id_usr,id_grp,*new_bm,1);
+                int bm_new_bap = crear_carpeta_bloque_ap(archivo,nombre_c,ini_particion,bm_padre,id_usr,id_grp,&*new_bm,1);
                 if(bm_new_bap != 1)
                 {
                     //::::::::::::::::::::Re-escribiedo EL  BLQOUE DE APUNTADORES
@@ -1288,6 +1291,10 @@ int crear_bc_bap(FILE *archivo,char *nombre_c,int ini_particion,int bm_bap_padre
                 bap.b_pointers[i] = pos_bm_bc;
                 fseek(archivo,pos_byte_ba,SEEK_SET);
                 fwrite(&bap,sizeof(BAP),1,archivo);
+                //::::::::::::::::::: ACTUALIZANDO EL SUPER BLOQUE
+                sb_tmp[0].s_free_blocks_count--;
+                fseek(archivo, ini_particion, SEEK_SET);
+                fwrite(sb_tmp, sizeof(SB), 1, archivo);
                 *new_bm = pos_bm_bc;
                 return 1;
             }
