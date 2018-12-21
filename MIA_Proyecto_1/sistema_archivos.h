@@ -124,6 +124,7 @@ void verificar_carpeta(FILE *archivo,int ini_particion,char *nombre_c,int bm_pad
 
 int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_padre,int *new_bm,int id_usr,int id_grp);
 
+// DEVUELVE  1->CORRECTO ;  0-> ERROR
 int estado_crear_carpeta(FILE *archivo,int ini_particion,CHAR_ARRAY carpetas[],int contador_carpetas,int p);
 
 int crear_inodo_carpeta(FILE *archivo,int ini_particion,int id_usr,int id_grp,int bm_padre);
@@ -131,10 +132,8 @@ int crear_inodo_carpeta(FILE *archivo,int ini_particion,int id_usr,int id_grp,in
 
 int crear_bloque_carpeta_bm(FILE *archivo,int ini_particion);
 
-void buscar_hijo_carpeta_simple(FILE *archivo,int ini_particion,char *nombre_c,int bm_bap,int *bm_hijo);
-void buscar_hijo_carpeta_doble(FILE *archivo,int ini_particion,char *nombre_c,int bm_bap,int *bm_hijo);
-void buscar_hijo_carpeta_triple(FILE *archivo,int ini_particion,char *nombre_c,int bm_bap,int *bm_hijo);
+void  buscar_hijo_carpeta_apid(FILE *archivo,int ini_particion,char *nombre_c,int bm_bap,int *bm_hijo,int nivel);
 
-
+int crear_bc_bap(FILE *archivo,char *nombre_c,int ini_particion,int bm_bap_padre,int bm_padre,int id_usr,int id_grp,int *new_bm,int tipo_bap);
 
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED

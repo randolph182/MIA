@@ -898,10 +898,10 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                 {
                     if(flag_p_mkdir == 1)
                     {
-                        ejecutar_mkdir(archivo,usuario_logeado->inicio_particion,path,1);
+                        ejecutar_mkdir(archivo,usuario_logeado,path,1);
                     }
                     else
-                         ejecutar_mkdir(archivo,usuario_logeado->inicio_particion,path,0);
+                         ejecutar_mkdir(archivo,usuario_logeado,path,0);
                     fclose(archivo);
                 }
                 else
