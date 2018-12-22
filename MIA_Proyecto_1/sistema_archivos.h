@@ -129,11 +129,14 @@ int estado_crear_carpeta(FILE *archivo,int ini_particion,CHAR_ARRAY carpetas[],i
 
 int crear_inodo_carpeta(FILE *archivo,int ini_particion,int id_usr,int id_grp,int bm_padre);
 
-
 int crear_bloque_carpeta_bm(FILE *archivo,int ini_particion);
 
 void  buscar_hijo_carpeta_apid(FILE *archivo,int ini_particion,char *nombre_c,int bm_bap,int *bm_hijo,int nivel);
 
 int crear_bc_bap(FILE *archivo,char *nombre_c,int ini_particion,int bm_bap_padre,int bm_padre,int id_usr,int id_grp,int *new_bm,int tipo_bap);
+
+//========================================================== METODOS QUE SE UTILIZARON PARA MKFILE =======================
+
+
 
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED

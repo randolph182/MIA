@@ -225,7 +225,7 @@ void consultar_usuarios(FILE *archivo, int ini_particion, int size_particion, ch
         memset(acum, 0, sizeof(acum));
         for (int i = 0; i < 12; i++)
         {
-            if (ti_tmp[0].i_block[i] != -1)
+            if (ti_tmp[0].i_block[i] != -1 )
             {
                 //posicion del bitmap * 64 que pesan todos los bloques  + espacio del bm de bloques + espacio de la tabla de inodos
                 int pos_byte_block = sb_tmp[0].s_bm_block_start + ti_tmp[0].i_block[i] * 64 + (3 * n) + n * sizeof(TI);
@@ -672,7 +672,7 @@ void verificar_carpeta(FILE *archivo,int ini_particion,char *nombre_c,int bm_pad
     int i =0;
     for( i= 0; i < 15; i++) // 12   APUNTADORES DIRECTOS
     {
-         if(inodo_padre[0].i_block[i] != -1) //accedemos a su apuntador de contenido
+         if(inodo_padre[0].i_block[i] != -1 && inodo_padre[0].i_type == '0') //accedemos a su apuntador de contenido y que sea decarpeta
          {
             if(i == 12) //revisamos en los bloques de apuntadores simples
                 buscar_hijo_carpeta_apid(archivo,ini_particion,nombre_c,inodo_padre[0].i_block[i],&*bm_hijo,1);
@@ -721,7 +721,7 @@ int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_pad
     {
         if(i == 12)
         {
-            if(inodo_padre[0].i_block[i] != -1)
+            if(inodo_padre[0].i_block[i] != -1 && inodo_padre[0].i_type == '0')
                 return crear_bc_bap(archivo,nombre,ini_particion,inodo_padre[0].i_block[i],bm_padre,id_usr,id_grp,&*new_bm,1);
              else
              {
@@ -743,7 +743,7 @@ int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_pad
         }
         else if(i == 13)
         {
-             if(inodo_padre[0].i_block[i] != -1)
+             if(inodo_padre[0].i_block[i] != -1 && inodo_padre[0].i_type == '0')
                  return crear_bc_bap(archivo,nombre,ini_particion,inodo_padre[0].i_block[i],bm_padre,id_usr,id_grp,&*new_bm,2);
              else
              {
@@ -765,7 +765,7 @@ int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_pad
         }
         else if(i == 14)
         {
-             if(inodo_padre[0].i_block[i] != -1)
+             if(inodo_padre[0].i_block[i] != -1 && inodo_padre[0].i_type == '0')
                  return crear_bc_bap(archivo,nombre,ini_particion,inodo_padre[0].i_block[i],bm_padre,id_usr,id_grp,&*new_bm,3);
              else
              {
@@ -787,7 +787,7 @@ int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_pad
         }
         else
         {
-            if(inodo_padre[0].i_block[i] != -1)
+            if(inodo_padre[0].i_block[i] != -1 && inodo_padre[0].i_type == '0')
              {
                 //accedems al bloque hijo verificando si existe
                 pos_byte_bh = sb_tmp[0].s_block_start +  inodo_padre[0].i_block[i] * 64;
@@ -1301,4 +1301,52 @@ int crear_bc_bap(FILE *archivo,char *nombre_c,int ini_particion,int bm_bap_padre
         }
     }
     return 0;
+}
+
+
+void ejecutar_mkfile(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int size,char *contenido)
+{
+    //primero listamos todas las carpetas con su archivo
+    CHAR_ARRAY carpetas[30];
+    //:::::::::::::::: PROCESO DONDE SE LISTAN LAS CARPETAS QUE VIENEN EN EL PATH
+    int contador_elementos = 0;
+    char *path_tmp ;
+    char *nombre_elemento;
+    while ((nombre_elemento = strtok_r(path, "/", &path))) //nos movemos carpeta por carpeta
+    {
+        strcpy(carpetas[contador_elementos].info,nombre_elemento);
+        carpetas[contador_elementos].estado = 1;
+        contador_elementos++;
+    }
+
+    // int bm_padre =0;
+    // int bm_hijo= -1;
+    // int bm_archivo=0;
+    // //:::::::::::::::::: VAMOAS A IR RECORRIENDO TODOS LOS ELEMENTOS HASTA LLEGAR AL ARCHIVO
+    // for(int i = 0; i < contador_elementos; i++)
+    // {
+
+    //     verificar_carpeta(archivo,usr_logeado->inicio_particion,&carpetas[i],bm_padre,&bm_hijo);
+    //     if(bm_hijo != -1 ) //consultamos si existe la carpeta
+    //     {
+    //         bm_padre = bm_hijo;
+    //         bm_hijo = -1;
+    //     }
+    //     else if(bm_hijo == -1) //no existe entonces la creamos
+    //     {
+    //         int new_bm = 0;
+    //         int exito = crear_carpeta_mkdir(archivo,usr_logeado->inicio_particion,&carpetas[i], padre,&new_bm,usr_logeado->id,usr_logeado->id_grp);
+    //         if(exito !=0 )
+    //         {
+    //             padre = new_bm;
+    //             hijo = -1;
+    //         }
+    //         else
+    //         {
+    //             printf("ERROR: no se pudo seguir con la secuencia de creacion de carpetas con path: %s\n",path);
+    //             break;
+    //         }
+    //     }
+    // }
+    
 }

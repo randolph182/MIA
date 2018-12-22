@@ -32,7 +32,9 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     int flag_rmgrp = 0;
     int flag_rmusr = 0;
     int flag_mkdir = 0;
-    int flag_p_mkdir = 0;
+    int flag_p = 0;
+    int flag_mkfile = 0;
+
 
     int size = 0;
     char unit= 'k'; //en kilobytes por defecto
@@ -60,6 +62,8 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     char *fit = (char*)malloc(sizeof(char)*3);
      memset(fit,0,sizeof(fit));
 
+    
+
     //FASE2
     char *usr =(char*)malloc(sizeof(char)*10); //10 porque es el limite
     memset(usr,0,10);
@@ -67,6 +71,9 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     memset(pwd,0,10);
     char *grp = (char*)malloc(sizeof(char)*10);
     memset(grp,0,10);
+
+    char *cont = (char*)malloc(sizeof(char) * 250);
+    memset(cont,0,sizeof(cont));
 
 /*=================== VARIABLES GENERALES ==================*/
 
@@ -91,6 +98,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     int flag_add =0;
     int flag_id = 0;
     int flag_fs =0;
+    int flag_cont = 0;
 
     int flag_sign_mayor = 0;
     int flag_cmlla_db = 0;
@@ -210,10 +218,16 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             }
             else if(strcasecmp(acum_comando,"p")==0)
             {
-                flag_p_mkdir =1;
+                flag_p =1;
                 index_lst++;
                 memset(acum_comando,0,sizeof(acum_comando));
                 cont_sign_mnos_cmd = 0;
+            }
+            else if(strcasecmp(acum_comando,"mkfile")==0)
+            {
+                flag_mkfile =1;
+                index_lst++;
+                memset(acum_comando,0,sizeof(acum_comando));
             }
             else
             {
@@ -313,6 +327,11 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                         strcpy(grp,acum_comando);
                         flag_grp =0;
                     }
+                    else if(flag_cont == 1) //============================================== cont
+                    {
+                        strcpy(cont,acum_comando);
+                        flag_cont =0;
+                    }
                     if((lista[index_lst] != '\n') && (lista[index_lst] != '\r')) //salto de linea o un return
                         index_lst++;
 
@@ -354,9 +373,16 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                     caracter[0] = '-';
                     strcat(acum_comando,caracter); //concatenamos el signo menos
                 }
+                else if(flag_size == 1)
+                {
+                    printf("ERROR: no se puede declarar la variable size con numeros negativos\n\n");
+                    flag_error = 1;
+                    break;
+                }
                 else{
                     printf("ERROR: hay problemas con un signo negativo, ya que se esperaba que perteneciera a un add \n\n");
                 }
+                
             }
             else if(cont_sign_mnos_cmd == 0) //el objetivo -size- entonces inicia - tambien puede venir un p
             {
@@ -390,6 +416,8 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                      flag_pwd = 1;
                 else if(strcasecmp(acum_comando,"grp") == 0)
                      flag_grp = 1;
+                else if(strcasecmp(acum_comando,"cont") == 0)
+                     flag_cont = 1;
                 else
                 {
                     printf("ERROR: hubo problemas con el parametro: ");
@@ -478,6 +506,11 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                     {
                         strcpy(name,acum_comando);
                         flag_name == 0;
+                    }
+                    else if(flag_cont == 1)
+                    {
+                       strcpy(cont,acum_comando);
+                       flag_cont =0;
                     }
                     memset(acum_comando,0,sizeof(acum_comando));
                     index_lst++; //quitamos las comillas dobles del analisis
@@ -896,7 +929,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                 FILE *archivo = fopen(usuario_logeado->path_particion,"r+b");
                 if(archivo!=NULL)
                 {
-                    if(flag_p_mkdir == 1)
+                    if(flag_p == 1)
                     {
                         ejecutar_mkdir(archivo,usuario_logeado,path,1);
                     }
@@ -909,6 +942,27 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             }
             else
                 printf("ERROR: No se ejecutar mkdir porque hace falta path\n");
+        }
+        else if(flag_mkfile == 1)
+        {
+            if(strcmp(path,"") !=0)
+            {
+                FILE *archivo = fopen(usuario_logeado->path_particion,"r+b");
+                if(archivo!=NULL)
+                {
+                    if(flag_p == 1)
+                    {
+                        //ejecutar_mkdir(archivo,usuario_logeado,path,1);
+                    }
+                    else
+                         //ejecutar_mkdir(archivo,usuario_logeado,path,0);
+                    fclose(archivo);
+                }
+                else
+                    printf("ERROR: no se puede acceder al path: %s en el estado de MKFILE\n\n",usuario_logeado->path_particion);
+            }
+            else
+                printf("ERROR: No se ejecutar MIKFILE porque hace falta el path\n");
         }
     }
 
@@ -931,6 +985,8 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     usr = NULL;
     free(pwd);
     pwd = NULL;
+    free(cont);
+    cont = NULL;
     //reseteando flag_error
     flag_error = 0;
 
