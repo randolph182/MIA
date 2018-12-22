@@ -1210,7 +1210,7 @@ int crear_bc_bap(FILE *archivo,char *nombre_c,int ini_particion,int bm_bap_padre
     int pos_byte_ba = sb_tmp[0].s_block_start  + bm_bap_padre * sizeof(BA);
     BAP bap;
     fseek(archivo,pos_byte_ba,SEEK_SET);
-    fread(&bap,sizeof(BA),1,archivo);
+    fread(&bap,sizeof(BAP),1,archivo);
 
     for(int i = 0; i < 16; i++)
     {
@@ -1304,49 +1304,637 @@ int crear_bc_bap(FILE *archivo,char *nombre_c,int ini_particion,int bm_bap_padre
 }
 
 
-void ejecutar_mkfile(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int size,char *contenido)
+int ejecutar_mkfile(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int size,char *contenido)
 {
     //primero listamos todas las carpetas con su archivo
-    CHAR_ARRAY carpetas[30];
+    CHAR_ARRAY elementos[30];
     //:::::::::::::::: PROCESO DONDE SE LISTAN LAS CARPETAS QUE VIENEN EN EL PATH
     int contador_elementos = 0;
     char *path_tmp ;
     char *nombre_elemento;
     while ((nombre_elemento = strtok_r(path, "/", &path))) //nos movemos carpeta por carpeta
     {
-        strcpy(carpetas[contador_elementos].info,nombre_elemento);
-        carpetas[contador_elementos].estado = 1;
+        strcpy(elementos[contador_elementos].info,nombre_elemento);
+        elementos[contador_elementos].estado = 1;
         contador_elementos++;
     }
 
-    // int bm_padre =0;
-    // int bm_hijo= -1;
-    // int bm_archivo=0;
-    // //:::::::::::::::::: VAMOAS A IR RECORRIENDO TODOS LOS ELEMENTOS HASTA LLEGAR AL ARCHIVO
-    // for(int i = 0; i < contador_elementos; i++)
-    // {
+    int bm_padre =0;
+    int bm_hijo= -1;
+    int bm_archivo=0;
+    //:::::::::::::::::: VAMOAS A IR RECORRIENDO TODOS LOS ELEMENTOS HASTA LLEGAR AL ARCHIVO
+    for(int i = 0; i < contador_elementos; i++)
+    {
+        if(i + 1 == contador_elementos) //estamos en la ultimo posicion donde usualmente se declararan los archivos
+        {
+            //parte donde se va a crear el nuevo archivo
+            //debo revisar permisos del inodo padre para crear archvio
+            //*debo hacer un metodo que cree un inodo tipo archivo y retorne su pos en bitmap
+            //*debo hacer un metodo que revise en la carpeta sugerida que no exista el mismo archivo
+            //debo hacer una funcion que inserte datos en donde se le pase CONT Y SIZE eso implica tambien buscar lugar adecuado
+            return 1;
+        }
+        else
+        {
+            verificar_carpeta(archivo,usr_logeado->inicio_particion,&elementos[i],bm_padre,&bm_hijo);
+            if(bm_hijo != -1 ) //consultamos si existe la carpeta
+            {
+                bm_padre = bm_hijo;
+                bm_hijo = -1;
+            }
+            else if(bm_hijo == -1 && p == 1) //no existe entonces la creamos confirmamos p
+            {
+                int new_bm = 0;
+                int exito = crear_carpeta_mkdir(archivo,usr_logeado->inicio_particion,&elementos[i], bm_padre,&new_bm,usr_logeado->id,usr_logeado->id_grp);
+                if(exito !=0 )
+                {
+                    bm_padre = new_bm;
+                    bm_hijo = -1;
+                }
+                else
+                {
+                    printf("ERROR: no se pudo seguir con la secuencia de creacion de carpetas con en mkfile %s\n",elementos[i]);
+                    return 0;
+                }
+            }
+            else
+            {
+                printf("ERROR: no se puede crear la carpeta: %s porque no tiene activa la p en mkfile\n",elementos[i]);
+                return 0;
+            }
+        }
+    }
+}
 
-    //     verificar_carpeta(archivo,usr_logeado->inicio_particion,&carpetas[i],bm_padre,&bm_hijo);
-    //     if(bm_hijo != -1 ) //consultamos si existe la carpeta
-    //     {
-    //         bm_padre = bm_hijo;
-    //         bm_hijo = -1;
-    //     }
-    //     else if(bm_hijo == -1) //no existe entonces la creamos
-    //     {
-    //         int new_bm = 0;
-    //         int exito = crear_carpeta_mkdir(archivo,usr_logeado->inicio_particion,&carpetas[i], padre,&new_bm,usr_logeado->id,usr_logeado->id_grp);
-    //         if(exito !=0 )
-    //         {
-    //             padre = new_bm;
-    //             hijo = -1;
-    //         }
-    //         else
-    //         {
-    //             printf("ERROR: no se pudo seguir con la secuencia de creacion de carpetas con path: %s\n",path);
-    //             break;
-    //         }
-    //     }
-    // }
+int verificar_permisos(FILE *archivo,NODO_USR *usr_logeado,int bm_inodo,int tipo_permiso)
+{
+    SB sb_tmp[1];
+    fseek(archivo,usr_logeado->inicio_particion,SEEK_SET);
+    fread(sb_tmp,sizeof(SB),1,archivo);
+
+    int pos_ti = sb_tmp[0].s_inode_start + (bm_inodo * sizeof(TI));
+    TI ti_act;
+    fseek(archivo,pos_ti,SEEK_SET);
+
+}
+
+int crear_inodo_archivo(FILE *archivo,NODO_USR *usr_logeado)
+{
+    SB sb_tmp[1];
+    fseek(archivo,usr_logeado->inicio_particion,SEEK_SET);
+    fread(sb_tmp,sizeof(SB),1,archivo);
+
+    int ini_bm_inodo = sb_tmp[0].s_bm_inode_start;
+    int fin_bm_inodo = ini_bm_inodo + sb_tmp[0].s_inodes_count;
+
     
+    int count_bm = 0;
+    char bit;
+    int bm_encontrado =0;
+
+    for (int i = ini_bm_inodo; i < fin_bm_inodo; i++)
+    {
+        fseek(archivo, i, SEEK_SET);
+        fread(&bit, sizeof(char), 1, archivo);
+        if (bit == '0')
+        {
+            fseek(archivo, i, SEEK_SET);
+            fwrite("1", sizeof(char), 1, archivo);
+        
+            sb_tmp[0].s_free_blocks_count--;
+            fseek(archivo,usr_logeado->inicio_particion,SEEK_SET);
+            fwrite(sb_tmp, sizeof(SB), 1, archivo);
+            bm_encontrado = 1;
+            break;
+        }
+        count_bm++;
+    }
+
+    if(bm_encontrado == 1)
+    {
+        //:::::::: PROCEDEMOS A LA CREACION DE UN INODO  
+        TI inodo_nuevo;
+        
+        for(int j = 0; j < 15; j++)
+           inodo_nuevo.i_block[j] = -1;
+        inodo_nuevo.i_uid = usr_logeado->id;
+        inodo_nuevo.i_gid = usr_logeado->id_grp;
+        inodo_nuevo.i_size =0;
+        inodo_nuevo.i_type = '1';
+        time_t tiempo = time(0);
+        struct tm *tlocal = localtime(&tiempo);
+        char fecha[16];
+        strftime(fecha, 16, "%d/%m/%y", tlocal);
+        strcpy(inodo_nuevo.i_ctime, fecha);
+        strcpy(inodo_nuevo.i_mtime, fecha);
+        inodo_nuevo.i_atime[0] = '0';
+        //Escribiendo el inodo nuevo
+        int pos_inodo = sb_tmp[0].s_inode_start + count_bm * sizeof(TI);
+        fseek(archivo, pos_inodo, SEEK_SET);
+        fwrite(&inodo_nuevo, sizeof(TI), 1, archivo);
+        //ACTUALIZANDO EL SUPER BLOQUE
+        sb_tmp[0].s_free_inodes_count--;
+        fseek(archivo,usr_logeado->inicio_particion,SEEK_SET);
+        fwrite(sb_tmp, sizeof(SB), 1, archivo);
+        return count_bm;
+    }
+    else{
+        printf("ERROR: no se puede pudo encontrar un bitmap para un inodo archivo (se acabaron) \n");
+        return -1;
+    }
+}
+
+//retorna el inodo de archivo buscado
+int buscar_archivo(FILE *archivo,int ini_particion,int bm_inocarp,char *nombre_archivo)
+{
+    SB sb_tmp[1];
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(sb_tmp,sizeof(SB),1,archivo);
+
+    int pos_inocarp = sb_tmp[0].s_inode_start + (bm_inocarp * sizeof(TI));
+    TI inodo_carpeta;
+    fseek(archivo,pos_inocarp,SEEK_SET);
+    fread(&inodo_carpeta,sizeof(TI),1,archivo);
+    //apuntadores del indo carpeta
+    for(int i = 0; i < 15; i++)
+    {
+        if(inodo_carpeta.i_block[i] != -1)
+        {
+            if(i == 12)
+            {
+                int result = -1;
+                result = buscar_archivo_bapi(archivo,ini_particion,nombre_archivo, bm_inocarp,1);
+                if(result != -1)
+                    return result;
+            }
+            else if(i == 13)
+            {
+                int result = -1;
+                result = buscar_archivo_bapi(archivo,ini_particion,nombre_archivo, bm_inocarp,2);
+                if(result != -1)
+                    return result;
+            }
+            else if(i == 14)
+            {
+                int result = -1;
+                result = buscar_archivo_bapi(archivo,ini_particion,nombre_archivo, bm_inocarp,3);
+                if(result != -1)
+                    return result;
+            }
+            else{
+                //debemos sacar su bloque de carpetas para revisar ahi 
+                BC bloque_carpeta;
+                int pos_bloque_carp = sb_tmp[0].s_block_start + (inodo_carpeta.i_block[i] * 64);
+                fseek(archivo,pos_bloque_carp,SEEK_SET);
+                fread(&bloque_carpeta,sizeof(BC),1,archivo);
+                
+                for(int j = 0; j < 4; j++)
+                {
+                    if(bloque_carpeta.b_content[j].b_inodo != -1)
+                    {
+                        if(strcmp(bloque_carpeta.b_content[j].b_name,nombre_archivo) == 0)
+                        {
+                            //printf("ERROR: no se puede crear el archiov: %s porque ya existe un elemento con el mismo nombre\n\n",nombre_archivo);
+                            return bloque_carpeta.b_content[j].b_inodo;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return -1;
+}
+
+//retorna un bm de inodo  de archivo buscado de apuntadores indirectos
+int buscar_archivo_bapi(FILE *archivo,int ini_particion,char *nombre_archivo,int bm_bap,int nivel)
+{
+    SB sb_tmp[1];
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(sb_tmp,sizeof(SB),1,archivo);
+    //::::: SACANDO BLOQUE DE APUNTADORES
+    int pos_byte_ba = sb_tmp[0].s_block_start  + bm_bap * sizeof(BA);
+    BAP bap;
+    fseek(archivo,pos_byte_ba,SEEK_SET);
+    fread(&bap,sizeof(BA),1,archivo);
+
+    
+    for(int i = 0; i < 16; i++)
+    {
+        if(bap.b_pointers[i] != -1)
+        {
+            if(nivel == 1) //si el nivel es uno entonces sacamos su bloque de carpeta para buscar su nombre
+            {
+                BC bc;
+                int pos_byte_bc  = sb_tmp[0].s_bm_block_start + (bap.b_pointers[i] * sizeof(BC));
+                fseek(archivo,pos_byte_bc,archivo);
+                fread(&bc,sizeof(BC),1,archivo);
+                
+                for(int j = 0; j < 4; j++)
+                {
+                    if(strcpy(bc.b_content[j].b_name,nombre_archivo) == 0 && bc.b_content[j].b_inodo != -1) //osea que si apunte a uno ino
+                        return bc.b_content[j].b_inodo;
+                }
+                
+            }
+            else if(nivel == 2)
+            {
+                int bm_arch = buscar_archivo_bapi(archivo,ini_particion,nombre_archivo,bap.b_pointers[i],1);
+                if(bm_arch != -1)
+                    return bm_arch;
+            }
+            else if(nivel == 3)
+            {
+                int bm_arch = buscar_archivo_bapi(archivo,ini_particion,nombre_archivo,bap.b_pointers[i],2);
+                if(bm_arch != -1)
+                    return bm_arch;
+            }
+        }
+    }
+    return -1;
+}
+
+//retorna 1 bine 0 error
+int insertar_info_archivo(FILE *archivo,int ini_particion,int bm_inodo,int size,char *cont)
+{
+     SB sb_tmp[1];
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(sb_tmp,sizeof(SB),1,archivo);
+    //SACANDO EL BITMAP DEL ARCHIVO
+    int pos_bm_ino = sb_tmp[0].s_inode_start + (bm_inodo * sizeof(TI));
+    TI inodo_arch;
+    fseek(archivo,pos_bm_ino,SEEK_SET);
+    fread(&inodo_arch,sizeof(TI),1,archivo);
+    
+    int size_actual_archivo = inodo_arch.i_size;
+    //debo preguntar antes si tiene datos el inodo del archivo
+    int ap_block_int = -1;
+
+    if(size_actual_archivo == 0) //significa que no tiene nada de datos tonces usamos el bloque 1;
+    {
+        int new_bm_block = -1;
+        int new_byte_block = -1;
+        crear_bloque_archivo(archivo, ini_particion, &new_bm_block, &new_byte_block);
+
+        if (new_bm_block != -1)
+        {
+            inodo_arch.i_block[0] = new_bm_block;
+            ap_block_int = new_bm_block;
+            fseek(archivo,pos_bm_ino,SEEK_SET);
+            fwrite(&inodo_arch,sizeof(TI),1,archivo);
+        }     
+        else
+        {
+            printf("ERROR: No se puede crear otro bloque en el bitmap\n\n");
+            return -1;
+        }
+    }
+    else
+    {
+        float ap_block = size_actual_archivo / 64.00;
+        ap_block_int = floor(ap_block);
+        if(ap_block == ap_block_int)//el bloque esta lleno necesito moverme una posicion adelante
+        {
+            ap_block_int = nuevo_apt_block_archivo(archivo,ini_particion,bm_inodo);
+        }
+    }
+
+    if(ap_block_int != -1)
+    {
+        if(size != 0)
+        {
+            
+        }
+        
+        
+        int pos_ba = sb_tmp[0].s_block_start + (ap_block_int * 64);
+        BA ba_new;
+        fseek(archivo,pos_ba,SEEK_SET);
+        fread(&ba_new,sizeof(BA),1,archivo);
+
+
+    }
+    else{
+        printf("Error: no se pudo encontrar un apuntador a bloque de archivo para ingresar informacion\n\n");
+        return 0;
+    }
+}
+//retorna un bm donde se encuentra el bloque de archivos
+int nuevo_apt_block_archivo(FILE *archivo,int ini_particion,int bm_ino_arch)
+{
+    SB sb_tmp[1];
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(sb_tmp,sizeof(SB),1,archivo);
+    //SACANDO EL BITMAP DEL ARCHIVO
+    int pos_bm_ino = sb_tmp[0].s_inode_start + (bm_ino_arch * sizeof(TI));
+    TI inodo_arch;
+    fseek(archivo,pos_bm_ino,SEEK_SET);
+    fread(&inodo_arch,sizeof(TI),1,archivo);
+
+    int bm_bloque_archivos = -1;
+    int apt_encontrado = 0;
+    for(int i = 0; i < 15; i++)
+    {
+        if(i == 12)
+        {
+            if(inodo_arch.i_block[i] == -1) //necesito crearle un bloque de apuntadores simple
+            {
+                int bm_bap = nuevo_apt_ind_block_archivo(archivo,ini_particion,&bm_bloque_archivos,1);
+                if(bm_bap != -1)
+                {
+                    inodo_arch.i_block[i] = bm_bap;
+                    apt_encontrado = 1;
+                    break;
+                }
+                else
+                {
+                    printf("ERROR: no se pudo crar otro apuntador indirecto para un nuevo bloque de archivos\n\n");
+                    return -1;
+                }
+            }
+            else
+            {
+                bm_bloque_archivos = nuevo_ba_en_bapi(archivo,ini_particion,inodo_arch.i_block[i],1);
+                if(bm_bloque_archivos != -1)
+                {
+                    apt_encontrado = 1;
+                    break;
+                }
+                else{
+                    printf("ERROR: no se pudo crar otro apuntador indirecto para un nuevo bloque de archivos\n\n");
+                    return -1;
+                }
+            }
+        }
+        else if(i == 13)
+        {
+            if(inodo_arch.i_block[i] == -1) //necesito crearle un bloque de apuntadores simple
+            {
+                int bm_bap = nuevo_apt_ind_block_archivo(archivo,ini_particion,&bm_bloque_archivos,2);
+                if(bm_bap != -1)
+                {
+                    inodo_arch.i_block[i] = bm_bap;
+                    apt_encontrado = 1;
+                    break;
+                }
+                else
+                {
+                    printf("ERROR: no se pudo crar otro apuntador indirecto para un nuevo bloque de archivos\n\n");
+                    return -1;
+                }
+            }
+            else
+            {
+                bm_bloque_archivos = nuevo_ba_en_bapi(archivo,ini_particion,inodo_arch.i_block[i],2);
+                if(bm_bloque_archivos != -1)
+                {
+                    apt_encontrado = 1;
+                    break;
+                }
+                else{
+                    printf("ERROR: no se pudo crar otro apuntador indirecto para un nuevo bloque de archivos\n\n");
+                    return -1;
+                }
+            }
+        }
+        else if( i == 14)
+        {
+            if(inodo_arch.i_block[i] == -1) //necesito crearle un bloque de apuntadores simple
+            {
+                int bm_bap = nuevo_apt_ind_block_archivo(archivo,ini_particion,&bm_bloque_archivos,3);
+                if(bm_bap != -1)
+                {
+                    inodo_arch.i_block[i] = bm_bap;
+                    apt_encontrado = 1;
+                    break;
+                }
+                else
+                {
+                    printf("ERROR: no se pudo crar otro apuntador indirecto para un nuevo bloque de archivos\n\n");
+                    return -1;
+                }
+            }
+            else
+            {
+                bm_bloque_archivos = nuevo_ba_en_bapi(archivo,ini_particion,inodo_arch.i_block[i],3);
+                if(bm_bloque_archivos != -1)
+                {
+                    apt_encontrado = 1;
+                    break;
+                }
+                else{
+                    printf("ERROR: no se pudo crar otro apuntador indirecto para un nuevo bloque de archivos\n\n");
+                    return -1;
+                }
+            }
+        }
+        else
+        {
+            if(inodo_arch.i_block[i] == -1)
+            {
+                int new_bm_block = -1;
+                int new_byte_block = -1;
+                crear_bloque_archivo(archivo, ini_particion, &new_bm_block, &new_byte_block);
+
+                if (new_bm_block != -1)
+                {
+                    inodo_arch.i_block[i] = new_bm_block;
+                    bm_bloque_archivos = new_bm_block;
+                    apt_encontrado = 1;
+                    break;
+                }     
+                else
+                {
+                    printf("ERROR: No se puede crear otro bloque en el bitmap\n\n");
+                    return -1;
+                }
+            }
+        }
+    }
+
+    if(apt_encontrado == 1)
+    {
+        fseek(archivo,pos_bm_ino,SEEK_SET);
+        fwrite(&inodo_arch,sizeof(TI),1,archivo);
+        return bm_bloque_archivos;
+    }
+    return -1;
+}
+
+int nuevo_apt_ind_block_archivo(FILE *archivo,int ini_particion,int *new_bm_ba,int nivel)
+{
+    SB sb_tmp[1];
+    fseek(archivo, ini_particion, SEEK_SET);
+    fread(sb_tmp, sizeof(SB), 1, archivo);
+
+    //::::::::::::::::::::::BUSCANDO ESPACIO EL BITMAP DE BLOQUES PARA BAP
+    int ini_bm_block = sb_tmp[0].s_bm_block_start;
+    int fin_bm_block = sb_tmp[0].s_bm_block_start + (3* sb_tmp[0].s_inodes_count);
+    int cont_bm_bap =0;
+    int hubo_bm_bap =0;
+    char bit;
+    for(int i = ini_bm_block; i < fin_bm_block; i++)
+    {
+        fseek(archivo, i, SEEK_SET);
+        fread(&bit, sizeof(char), 1, archivo);
+        if (bit == '0')
+        {
+            //::::::::::::::ESCRIBIENDO EN EL BITMAP DE BLOQUES EL NUEVO BAP
+            fseek(archivo, i, SEEK_SET);
+            fwrite("1", sizeof(char), 1, archivo); //inodo
+            hubo_bm_bap = 1;
+            break;
+        }
+        cont_bm_bap++;
+    }
+
+    if(hubo_bm_bap == 1)
+    {
+        BAP nbap;
+        for(int j = 0; j < 16; j++)
+            nbap.b_pointers[j] = -1;
+        //;;;;;;;;;;;;;;;;;;;;;;;;; CONFIGURANDO EL TIPO DE APUNTADOR
+        if(nivel == 3)
+        {
+            int bm_bap3 = nuevo_apt_ind_block_archivo(archivo,ini_particion,&*new_bm_ba,2);
+            if(bm_bap3 != -1)
+            {
+                //::::::::::::::::::::CONFIGURANDO EL NUEVO BLQOUE DE APUNTADORES SIMPLE
+                nbap.b_pointers[0] = bm_bap3;
+                int pos_bytes_bap = sb_tmp[0].s_block_start + (cont_bm_bap * sizeof(BAP));
+                fseek(archivo,pos_bytes_bap,SEEK_SET);
+                fwrite(&nbap,sizeof(BAP),1,archivo);
+                return cont_bm_bap;
+            }
+            else
+            {
+                printf("ERROR: problemas con crear el bloque de apuntadores triple\n\n");
+                return -1;
+            }
+        }
+        else if(nivel == 2)
+        {
+            int bm_bap2 = nuevo_apt_ind_block_archivo(archivo,ini_particion,&*new_bm_ba,1);
+            if(bm_bap2 != -1)
+            {
+                //::::::::::::::::::::CONFIGURANDO EL NUEVO BLQOUE DE APUNTADORES SIMPLE
+                nbap.b_pointers[0] = bm_bap2;
+                int pos_bytes_bap = sb_tmp[0].s_block_start + (cont_bm_bap * sizeof(BAP));
+                fseek(archivo,pos_bytes_bap,SEEK_SET);
+                fwrite(&nbap,sizeof(BAP),1,archivo);
+                return cont_bm_bap;
+            }
+            else
+            {
+                printf("ERROR: problemas con crear el bloque de apuntadores triple\n\n");
+                return -1;
+            }
+        }
+        else if(nivel == 1)
+        {
+            int new_bm_block = -1;
+            int new_byte_block = -1;
+            crear_bloque_archivo(archivo, ini_particion, &new_bm_block, &new_byte_block);
+
+            if (new_bm_block == -1)
+            {
+                printf("ERROR: No se puede crear otro bloque en el bitmap\n\n");
+                return -1;
+            }     
+            //::::::::::::::::::::CONFIGURANDO EL NUEVO BLQOUE DE APUNTADORES SIMPLE
+            nbap.b_pointers[0] = new_bm_block;
+            //escribiendo bloque de apuntadores
+            int pos_bytes_bap = sb_tmp[0].s_block_start + (cont_bm_bap * sizeof(BAP));
+            fseek(archivo,pos_bytes_bap,SEEK_SET);
+            fwrite(&nbap,sizeof(BAP),1,archivo);
+            //ACTUALIZANDO EL SUBPER BLOQUE
+            sb_tmp[0].s_free_blocks_count--;
+            fseek(archivo, ini_particion, SEEK_SET);
+            fwrite(sb_tmp, sizeof(SB), 1, archivo);
+            *new_bm_ba = new_bm_block;
+            return cont_bm_bap;
+        }
+    }
+    else
+    {
+        printf("ERROR: El bitmap de bloques se quedo sin espacio para uno nuevo\n");
+        return -1;
+    }
+}
+
+int nuevo_ba_en_bapi(FILE *archivo,int ini_particion,int bm_bapi_padre,int nivel)
+{
+    SB sb_tmp[1];
+    fseek(archivo, ini_particion, SEEK_SET);
+    fread(sb_tmp, sizeof(SB), 1, archivo);
+    //::::: SACANDO BLOQUE DE APUNTADORES
+    int pos_byte_ba = sb_tmp[0].s_block_start  + bm_bapi_padre * sizeof(BA);
+    BAP bap;
+    fseek(archivo,pos_byte_ba,SEEK_SET);
+    fread(&bap,sizeof(BA),1,archivo);
+
+    for(int i = 0; i < 16; i++)
+    {
+        if(bap.b_pointers[i] == -1)
+        {
+            if(nivel == 3) //finalidad crear otro BAP
+            {
+                int new_bm = -1;
+                int bm_new_bap = nuevo_apt_ind_block_archivo(archivo,ini_particion,&new_bm,2);
+                if(bm_new_bap != 1)
+                {
+                    //::::::::::::::::::::Re-escribiedo EL  BLQOUE DE APUNTADORES
+                    bap.b_pointers[i] = bm_new_bap;
+                    fseek(archivo,pos_byte_ba,SEEK_SET);
+                    fwrite(&bap,sizeof(BAP),1,archivo);
+                    return new_bm;
+                }
+                else
+                {
+                    printf("ERROR: un bloque de apuntador tipo 2 no pudo ser creado\n\n");
+                    return -1;
+                }
+
+            }
+            else if(nivel == 2) //finalidad crear otro BAP
+            {
+                int new_bm = -1;
+                int bm_new_bap = nuevo_apt_ind_block_archivo(archivo,ini_particion,&new_bm,1);
+                if(bm_new_bap != 1)
+                {
+                    //::::::::::::::::::::Re-escribiedo EL  BLQOUE DE APUNTADORES
+                    bap.b_pointers[i] = bm_new_bap;
+                    fseek(archivo,pos_byte_ba,SEEK_SET);
+                    fwrite(&bap,sizeof(BAP),1,archivo);
+                    return new_bm;
+                }
+                else
+                {
+                    printf("ERROR: un bloque de apuntador tipo 1 no pudo ser creado\n\n");
+                    return -1;
+                }
+            }
+            else if(nivel == 1)
+            {
+                int new_bm_block = -1;
+                int new_byte_block = -1;
+                crear_bloque_archivo(archivo, ini_particion, &new_bm_block, &new_byte_block);
+
+                if (new_bm_block == -1)
+                {
+                    printf("ERROR: No se puede crear otro bloque en el bitmap\n\n");
+                    return -1;
+                }
+                bap.b_pointers[i] = new_bm_block;
+                fseek(archivo,pos_byte_ba,SEEK_SET);
+                fwrite(&bap,sizeof(BAP),1,archivo);
+                //::::::::::::::::::: ACTUALIZANDO EL SUPER BLOQUE
+                sb_tmp[0].s_free_blocks_count--;
+                fseek(archivo, ini_particion, SEEK_SET);
+                fwrite(sb_tmp, sizeof(SB), 1, archivo);
+                //RETORNO DE BM NUEVO DE BA
+                return new_bm_block;     
+            }
+        }
+    }
+    return -1;
 }

@@ -135,8 +135,10 @@ void  buscar_hijo_carpeta_apid(FILE *archivo,int ini_particion,char *nombre_c,in
 
 int crear_bc_bap(FILE *archivo,char *nombre_c,int ini_particion,int bm_bap_padre,int bm_padre,int id_usr,int id_grp,int *new_bm,int tipo_bap);
 
-//========================================================== METODOS QUE SE UTILIZARON PARA MKFILE =======================
+int crear_carpeta_bloque_ap(FILE *archivo,char *nombre_c,int ini_particion,int bm_padre,int id_usr,int id_grp,int *new_bm,int tipo_bap);
 
+//========================================================== METODOS QUE SE UTILIZARON PARA MKFILE =======================
+int ejecutar_mkfile(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int size,char *contenido);
 
 
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED

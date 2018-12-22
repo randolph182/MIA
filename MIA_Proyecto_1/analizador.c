@@ -943,7 +943,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             else
                 printf("ERROR: No se ejecutar mkdir porque hace falta path\n");
         }
-        else if(flag_mkfile == 1)
+        else if(flag_mkfile == 1) //========================================================= MKFILE
         {
             if(strcmp(path,"") !=0)
             {
@@ -952,7 +952,8 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                 {
                     if(flag_p == 1)
                     {
-                        //ejecutar_mkdir(archivo,usuario_logeado,path,1);
+                        //
+                        ejecutar_mkdir(archivo,usuario_logeado,path,1);
                     }
                     else
                          //ejecutar_mkdir(archivo,usuario_logeado,path,0);
