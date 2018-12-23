@@ -610,11 +610,22 @@ int ejecutar_mkdir(FILE *archivo,NODO_USR *usr_logeado,char *path,int p)
     int contador_carpeta = 0;
     char *path_tmp ;
     char *nombre_carpeta;
+    int fin =0;
     while ((nombre_carpeta = strtok_r(path, "/", &path))) //nos movemos carpeta por carpeta
     {
-        strcpy(carpetas[contador_carpeta].info,nombre_carpeta);
-        carpetas[contador_carpeta].estado = 1;
-        contador_carpeta++;
+        fin = strlen(nombre_carpeta);
+        if(fin <12)
+        {
+            strcpy(carpetas[contador_carpeta].info,nombre_carpeta);
+            carpetas[contador_carpeta].info[fin] = '\0';
+            carpetas[contador_carpeta].estado = 1;
+            contador_carpeta++;
+        }
+        else{
+            printf("ERROR: no se permiten nombres mas de 12 caracters\n");
+            return 0;
+        }
+
     }
     //si cumple con los parametros adecuados para crear las carpetas
     int crear = estado_crear_carpeta(archivo,usr_logeado->inicio_particion,carpetas,contador_carpeta,p);
@@ -626,7 +637,7 @@ int ejecutar_mkdir(FILE *archivo,NODO_USR *usr_logeado,char *path,int p)
 
         for(int i = 0; i < contador_carpeta; i++)
         {
-            verificar_carpeta(archivo,usr_logeado->inicio_particion,&carpetas[i],padre,&hijo);
+            verificar_carpeta(archivo,usr_logeado->inicio_particion,carpetas[i].info,padre,&hijo);
             if(hijo != -1 ) //consultamos si existe la carpeta
             {
                 padre = hijo;
@@ -635,7 +646,7 @@ int ejecutar_mkdir(FILE *archivo,NODO_USR *usr_logeado,char *path,int p)
             else if(hijo == -1) //no existe entonces la creamos
             {
                 int new_bm = 0;
-                int exito = crear_carpeta_mkdir(archivo,usr_logeado->inicio_particion,&carpetas[i], padre,&new_bm,usr_logeado->id,usr_logeado->id_grp);
+                int exito = crear_carpeta_mkdir(archivo,usr_logeado->inicio_particion,carpetas[i].info, padre,&new_bm,usr_logeado->id,usr_logeado->id_grp);
                 if(exito !=0 )
                 {
                     padre = new_bm;
@@ -686,9 +697,11 @@ void verificar_carpeta(FILE *archivo,int ini_particion,char *nombre_c,int bm_pad
                 BC bloque_carpeta;
                 fseek(archivo,pos_byte_bh,SEEK_SET);
                 fread(&bloque_carpeta,sizeof(BC),1,archivo);
-
                 for(int j = 0; j < 4; j++) //  4 apuntadores de bloque carpeta
                 {
+                    //printf("%s vs ",bloque_carpeta.b_content[j].b_name);
+                    //printf("%s\n",nombre_c);
+
                     if(strcmp(bloque_carpeta.b_content[j].b_name,nombre_c) == 0)
                     {
                         *bm_hijo = bloque_carpeta.b_content[j].b_inodo;
@@ -804,6 +817,7 @@ int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_pad
                         {
                             memset(bloque_carpeta.b_content[j].b_name,0,sizeof(bloque_carpeta.b_content[j].b_name));
                             strcpy(bloque_carpeta.b_content[j].b_name,nombre); //comenzamos escribiendo el nombre
+                           // printf("%s\n",bloque_carpeta.b_content[j].b_name);
                             bloque_carpeta.b_content[j].b_inodo = ap_bm_inodo;
                             *new_bm = ap_bm_inodo;
                             //RE-ESCRIBIENDO EL BLOQUE CARPETA
@@ -874,7 +888,7 @@ int estado_crear_carpeta(FILE *archivo,int ini_particion,CHAR_ARRAY carpetas[],i
 
     for(int i = 0; i < contador_carpetas; i++)
     {
-        verificar_carpeta(archivo,ini_particion,&carpetas[i],padre,&hijo);
+        verificar_carpeta(archivo,ini_particion,carpetas[i].info,padre,&hijo);
         if(hijo != -1 ) //si es distinto  a  -1 es porque si encontro un hijo con el nombre
         {
             padre = hijo;
@@ -1312,11 +1326,22 @@ int ejecutar_mkfile(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int siz
     int contador_elementos = 0;
     char *path_tmp ;
     char *nombre_elemento;
+    int size_elem =0;
     while ((nombre_elemento = strtok_r(path, "/", &path))) //nos movemos carpeta por carpeta
     {
-        strcpy(elementos[contador_elementos].info,nombre_elemento);
-        elementos[contador_elementos].estado = 1;
-        contador_elementos++;
+        size_elem = strlen(nombre_elemento);
+        if(size_elem < 12)
+        {
+            strcpy(elementos[contador_elementos].info,nombre_elemento);
+            elementos[contador_elementos].estado = 1;
+            contador_elementos++;
+        }
+        else
+        {
+            printf("ERROR: no se pueden declarar mas de 12 caracteres para los nombres en mkfile\n");
+            return 0;
+        }
+
     }
 
     int bm_padre =0;
@@ -1332,7 +1357,61 @@ int ejecutar_mkfile(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int siz
             //*debo hacer un metodo que cree un inodo tipo archivo y retorne su pos en bitmap
             //*debo hacer un metodo que revise en la carpeta sugerida que no exista el mismo archivo
             //debo hacer una funcion que inserte datos en donde se le pase CONT Y SIZE eso implica tambien buscar lugar adecuado
-            return 1;
+
+            int existe = buscar_archivo(archivo,usr_logeado->inicio_particion,bm_padre,&elementos[i]);
+            if(existe == -1) //significa que no existe
+            {
+                int bm_arch = crear_inodo_archivo(archivo,usr_logeado);
+                if(bm_arch != -1)
+                {
+                    int se_registro = buscar_apt_ino_carp_to_ino_arch(archivo,usr_logeado->inicio_particion,bm_padre,bm_arch,&elementos[i]);
+                    if(se_registro == 1)
+                    {
+                        char *nueva_cadena  =  (char*)malloc(sizeof(char)*1024);
+                        memset(nueva_cadena,0,sizeof(nueva_cadena));
+
+                        if(strcmp(contenido,"") == 0)
+                        {
+                            listar_info_to_archivo(size,contenido,1,nueva_cadena);
+                        }
+                        else
+                            listar_info_to_archivo(size,contenido,0,nueva_cadena);
+                           // nueva_cadena = listar_info_to_archivo(size,contenido,0);
+                        if(nueva_cadena != NULL)
+                        {
+                            int result_set_info_archivo = insertar_info_archivo(archivo,usr_logeado->inicio_particion,bm_arch,nueva_cadena);
+                            if(result_set_info_archivo == 1)
+                            {
+                                printf("se inserto adecuadamente la informacion\n");
+                                return 1;
+                            }
+                            else
+                                {
+                                    printf("Problemas con insertar informacion en el archivo\n");
+                                    return 0;
+                                }
+                        }
+                        else
+                        {
+                            printf("ERROR: no se pudo obtener informacion del archivo porque size of path no cumplen\n\n");
+                            return 0;
+                        }
+                    }
+                    else{
+                        printf("NO se pudo completar la accion en mkfile\n\n");
+                        return 0;
+                    }
+                }
+                else{
+                        printf("NO se pudo completar la accion en mkfile\n\n");
+                        return 0;
+                    }
+            }
+            else
+            {
+                printf("Error el archivo:  %s ya existe en la ruta especificada\n",elementos[i].info);
+            }
+
         }
         else
         {
@@ -1387,7 +1466,7 @@ int crear_inodo_archivo(FILE *archivo,NODO_USR *usr_logeado)
     int ini_bm_inodo = sb_tmp[0].s_bm_inode_start;
     int fin_bm_inodo = ini_bm_inodo + sb_tmp[0].s_inodes_count;
 
-    
+
     int count_bm = 0;
     char bit;
     int bm_encontrado =0;
@@ -1400,7 +1479,7 @@ int crear_inodo_archivo(FILE *archivo,NODO_USR *usr_logeado)
         {
             fseek(archivo, i, SEEK_SET);
             fwrite("1", sizeof(char), 1, archivo);
-        
+
             sb_tmp[0].s_free_blocks_count--;
             fseek(archivo,usr_logeado->inicio_particion,SEEK_SET);
             fwrite(sb_tmp, sizeof(SB), 1, archivo);
@@ -1412,9 +1491,9 @@ int crear_inodo_archivo(FILE *archivo,NODO_USR *usr_logeado)
 
     if(bm_encontrado == 1)
     {
-        //:::::::: PROCEDEMOS A LA CREACION DE UN INODO  
+        //:::::::: PROCEDEMOS A LA CREACION DE UN INODO
         TI inodo_nuevo;
-        
+
         for(int j = 0; j < 15; j++)
            inodo_nuevo.i_block[j] = -1;
         inodo_nuevo.i_uid = usr_logeado->id;
@@ -1444,7 +1523,7 @@ int crear_inodo_archivo(FILE *archivo,NODO_USR *usr_logeado)
     }
 }
 
-//retorna el inodo de archivo buscado
+//retorna el bm del inodo de archivo buscado  -1 sino esta
 int buscar_archivo(FILE *archivo,int ini_particion,int bm_inocarp,char *nombre_archivo)
 {
     SB sb_tmp[1];
@@ -1482,12 +1561,12 @@ int buscar_archivo(FILE *archivo,int ini_particion,int bm_inocarp,char *nombre_a
                     return result;
             }
             else{
-                //debemos sacar su bloque de carpetas para revisar ahi 
+                //debemos sacar su bloque de carpetas para revisar ahi
                 BC bloque_carpeta;
                 int pos_bloque_carp = sb_tmp[0].s_block_start + (inodo_carpeta.i_block[i] * 64);
                 fseek(archivo,pos_bloque_carp,SEEK_SET);
                 fread(&bloque_carpeta,sizeof(BC),1,archivo);
-                
+
                 for(int j = 0; j < 4; j++)
                 {
                     if(bloque_carpeta.b_content[j].b_inodo != -1)
@@ -1517,7 +1596,7 @@ int buscar_archivo_bapi(FILE *archivo,int ini_particion,char *nombre_archivo,int
     fseek(archivo,pos_byte_ba,SEEK_SET);
     fread(&bap,sizeof(BA),1,archivo);
 
-    
+
     for(int i = 0; i < 16; i++)
     {
         if(bap.b_pointers[i] != -1)
@@ -1528,13 +1607,13 @@ int buscar_archivo_bapi(FILE *archivo,int ini_particion,char *nombre_archivo,int
                 int pos_byte_bc  = sb_tmp[0].s_bm_block_start + (bap.b_pointers[i] * sizeof(BC));
                 fseek(archivo,pos_byte_bc,archivo);
                 fread(&bc,sizeof(BC),1,archivo);
-                
+
                 for(int j = 0; j < 4; j++)
                 {
-                    if(strcpy(bc.b_content[j].b_name,nombre_archivo) == 0 && bc.b_content[j].b_inodo != -1) //osea que si apunte a uno ino
+                    if(strcmp(bc.b_content[j].b_name,nombre_archivo) == 0 && bc.b_content[j].b_inodo != -1) //osea que si apunte a uno ino
                         return bc.b_content[j].b_inodo;
                 }
-                
+
             }
             else if(nivel == 2)
             {
@@ -1554,7 +1633,7 @@ int buscar_archivo_bapi(FILE *archivo,int ini_particion,char *nombre_archivo,int
 }
 
 //retorna 1 bine 0 error
-int insertar_info_archivo(FILE *archivo,int ini_particion,int bm_inodo,int size,char *cont)
+int insertar_info_archivo(FILE *archivo,int ini_particion,int bm_inodo,char *informacion)
 {
      SB sb_tmp[1];
     fseek(archivo,ini_particion,SEEK_SET);
@@ -1564,7 +1643,7 @@ int insertar_info_archivo(FILE *archivo,int ini_particion,int bm_inodo,int size,
     TI inodo_arch;
     fseek(archivo,pos_bm_ino,SEEK_SET);
     fread(&inodo_arch,sizeof(TI),1,archivo);
-    
+
     int size_actual_archivo = inodo_arch.i_size;
     //debo preguntar antes si tiene datos el inodo del archivo
     int ap_block_int = -1;
@@ -1581,7 +1660,7 @@ int insertar_info_archivo(FILE *archivo,int ini_particion,int bm_inodo,int size,
             ap_block_int = new_bm_block;
             fseek(archivo,pos_bm_ino,SEEK_SET);
             fwrite(&inodo_arch,sizeof(TI),1,archivo);
-        }     
+        }
         else
         {
             printf("ERROR: No se puede crear otro bloque en el bitmap\n\n");
@@ -1600,17 +1679,113 @@ int insertar_info_archivo(FILE *archivo,int ini_particion,int bm_inodo,int size,
 
     if(ap_block_int != -1)
     {
-        if(size != 0)
-        {
-            
-        }
-        
-        
+        //PARA PODER ENTRAR AQUI SE NECESITA QUE EL BM DEL BA  ESTE REGISTRADO EN EL INODO
         int pos_ba = sb_tmp[0].s_block_start + (ap_block_int * 64);
         BA ba_new;
         fseek(archivo,pos_ba,SEEK_SET);
         fread(&ba_new,sizeof(BA),1,archivo);
+        char *acum_char = (char *)malloc(sizeof(char) * 1); //concatenador
+        memset(acum_char, 0, sizeof(acum_char));
+        int bytes_info = strlen(informacion);
+        int bytes_block = contar_bytes_block(archivo,pos_ba);
+        int total_bytes = bytes_block + bytes_info;
 
+        if(total_bytes > 64)
+        {
+            int no_bytes_restantes = total_bytes - 64;
+            int no_bytes_escribir = bytes_info - no_bytes_restantes;
+            int i =0;
+            for( i= 0; i < no_bytes_escribir; i++)
+            {
+                acum_char[0] = informacion[i];
+                strcat(&ba_new.b_content,acum_char);
+            }
+            fseek(archivo,pos_ba,SEEK_SET);
+            fwrite(&ba_new,sizeof(BA),1,archivo);
+
+            total_bytes = total_bytes -64;
+
+            int pos_ba_new;
+            int bytes_ini = no_bytes_escribir;
+            while(total_bytes > 64)
+            {
+                ap_block_int = nuevo_apt_block_archivo(archivo,ini_particion,bm_inodo);
+
+                if(ap_block_int != -1)
+                {
+                    pos_ba_new = sb_tmp[0].s_block_start + (ap_block_int * 64);
+                    BA ba_otro_new;
+                    fseek(archivo,pos_ba_new,SEEK_SET);
+                    fread(&ba_otro_new,sizeof(BA),1,archivo);
+                    memset(&ba_otro_new.b_content,0,sizeof(BA));
+
+                    for(int i = bytes_ini; i < 64 + bytes_ini; i++)
+                    {
+                        acum_char[0] = informacion[i];
+                        strcat(&ba_otro_new.b_content,acum_char);
+                    }
+                    bytes_ini = bytes_ini + 64;
+                    total_bytes = total_bytes - 64;
+                    fseek(archivo,pos_ba_new,SEEK_SET);
+                    fwrite(&ba_otro_new,sizeof(BA),1,archivo);
+                }
+                else
+                {
+                    printf("Error al tratar de encontrar un nuevo  bm para bloque de archivos en mkfile\n\n");
+                    return 0;
+                }
+            }
+            if(total_bytes > 0)
+            {
+                ap_block_int = nuevo_apt_block_archivo(archivo,ini_particion,bm_inodo);
+                if(ap_block_int != -1)
+                {
+                    pos_ba_new = sb_tmp[0].s_block_start + (ap_block_int * 64);
+                    BA ba_otro_new;
+                    memset(&ba_otro_new.b_content,0,sizeof(BA));
+                    fseek(archivo,pos_ba_new,SEEK_SET);
+                    fread(&ba_otro_new,sizeof(BA),1,archivo);
+                    for(int i = bytes_ini; i < strlen(informacion); i++)
+                    {
+                        acum_char[0] = informacion[i];
+                        strcat(&ba_otro_new.b_content,acum_char);
+                    }
+                    fseek(archivo,pos_ba_new,SEEK_SET);
+                    fwrite(&ba_otro_new,sizeof(BA),1,archivo);
+                    //ACTUALIZANDO EL INODO ARCHIVO
+                    inodo_arch.i_size = inodo_arch.i_size + strlen(informacion);
+                    fseek(archivo,pos_bm_ino,SEEK_SET);
+                    fwrite(&inodo_arch,sizeof(TI),1,archivo);
+                    return 1;
+                }
+                else
+                {
+                    printf("Error al tratar de encontrar un nuevo  bm para bloque de archivos en mkfile\n\n");
+                    return 0;
+                }
+
+            }
+            else
+            {
+                //ACTUALIZANDO EL INODO ARCHIVO
+                inodo_arch.i_size = inodo_arch.i_size + strlen(informacion);
+                fseek(archivo,pos_bm_ino,SEEK_SET);
+                fwrite(&inodo_arch,sizeof(TI),1,archivo);
+                return 1;
+            }
+
+        }
+        else
+        {
+            strcat(&ba_new.b_content,informacion);
+            fseek(archivo,pos_ba,SEEK_SET);
+            fwrite(&ba_new,sizeof(BA),1,archivo);
+            //ACTUALIZANDO EL INODO ARCHIVO
+            inodo_arch.i_size = inodo_arch.i_size + strlen(informacion);
+            fseek(archivo,pos_bm_ino,SEEK_SET);
+            fwrite(&inodo_arch,sizeof(TI),1,archivo);
+            return 1;
+        }
 
     }
     else{
@@ -1741,7 +1916,7 @@ int nuevo_apt_block_archivo(FILE *archivo,int ini_particion,int bm_ino_arch)
                     bm_bloque_archivos = new_bm_block;
                     apt_encontrado = 1;
                     break;
-                }     
+                }
                 else
                 {
                     printf("ERROR: No se puede crear otro bloque en el bitmap\n\n");
@@ -1839,7 +2014,7 @@ int nuevo_apt_ind_block_archivo(FILE *archivo,int ini_particion,int *new_bm_ba,i
             {
                 printf("ERROR: No se puede crear otro bloque en el bitmap\n\n");
                 return -1;
-            }     
+            }
             //::::::::::::::::::::CONFIGURANDO EL NUEVO BLQOUE DE APUNTADORES SIMPLE
             nbap.b_pointers[0] = new_bm_block;
             //escribiendo bloque de apuntadores
@@ -1932,9 +2107,177 @@ int nuevo_ba_en_bapi(FILE *archivo,int ini_particion,int bm_bapi_padre,int nivel
                 fseek(archivo, ini_particion, SEEK_SET);
                 fwrite(sb_tmp, sizeof(SB), 1, archivo);
                 //RETORNO DE BM NUEVO DE BA
-                return new_bm_block;     
+                return new_bm_block;
             }
         }
     }
     return -1;
+}
+
+int buscar_apt_ino_carp_to_ino_arch(FILE *archivo,int ini_particion,int bm_inocarp,int bm_inoarch,char *name)
+{
+    SB sb_tmp[1];
+    fseek(archivo, ini_particion, SEEK_SET);
+    fread(sb_tmp, sizeof(SB), 1, archivo);
+
+    int pos_byte_icarp = sb_tmp[0].s_inode_start +  bm_inocarp * sizeof(TI);
+
+    TI inodo_carp[1];
+    fseek(archivo,pos_byte_icarp,SEEK_SET);
+    fread(inodo_carp,sizeof(TI),1,archivo);
+
+
+    for(int  i = 0; i < 12; i++)
+    {
+        if(inodo_carp[0].i_block[i] != -1)
+        {
+            BC bloque_carpeta;
+            int pos_bloque = sb_tmp[0].s_block_start + inodo_carp[0].i_block[i] *64;
+            fseek(archivo,pos_bloque,SEEK_SET);
+            fread(&bloque_carpeta,sizeof(BC),1,archivo);
+
+            for(int j = 0; j < 4; j++)
+            {
+                if(bloque_carpeta.b_content[j].b_inodo == -1)
+                {
+                    memset(bloque_carpeta.b_content[j].b_name,0,sizeof(bloque_carpeta.b_content[j].b_name));
+                    strcpy(bloque_carpeta.b_content[j].b_name,name);
+                    bloque_carpeta.b_content[j].b_inodo = bm_inoarch;
+                    fseek(archivo,pos_bloque,SEEK_SET);
+                    fwrite(&bloque_carpeta,sizeof(BC),1,archivo);
+                    return 1;
+                }
+            }
+
+        }
+    }
+    return 0;
+
+}
+
+void listar_info_to_archivo(int size,char *path_contenido,int sin_path,char *str2)
+{
+    memset(str2,0,1024);
+    if(sin_path == 0)
+    {
+        FILE *archivo;
+        char str1[100];
+        archivo = fopen(path_contenido,"r");
+        if(archivo == NULL)
+        {
+            perror("Error opening file");
+            str2 =  NULL;
+        }
+        while( fgets (str1, 100, archivo)!=NULL ) {
+        /* writing content to stdout */
+        strcat(str2,str1);
+        }
+        fclose(archivo);
+    }
+
+   if(size != 0)
+   {
+       char *digito = (char*)malloc(sizeof(char)*1);
+       memset(digito,0,sizeof(digito));
+       digito[0] = 48; //0
+
+       for(int i = 0; i < size; i++)
+       {
+           if(digito[0] == 58)
+           {
+               //strcat(str2,digito);
+               digito[0] = 48;
+           }
+            strcat(str2,digito);
+            digito[0]++;
+       }
+   }
+   else{
+       if(sin_path == 0)
+            str2 =  NULL;
+   }
+}
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; cat
+//retorn 1 bien 0mal
+int mostrar_contenido_archivo(FILE *archivo,NODO_USR *usr_logeado,char *path_file)
+{
+    SB sb;
+    fseek(archivo,usr_logeado->inicio_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    //primero listamos todas las carpetas con su archivo
+    CHAR_ARRAY elementos[30];
+    //:::::::::::::::: PROCESO DONDE SE LISTAN LAS CARPETAS QUE VIENEN EN EL PATH
+    int contador_elementos = 0;
+    char *path_tmp ;
+    char *nombre_elemento;
+    while ((nombre_elemento = strtok_r(path_file, "/", &path_file))) //nos movemos carpeta por carpeta
+    {
+        strcpy(elementos[contador_elementos].info,nombre_elemento);
+        elementos[contador_elementos].estado = 1;
+        contador_elementos++;
+    }
+
+    int bm_padre =0;
+    int bm_hijo= -1;
+    int bm_archivo=0;
+    //:::::::::::::::::: VAMOAS A IR RECORRIENDO TODOS LOS ELEMENTOS HASTA LLEGAR AL ARCHIVO
+    for(int i = 0; i < contador_elementos; i++)
+    {
+        if(i + 1 == contador_elementos) //estamos en la ultimo posicion donde usualmente se declararan los archivos
+        {
+            int existe = buscar_archivo(archivo,usr_logeado->inicio_particion,bm_padre,&elementos[i]);
+            if(existe != -1) //significa que si
+            {
+                imp_block_archivo(archivo,usr_logeado->inicio_particion, existe);
+            }
+            else
+            {
+                printf("ERROR: no se pudo encontrar el archivo para imprimirlo en CAT\n\n");
+                return 0;
+            }
+        }
+        else
+        {
+            verificar_carpeta(archivo,usr_logeado->inicio_particion,&elementos[i],bm_padre,&bm_hijo);
+            if(bm_hijo != -1 ) //consultamos si existe la carpeta
+            {
+                bm_padre = bm_hijo;
+                bm_hijo = -1;
+            }
+            else if(bm_hijo == -1 ) //no existe entonces la creamos confirmamos p
+            {
+                printf("ERROR: no se puede crear no se puede acceder al archivo para mostrar su contenido porque el path es incorrecto\n\n");
+                return 0;
+            }
+        }
+    }
+}
+
+void imp_block_archivo(FILE *archivo,int ini_particion,int bm_ino_arch)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+    //get inodo archivo
+    int pos_inoarch = sb.s_inode_start + (bm_ino_arch *  sizeof(TI));
+    TI ino_arch;
+    fseek(archivo,pos_inoarch,SEEK_SET);
+    fread(&ino_arch,sizeof(TI),1,archivo);
+
+
+    for(int i = 0; i < 15; i++)
+    {
+        if(ino_arch.i_block[i] != -1)
+        {
+            BA block_arch;
+            int pos_ba = sb.s_block_start + (64 * ino_arch.i_block[i]);
+            fseek(archivo,pos_ba,SEEK_SET);
+            fread(&block_arch,sizeof(BA),1,archivo);
+
+            printf("# %s",block_arch.b_content);
+        }
+    }
+
+
 }

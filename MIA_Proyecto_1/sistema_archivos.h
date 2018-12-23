@@ -139,6 +139,15 @@ int crear_carpeta_bloque_ap(FILE *archivo,char *nombre_c,int ini_particion,int b
 
 //========================================================== METODOS QUE SE UTILIZARON PARA MKFILE =======================
 int ejecutar_mkfile(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int size,char *contenido);
-
+int verificar_permisos(FILE *archivo,NODO_USR *usr_logeado,int bm_inodo,int tipo_permiso);
+int crear_inodo_archivo(FILE *archivo,NODO_USR *usr_logeado);
+int buscar_archivo(FILE *archivo,int ini_particion,int bm_inocarp,char *nombre_archivo);
+int buscar_archivo_bapi(FILE *archivo,int ini_particion,char *nombre_archivo,int bm_bap,int nivel);
+int insertar_info_archivo(FILE *archivo,int ini_particion,int bm_inodo,char *informacion);
+int nuevo_apt_block_archivo(FILE *archivo,int ini_particion,int bm_ino_arch);
+int nuevo_apt_ind_block_archivo(FILE *archivo,int ini_particion,int *new_bm_ba,int nivel);
+int nuevo_ba_en_bapi(FILE *archivo,int ini_particion,int bm_bapi_padre,int nivel);
+int buscar_apt_ino_carp_to_ino_arch(FILE *archivo,int ini_particion,int bm_inocarp,int bm_inoarch,char *name);
+void listar_info_to_archivo(int size,char *path_contenido,int sin_path,char *str2);
 
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED

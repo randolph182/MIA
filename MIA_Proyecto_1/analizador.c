@@ -34,7 +34,8 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     int flag_mkdir = 0;
     int flag_p = 0;
     int flag_mkfile = 0;
-
+    int flag_cat =0;
+    int flag_file =0;
 
     int size = 0;
     char unit= 'k'; //en kilobytes por defecto
@@ -229,6 +230,12 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                 index_lst++;
                 memset(acum_comando,0,sizeof(acum_comando));
             }
+            else if(strcasecmp(acum_comando,"cat")==0)
+            {
+                flag_cat =1;
+                index_lst++;
+                memset(acum_comando,0,sizeof(acum_comando));
+            }
             else
             {
                 if(flag_sign_mayor == 1) // ->  //agregar informacion a variables
@@ -332,6 +339,20 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                         strcpy(cont,acum_comando);
                         flag_cont =0;
                     }
+                    else if(flag_file == 1 && flag_cat == 1)  //============================================== cat
+                    {
+                        
+                        int result =  ejecutar_cat(usuario_logeado,acum_comando);
+                        if(result == 0)
+                        {
+                            flag_error = 1;
+                            printf("ERROR: no se pudo seguir con la secuencia de archivos en CAT");   
+                            break;
+                        }
+                        memset(acum_comando,0,sizeof(acum_comando));
+                        printf("\n");
+                        flag_file = 0;
+                    }
                     if((lista[index_lst] != '\n') && (lista[index_lst] != '\r')) //salto de linea o un return
                         index_lst++;
 
@@ -418,6 +439,8 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                      flag_grp = 1;
                 else if(strcasecmp(acum_comando,"cont") == 0)
                      flag_cont = 1;
+                else if(flag_file ==1)
+                    flag_file = 1;
                 else
                 {
                     printf("ERROR: hubo problemas con el parametro: ");
@@ -448,7 +471,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
 
        if(lista[index_lst] == 34) //============================================== PATH (este path SI contiene comillas dibles)
        {
-            if(flag_path == 1 && flag_sign_mayor == 1 )
+            if(flag_path == 1 && flag_sign_mayor == 1)
            {
                 caracter[0] = lista[index_lst];
                 strcat(acum_comando,caracter); //concatenamos la comilla doble
@@ -512,6 +535,19 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                        strcpy(cont,acum_comando);
                        flag_cont =0;
                     }
+                    else if(flag_file == 1)
+                    {
+                        int result =  ejecutar_cat(usuario_logeado,acum_comando);
+                        if(result == 0)
+                        {
+                            flag_error = 1;
+                            printf("ERROR: no se pudo seguir con la secuencia de archivos en CAT");   
+                            break;
+                        }
+                        memset(acum_comando,0,sizeof(acum_comando));
+                        printf("\n");
+                        flag_file = 0;
+                    }
                     memset(acum_comando,0,sizeof(acum_comando));
                     index_lst++; //quitamos las comillas dobles del analisis
                 }
@@ -540,6 +576,8 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
         {
             caracter[0] = lista[index_lst];
             strcat(acum_comando,caracter);
+            if(strcasecmp(acum_comando,"file") == 0)
+                flag_file =1;
         }
 
         index_lst++;
@@ -927,6 +965,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             if(strcmp(path,"") !=0)
             {
                 FILE *archivo = fopen(usuario_logeado->path_particion,"r+b");
+                limpiar_path(path);
                 if(archivo!=NULL)
                 {
                     if(flag_p == 1)
@@ -950,13 +989,19 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                 FILE *archivo = fopen(usuario_logeado->path_particion,"r+b");
                 if(archivo!=NULL)
                 {
+                    int resultado_crear_archivo = 0;
+                    limpiar_path(path);
                     if(flag_p == 1)
                     {
-                        //
-                        ejecutar_mkdir(archivo,usuario_logeado,path,1);
+                        resultado_crear_archivo = ejecutar_mkfile(archivo,usuario_logeado,path,1,size,cont);
                     }
                     else
-                         //ejecutar_mkdir(archivo,usuario_logeado,path,0);
+                         resultado_crear_archivo = ejecutar_mkfile(archivo,usuario_logeado,path,0,size,cont);
+
+                    if(resultado_crear_archivo == 1)
+                        printf("Archivo creado con exito\n");
+                    else
+                        printf("Error no se pudo crear el archivo\n");
                     fclose(archivo);
                 }
                 else
@@ -993,5 +1038,21 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
 
 
 }
-
-
+// 0 1
+int ejecutar_cat(NODO_USR *usr_logeado,char * path_file)
+{
+    FILE *archivo = fopen(usr_logeado->path_particion,"r+b");
+    if(archivo!=NULL)
+    {
+        if(mostrar_contenido_archivo(archivo,usr_logeado,path_file) == 0)
+        {
+            printf("ERROR no se pudo imprimir con el path: %s",path_file);
+        }
+    }
+    else
+    {
+        printf("ERROR CON EL PATH EN LA EJECUCION DE CAT");
+        return 0;
+    }
+    
+}
