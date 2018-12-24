@@ -25,4 +25,6 @@ void concatenar_particion(int sizePtr,char *acum,PTR particiones[],int itera,int
 
 int sacar_porcentaje(int val_disco, int val_actual);
 
+void reporteTree(FILE *archivo,int ini_particion, char *path_reporte);
+
 #endif // REPORTE_GRAFICO_H_INCLUDED

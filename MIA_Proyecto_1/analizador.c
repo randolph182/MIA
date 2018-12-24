@@ -672,6 +672,33 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                 {
                     reporte_disk(path,path_disco,id);
                 }
+                else
+                {
+                    NODO_MOUNT *mount_particion = get_nodo_mount(id,ptr_mount);
+                    if(mount_particion!=NULL)
+                    {
+                        FILE *archivo =fopen(mount_particion->path_mount,"r+b");
+                        if(archivo !=NULL)
+                        {
+                            PTR particion = buscar_particion(archivo,mount_particion->name);
+                            if(particion.part_status == '1')
+                            {
+                                if(strcasecmp(name,"tree") ==0)
+                                {
+                                    reporteTree(archivo,particion.part_start, path);
+                                }
+                            }
+                            else
+                            {
+                                printf("ERROR:hay problemas con encontrar la particion con nombre: %s en REP \n\n",mount_particion->name);
+                            }
+                        }
+                        else{
+                            printf("Error no se puede obtener el path de la particion montada %s en rep\n",id);
+                        }
+                    }
+
+                }
             }
             else
             {

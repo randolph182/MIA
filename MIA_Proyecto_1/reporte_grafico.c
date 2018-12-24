@@ -575,3 +575,251 @@ int sacar_porcentaje(int val_disco, int val_actual)
     return resultado;
 }
 
+
+//path_archivo-> donde vamos a crearlo
+//path_disco -> donde esta el archivo bianrio para trabajar con el
+void reporteTree(FILE *archivo,int ini_particion, char *path_reporte)
+{
+    char *archivo_dot  = (char*)malloc(sizeof(char) * 100);
+    memset(archivo_dot,0,sizeof(archivo_dot));
+    char *extension = (char*)malloc(sizeof(char)*4);
+    memset(extension,0,sizeof(extension));
+
+    if(cvl_path_carpeta(path_reporte,&archivo_dot,&extension) == 1)
+    {
+       reporteTree_(archivo,ini_particion,archivo_dot,path_reporte,extension);
+    }
+    else
+        printf("ERROR: Algo salio mal en la creacion de la carpeta con path: %s\n\n",path_reporte);
+    free(archivo_dot);
+    archivo_dot = NULL;
+    free(extension);
+    extension = NULL;
+}
+
+void reporteTree_(FILE *archivo,int ini_particion,char *path_dot,char *path_reporte,char *extension)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    FILE *archivo_dot;
+    archivo_dot = fopen(path_dot,"w+"); //SI EXISTE O SI NO EXISTE LO CREA
+
+    fprintf(archivo_dot,"digraph TREE {\n");
+    fprintf(archivo_dot,"rankdir=\"LR\";\n");
+    fprintf(archivo_dot,"node [shape=record];\n");
+    fprintf(archivo_dot,"style=\"bold, filled, striped\";\n");
+    escribir_inodo(archivo,archivo_dot,ini_particion,-1,0); // 0 porque iniciamos desde el padre
+    fprintf(archivo_dot,"\n}");
+    fclose(archivo_dot);
+
+   char *comando = (char*)malloc(sizeof(char)*100);
+   memset(comando,0,sizeof(comando));
+
+   strcat(comando,"dot ");
+   strcat(comando,path_dot);
+   strcat(comando," -o ");
+   strcat(comando,path_reporte);
+
+   if(strcasecmp(extension,"png") ==0)
+   {
+    strcat(comando," -Tpng");
+   }
+   else if(strcasecmp(extension,"jpg") ==0)
+   {
+    strcat(comando," -Tjpg");
+   }
+   else if(strcasecmp(extension,"pdf") ==0)
+   {
+    strcat(comando," -Tpdf");
+   }
+
+  // printf("%s\n",comando);
+   int flag = system(comando);
+     printf("Reporte Generado!\n\n");
+
+
+}
+
+void escribir_inodo(FILE * archivo,FILE *archivo_dot,int ini_particion,int bm_bloque,int bm_inodo)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    TI inodo_actual;
+    int pos_inodo = sb.s_inode_start + (bm_inodo * sizeof(TI));
+    fseek(archivo,pos_inodo,SEEK_SET);
+    fread(&inodo_actual,sizeof(TI),1,archivo);
+    char entero[50];
+    fprintf(archivo_dot,"\tnode[width=2,style=\"filled\",fillcolor=\"orange\"];\n");
+    fprintf(archivo_dot,"\tinodo");
+    fprintf(archivo_dot,"%d",bm_inodo);
+    fprintf(archivo_dot,"[fillcolor=\"orange\",label=\"\n");
+    fprintf(archivo_dot,"\t\t{ INODO ");//  );
+    fprintf(archivo_dot,"%d",bm_inodo);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ i_uid\t| ");
+    fprintf(archivo_dot,"%d",inodo_actual.i_uid);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ i_gid\t| ");
+    fprintf(archivo_dot,"%d",inodo_actual.i_gid);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ i_size\t| ");
+    fprintf(archivo_dot,"%d",inodo_actual.i_size);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ i_atime\t| ");
+    fprintf(archivo_dot,inodo_actual.i_atime);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ i_ctime\t| ");
+    fprintf(archivo_dot,inodo_actual.i_ctime);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ i_mtime\t| ");
+    fprintf(archivo_dot,inodo_actual.i_mtime);
+    fprintf(archivo_dot," }|\n");
+
+    for(int i = 0; i < 15; i++)
+    {
+        if(inodo_actual.i_block[i] != -1)
+        {
+            fprintf(archivo_dot,"\t\t{ i_block[");//\t| ");
+            fprintf(archivo_dot,"%d",i+1);
+            fprintf(archivo_dot,"]\t| ");
+            fprintf(archivo_dot,"<ap");
+            fprintf(archivo_dot,"%d",inodo_actual.i_block[i]);
+            fprintf(archivo_dot,"> ");
+            fprintf(archivo_dot,"%d",inodo_actual.i_block[i]);
+            fprintf(archivo_dot," }|\n");
+        }
+    }
+
+    fprintf(archivo_dot,"\t\t{ i_type\t| ");
+    fprintf(archivo_dot,"%c",inodo_actual.i_type);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ i_perm\t| ");
+    fprintf(archivo_dot,"%d",inodo_actual.i_perm);
+    fprintf(archivo_dot," }|\n");
+
+    fprintf(archivo_dot,"\t\"];\n");
+
+    if(bm_bloque != -1)
+    {
+        //haciendo enlace
+        fprintf(archivo_dot,"\tblock");
+        fprintf(archivo_dot,"%d",bm_bloque);
+        fprintf(archivo_dot,":");
+        fprintf(archivo_dot,"ap");
+        fprintf(archivo_dot,"%d",bm_inodo);
+        fprintf(archivo_dot," -> ");
+        fprintf(archivo_dot,"inodo");
+        fprintf(archivo_dot,"%d",bm_inodo);
+        fprintf(archivo_dot,"\n");
+        
+    }
+    for(int i = 0; i < 15; i++)
+    {
+        if(inodo_actual.i_block[i] != -1)
+        {
+            if(inodo_actual.i_type == '0') //carpeta
+                escribir_bloque_carpeta(archivo,archivo_dot,ini_particion,bm_inodo,inodo_actual.i_block[i]);
+            else if(inodo_actual.i_type == '1') //carpeta
+                escribir_bloque_archivo(archivo,archivo_dot,ini_particion,bm_inodo,inodo_actual.i_block[i]);
+        }
+    }
+}
+
+void escribir_bloque_carpeta(FILE * archivo,FILE *archivo_dot,int ini_particion,int bm_inodo,int bm_bloque)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    BC bc_actual;
+    int pos_bloque = sb.s_block_start + (bm_bloque * 64);
+    fseek(archivo,pos_bloque,SEEK_SET);
+    fread(&bc_actual,sizeof(BC),1,archivo);
+
+    fprintf(archivo_dot,"\tnode[width=2,style=\"filled\",fillcolor=\"olivedrab2\"];\n");
+    fprintf(archivo_dot,"\tblock");
+    fprintf(archivo_dot,"%d",bm_bloque);
+    fprintf(archivo_dot,"[fillcolor=\"olivedrab2\",label=\"\n");
+    fprintf(archivo_dot,"\t\t{ BLOQUE CARPETA ");//  );
+    fprintf(archivo_dot,"%d",bm_bloque);
+    fprintf(archivo_dot," }|\n");
+    
+    for(int i = 0; i < 4; i++)
+    {
+        if(bc_actual.b_content[i].b_inodo != -1)
+        {
+            fprintf(archivo_dot,"\t\t{");
+            fprintf(archivo_dot,bc_actual.b_content[i].b_name);
+            fprintf(archivo_dot,"\t| ");
+            fprintf(archivo_dot,"<ap");
+            fprintf(archivo_dot,"%d",bc_actual.b_content[i].b_inodo);
+            fprintf(archivo_dot,"> ");
+            fprintf(archivo_dot,"%d",bc_actual.b_content[i].b_inodo);
+            fprintf(archivo_dot," }|\n");
+        }
+    }
+    fprintf(archivo_dot,"\t\"];\n");
+
+    //haciendo enlace
+    fprintf(archivo_dot,"\tinodo");
+    fprintf(archivo_dot,"%d",bm_inodo);
+    fprintf(archivo_dot,":");
+    fprintf(archivo_dot,"ap");
+    fprintf(archivo_dot,"%d",bm_bloque);
+    fprintf(archivo_dot," -> ");
+    fprintf(archivo_dot,"block");
+    fprintf(archivo_dot,"%d",bm_bloque);
+    fprintf(archivo_dot,"\n");
+
+    for(int i = 0; i < 4; i++)
+    {
+        if(bc_actual.b_content[i].b_inodo != -1)
+        {
+            if(strcmp(bc_actual.b_content[i].b_name,".") != 0 && strcmp(bc_actual.b_content[i].b_name,"..") != 0)
+            {
+                escribir_inodo( archivo,archivo_dot,ini_particion,bm_bloque,bc_actual.b_content[i].b_inodo);
+            }
+            
+        }
+    }
+}
+
+
+void escribir_bloque_archivo(FILE * archivo,FILE *archivo_dot,int ini_particion,int bm_inodo,int bm_bloque)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    BA ba_actual;
+    int pos_bloque = sb.s_block_start + (bm_bloque * 64);
+    fseek(archivo,pos_bloque,SEEK_SET);
+    fread(&ba_actual,sizeof(BA),1,archivo);
+
+    fprintf(archivo_dot,"\tnode[width=2,style=\"filled\",fillcolor=\"deepskyblue3\"];\n");
+    fprintf(archivo_dot,"\tblock");
+    fprintf(archivo_dot,"%d",bm_bloque);
+    fprintf(archivo_dot,"[fillcolor=\"deepskyblue3\",label=\"\n");
+    fprintf(archivo_dot,"\t\t{ BLOQUE ARCHIVO ");//  );
+    fprintf(archivo_dot,"%d",bm_bloque);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ ");
+    fprintf(archivo_dot,ba_actual.b_content);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\"];\n");
+    //haciendo enlace
+    fprintf(archivo_dot,"\tinodo");
+    fprintf(archivo_dot,"%d",bm_inodo);
+    fprintf(archivo_dot,":");
+    fprintf(archivo_dot,"ap");
+    fprintf(archivo_dot,"%d",bm_bloque);
+    fprintf(archivo_dot," -> ");
+    fprintf(archivo_dot,"block");
+    fprintf(archivo_dot,"%d",bm_bloque);
+    fprintf(archivo_dot,"\n");
+    
+}

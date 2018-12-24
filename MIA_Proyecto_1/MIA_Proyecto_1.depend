@@ -154,10 +154,10 @@
 	<string.h>
 	<stdio.h>
 
-1544491013 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/reporte_grafico.c
+1545613008 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/reporte_grafico.c
 	"reporte_grafico.h"
 
-1544929613 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/reporte_grafico.h
+1545604969 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/reporte_grafico.h
 	<string.h>
 	<stdio.h>
 	"admin_disco.h"
@@ -196,7 +196,7 @@
 1544993539 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/admin_disco.c
 	"admin_disco.h"
 
-1545541466 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/analizador.c
+1545603508 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/analizador.c
 	"analizador.h"
 	"admin_disco.h"
 
