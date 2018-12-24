@@ -575,9 +575,7 @@ int sacar_porcentaje(int val_disco, int val_actual)
     return resultado;
 }
 
-
-//path_archivo-> donde vamos a crearlo
-//path_disco -> donde esta el archivo bianrio para trabajar con el
+//path del reporte es a donde lo voy a graficar 
 void reporteTree(FILE *archivo,int ini_particion, char *path_reporte)
 {
     char *archivo_dot  = (char*)malloc(sizeof(char) * 100);
@@ -822,4 +820,159 @@ void escribir_bloque_archivo(FILE * archivo,FILE *archivo_dot,int ini_particion,
     fprintf(archivo_dot,"%d",bm_bloque);
     fprintf(archivo_dot,"\n");
     
+}
+
+void reporteInode(FILE *archivo,int ini_particion, char *path_reporte)
+{
+    char *archivo_dot  = (char*)malloc(sizeof(char) * 100);
+    memset(archivo_dot,0,sizeof(archivo_dot));
+    char *extension = (char*)malloc(sizeof(char)*4);
+    memset(extension,0,sizeof(extension));
+
+    if(cvl_path_carpeta(path_reporte,&archivo_dot,&extension) == 1)
+    {
+       reporteInode_(archivo,ini_particion,archivo_dot,path_reporte,extension);
+    }
+    else
+        printf("ERROR: Algo salio mal en la creacion de la carpeta con path: %s\n\n",path_reporte);
+    free(archivo_dot);
+    archivo_dot = NULL;
+    free(extension);
+    extension = NULL;
+}
+
+void reporteInode_(FILE *archivo,int ini_particion,char *path_dot,char *path_reporte,char *extension)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    FILE *archivo_dot;
+    archivo_dot = fopen(path_dot,"w+"); //SI EXISTE O SI NO EXISTE LO CREA
+
+    fprintf(archivo_dot,"digraph INODE{\n");
+    fprintf(archivo_dot,"rankdir=\"LR\";\n");
+    fprintf(archivo_dot,"node [shape=record];\n");
+    fprintf(archivo_dot,"style=\"bold, filled, striped\";\n");
+    
+    //parte donde escribimos todos los inodos
+    int ini_bm_inodo = sb.s_bm_inode_start;
+    int fin_bm_inodo = sb.s_bm_inode_start + sb.s_inodes_count;
+
+    char bit;
+    int bm_anterior = -1;
+    int count_bm_inodo = 0;
+    for (int i = ini_bm_inodo; i < fin_bm_inodo; i++)
+    {
+        fseek(archivo, i, SEEK_SET);
+        fread(&bit, sizeof(char), 1, archivo);
+        if (bit == '1')
+        {
+            escribir_inodo_tipo2(archivo,archivo_dot,ini_particion,bm_anterior,count_bm_inodo);
+        }
+        bm_anterior = count_bm_inodo;
+        count_bm_inodo++;
+    }
+
+    //escribir_inodo_tipo2
+
+    fprintf(archivo_dot,"\n}");
+    fclose(archivo_dot);
+
+   char *comando = (char*)malloc(sizeof(char)*100);
+   memset(comando,0,sizeof(comando));
+
+   strcat(comando,"dot ");
+   strcat(comando,path_dot);
+   strcat(comando," -o ");
+   strcat(comando,path_reporte);
+
+   if(strcasecmp(extension,"png") ==0)
+   {
+    strcat(comando," -Tpng");
+   }
+   else if(strcasecmp(extension,"jpg") ==0)
+   {
+    strcat(comando," -Tjpg");
+   }
+   else if(strcasecmp(extension,"pdf") ==0)
+   {
+    strcat(comando," -Tpdf");
+   }
+
+  // printf("%s\n",comando);
+   int flag = system(comando);
+     printf("Reporte Generado!\n\n");
+}
+
+
+void escribir_inodo_tipo2(FILE * archivo,FILE *archivo_dot,int ini_particion,int bm_inodo_anterior,int bm_inodo_actual)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    TI inodo_actual;
+    int pos_inodo = sb.s_inode_start + (bm_inodo_actual * sizeof(TI));
+    fseek(archivo,pos_inodo,SEEK_SET);
+    fread(&inodo_actual,sizeof(TI),1,archivo);
+    char entero[50];
+    fprintf(archivo_dot,"\tnode[width=2,style=\"filled\",fillcolor=\"orange\"];\n");
+    fprintf(archivo_dot,"\tinodo");
+    fprintf(archivo_dot,"%d",bm_inodo_actual);
+    fprintf(archivo_dot,"[fillcolor=\"orange\",label=\"\n");
+    fprintf(archivo_dot,"\t\t{ INODO ");//  );
+    fprintf(archivo_dot,"%d",bm_inodo_actual);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ i_uid\t| ");
+    fprintf(archivo_dot,"%d",inodo_actual.i_uid);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ i_gid\t| ");
+    fprintf(archivo_dot,"%d",inodo_actual.i_gid);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ i_size\t| ");
+    fprintf(archivo_dot,"%d",inodo_actual.i_size);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ i_atime\t| ");
+    fprintf(archivo_dot,inodo_actual.i_atime);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ i_ctime\t| ");
+    fprintf(archivo_dot,inodo_actual.i_ctime);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ i_mtime\t| ");
+    fprintf(archivo_dot,inodo_actual.i_mtime);
+    fprintf(archivo_dot," }|\n");
+
+    for(int i = 0; i < 15; i++)
+    {
+        if(inodo_actual.i_block[i] != -1)
+        {
+            fprintf(archivo_dot,"\t\t{ i_block[");//\t| ");
+            fprintf(archivo_dot,"%d",i+1);
+            fprintf(archivo_dot,"]\t| ");
+            fprintf(archivo_dot,"%d",inodo_actual.i_block[i]);
+            fprintf(archivo_dot," }|\n");
+        }
+    }
+
+    fprintf(archivo_dot,"\t\t{ i_type\t| ");
+    fprintf(archivo_dot,"%c",inodo_actual.i_type);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ i_perm\t| ");
+    fprintf(archivo_dot,"%d",inodo_actual.i_perm);
+    fprintf(archivo_dot," }|\n");
+
+    fprintf(archivo_dot,"\t\"];\n");
+
+    if(bm_inodo_anterior != -1)
+    {
+        //haciendo enlace
+        fprintf(archivo_dot,"\tinodo");
+        fprintf(archivo_dot,"%d",bm_inodo_anterior);
+        fprintf(archivo_dot," -> ");
+        fprintf(archivo_dot,"inodo");
+        fprintf(archivo_dot,"%d",bm_inodo_actual);
+        fprintf(archivo_dot,"\n");
+        
+    }
 }

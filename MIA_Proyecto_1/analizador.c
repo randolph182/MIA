@@ -729,6 +729,10 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                                 {
                                     reporteTree(archivo,particion.part_start, path);
                                 }
+                                if(strcasecmp(name,"inode") ==0)
+                                {
+                                    reporteInode(archivo,particion.part_start, path);
+                                }
                             }
                             else
                             {

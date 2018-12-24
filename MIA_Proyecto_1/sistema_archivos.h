@@ -102,6 +102,10 @@ struct BLOQUE_APUNTADORES
     int b_pointers[16]; //Array con los apuntadores hacia bloques (de archivo o carpeta)
 };
 //========================================================== JOURNAL =======================
+void inicializar_journal(FILE *archivo,int ini_particion);
+int registrar_journal(FILE *archivo,int ini_particion,char tipo_op,char tipo_log,char *nombre,char *contenido,char propietario,int permisos);
+void listar_log(FILE *archivo,int ini_particion);
+void ejecutar_recovery(FILE *archivo,NODO_USR *usr_logeado);
 
 //=================================================================================
 int crear_ext3(FILE *archivo,int size_particion,int inicio_particion,char *name_particion);
