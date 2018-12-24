@@ -106,12 +106,16 @@ void ejecutar_recovery(FILE *archivo,NODO_USR *usr_logeado)
         fread(&journal,sizeof(LOG),1,archivo);
         if(journal.Journal_Tipo_Operacion != '0')
         {
-            if(journal.Journal_Tipo_Operacion  == '1') //mkdir
+            if(journal.Journal_Tipo_Operacion  == '1') //mkdir creacion de carpetas
             {
                 if(strcmp(journal.Journal_contenido,"p") == 0)
                     ejecutar_mkdir(archivo,usr_logeado,journal.Journal_nombre,1,1);
                 else
                     ejecutar_mkdir(archivo,usr_logeado,journal.Journal_nombre,0,1);
+            }
+            else if(journal.Journal_Tipo_Operacion == '2') //mkfile creacion de archivos
+            {
+                ejecutar_mkfile(archivo,usr_logeado,journal.Journal_nombre,1,0,journal.Journal_contenido,1);
             }
         }
     }
@@ -778,7 +782,7 @@ int ejecutar_mkdir(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int log)
                 }
             }
         }
-        //si llega hasta aqui es porque si pudo crear todas las carpetas
+        //si llega hasta aqui es porque si pudo crear todas las carpetas y si log == 1 es porque viene uno 
         if(log == 0)
         {
             if(p == 1)
@@ -1451,13 +1455,14 @@ int crear_bc_bap(FILE *archivo,char *nombre_c,int ini_particion,int bm_bap_padre
 }
 
 
-int ejecutar_mkfile(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int size,char *contenido)
+int ejecutar_mkfile(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int size,char *contenido,int log)
 {
     //primero listamos todas las carpetas con su archivo
     CHAR_ARRAY elementos[30];
     //:::::::::::::::: PROCESO DONDE SE LISTAN LAS CARPETAS QUE VIENEN EN EL PATH
     int contador_elementos = 0;
-    char *path_tmp ;
+    char path_tmp[200];
+    strcpy(path_tmp,path);
     char *nombre_elemento;
     int size_elem =0;
     while ((nombre_elemento = strtok_r(path, "/", &path))) //nos movemos carpeta por carpeta
@@ -1502,20 +1507,30 @@ int ejecutar_mkfile(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int siz
                     {
                         char *nueva_cadena  =  (char*)malloc(sizeof(char)*1024);
                         memset(nueva_cadena,0,sizeof(nueva_cadena));
-
-                        if(strcmp(contenido,"") == 0)
+                        
+                        if(log == 0)
                         {
-                            listar_info_to_archivo(size,contenido,1,nueva_cadena);
+                            if(strcmp(contenido,"") == 0)
+                            {
+                                listar_info_to_archivo(size,contenido,1,nueva_cadena);
+                            }
+                            else
+                                listar_info_to_archivo(size,contenido,0,nueva_cadena);
                         }
                         else
-                            listar_info_to_archivo(size,contenido,0,nueva_cadena);
-                           // nueva_cadena = listar_info_to_archivo(size,contenido,0);
+                            strcpy(nueva_cadena,contenido);
+                        
                         if(nueva_cadena != NULL)
                         {
                             int result_set_info_archivo = insertar_info_archivo(archivo,usr_logeado->inicio_particion,bm_arch,nueva_cadena);
                             if(result_set_info_archivo == 1)
                             {
                                 printf("se inserto adecuadamente la informacion\n");
+                                
+                                if(log == 0)
+                                {
+                                    registrar_journal(archivo,usr_logeado->inicio_particion,'2','1',path_tmp,nueva_cadena,'1','664');
+                                }
                                 return 1;
                             }
                             else

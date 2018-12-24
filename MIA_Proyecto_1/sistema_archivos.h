@@ -140,7 +140,7 @@ int crear_bc_bap(FILE *archivo,char *nombre_c,int ini_particion,int bm_bap_padre
 int crear_carpeta_bloque_ap(FILE *archivo,char *nombre_c,int ini_particion,int bm_padre,int id_usr,int id_grp,int *new_bm,int tipo_bap);
 
 //========================================================== METODOS QUE SE UTILIZARON PARA MKFILE =======================
-int ejecutar_mkfile(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int size,char *contenido);
+int ejecutar_mkfile(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int size,char *contenido,int log);
 int verificar_permisos(FILE *archivo,NODO_USR *usr_logeado,int bm_inodo,int tipo_permiso);
 int crear_inodo_archivo(FILE *archivo,NODO_USR *usr_logeado);
 int buscar_archivo(FILE *archivo,int ini_particion,int bm_inocarp,char *nombre_archivo);

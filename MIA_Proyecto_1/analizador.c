@@ -1063,10 +1063,10 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                     limpiar_path(path);
                     if(flag_p == 1)
                     {
-                        resultado_crear_archivo = ejecutar_mkfile(archivo,usuario_logeado,path,1,size,cont);
+                        resultado_crear_archivo = ejecutar_mkfile(archivo,usuario_logeado,path,1,size,cont,0);
                     }
                     else
-                         resultado_crear_archivo = ejecutar_mkfile(archivo,usuario_logeado,path,0,size,cont);
+                         resultado_crear_archivo = ejecutar_mkfile(archivo,usuario_logeado,path,0,size,cont,0);
 
                     if(resultado_crear_archivo == 1)
                         printf("Archivo creado con exito\n");
