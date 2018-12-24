@@ -976,3 +976,102 @@ void escribir_inodo_tipo2(FILE * archivo,FILE *archivo_dot,int ini_particion,int
         
     }
 }
+
+void reporte_bm_inodo(FILE *archivo,int ini_particion, char *path_reporte)
+{
+    char *archivo_dot  = (char*)malloc(sizeof(char) * 100);
+    memset(archivo_dot,0,sizeof(archivo_dot));
+    char *extension = (char*)malloc(sizeof(char)*4);
+    memset(extension,0,sizeof(extension));
+
+    if(cvl_path_carpeta(path_reporte,&archivo_dot,&extension) == 1)
+    {
+       reporte_bm_inodo_(archivo,ini_particion,path_reporte);
+    }
+    else
+        printf("ERROR: Algo salio mal en la creacion de la carpeta con path: %s\n\n",path_reporte);
+    free(archivo_dot);
+    archivo_dot = NULL;
+    free(extension);
+    extension = NULL;
+}
+
+void reporte_bm_inodo_(FILE *archivo,int ini_particion,char *path_reporte)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    FILE *archivo_repo;
+    archivo_repo = fopen(path_reporte,"w+"); //SI EXISTE O SI NO EXISTE LO CREA
+    
+    int ini_bm_inodo = sb.s_bm_inode_start;
+    int fin_bm_inodo = sb.s_bm_inode_start + sb.s_inodes_count;
+
+    char bit;
+    int count_bm_inodo = 0;
+    for (int i = ini_bm_inodo; i < fin_bm_inodo; i++)
+    {
+        if(count_bm_inodo == 20)
+        {
+            fprintf(archivo_repo,"\n");
+            count_bm_inodo = 0;
+        }
+            
+
+        fseek(archivo, i, SEEK_SET);
+        fread(&bit, sizeof(char), 1, archivo);
+        fprintf(archivo_repo,"%c",bit);
+        count_bm_inodo++;
+    }
+    fclose(archivo_repo);
+}
+
+void reporte_bm_bloque(FILE *archivo,int ini_particion, char *path_reporte)
+{
+    char *archivo_dot  = (char*)malloc(sizeof(char) * 100);
+    memset(archivo_dot,0,sizeof(archivo_dot));
+    char *extension = (char*)malloc(sizeof(char)*4);
+    memset(extension,0,sizeof(extension));
+
+    if(cvl_path_carpeta(path_reporte,&archivo_dot,&extension) == 1)
+    {
+       reporte_bm_bloque_(archivo,ini_particion,path_reporte);
+    }
+    else
+        printf("ERROR: Algo salio mal en la creacion de la carpeta con path: %s\n\n",path_reporte);
+    free(archivo_dot);
+    archivo_dot = NULL;
+    free(extension);
+    extension = NULL;
+}
+
+void reporte_bm_bloque_(FILE *archivo,int ini_particion,char *path_reporte)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    FILE *archivo_repo;
+    archivo_repo = fopen(path_reporte,"w+"); //SI EXISTE O SI NO EXISTE LO CREA
+    
+    int ini_bm_inodo = sb.s_bm_block_start;
+    int fin_bm_inodo = sb.s_bm_block_start + (3*sb.s_inodes_count);
+
+    char bit;
+    int count_bm_inodo = 0;
+    for (int i = ini_bm_inodo; i < fin_bm_inodo; i++)
+    {
+        if(count_bm_inodo == 20)
+        {
+            fprintf(archivo_repo,"\n");
+            count_bm_inodo = 0;
+        }
+            
+        fseek(archivo, i, SEEK_SET);
+        fread(&bit, sizeof(char), 1, archivo);
+        fprintf(archivo_repo,"%c",bit);
+        count_bm_inodo++;
+    }
+    fclose(archivo_repo);
+}

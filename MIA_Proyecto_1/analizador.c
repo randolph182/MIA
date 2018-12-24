@@ -729,15 +729,24 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                                 {
                                     reporteTree(archivo,particion.part_start, path);
                                 }
-                                if(strcasecmp(name,"inode") ==0)
+                                else if(strcasecmp(name,"inode") ==0)
                                 {
                                     reporteInode(archivo,particion.part_start, path);
+                                }
+                                else if(strcasecmp(name,"bm_inode") == 0)
+                                {
+                                    reporte_bm_inodo(archivo,particion.part_start,path);
+                                }
+                                else if(strcasecmp(name,"bm_block") == 0)
+                                {
+                                    reporte_bm_bloque(archivo,particion.part_start,path);
                                 }
                             }
                             else
                             {
                                 printf("ERROR:hay problemas con encontrar la particion con nombre: %s en REP \n\n",mount_particion->name);
                             }
+                            fclose(archivo);
                         }
                         else{
                             printf("Error no se puede obtener el path de la particion montada %s en rep\n",id);
