@@ -1655,6 +1655,7 @@ int crear_inodo_archivo(FILE *archivo,NODO_USR *usr_logeado)
         strcpy(inodo_nuevo.i_ctime, fecha);
         strcpy(inodo_nuevo.i_mtime, fecha);
         inodo_nuevo.i_atime[0] = '0';
+        inodo_nuevo.i_perm = 664;
         //Escribiendo el inodo nuevo
         int pos_inodo = sb_tmp[0].s_inode_start + count_bm * sizeof(TI);
         fseek(archivo, pos_inodo, SEEK_SET);
@@ -2297,6 +2298,43 @@ int buscar_apt_ino_carp_to_ino_arch(FILE *archivo,int ini_particion,int bm_inoca
                 }
             }
 
+        }
+        else
+        {
+            int pos_bm_bloque = crear_bloque_carpeta_bm(archivo,ini_particion);
+            if(pos_bm_bloque != -1)
+            {
+                BC nuevo_bloque;
+                memset(nuevo_bloque.b_content[0].b_name,0,sizeof(nuevo_bloque.b_content[0].b_name));
+                strcpy(nuevo_bloque.b_content[0].b_name,name);
+                nuevo_bloque.b_content[0].b_inodo = bm_inoarch;
+
+                memset(nuevo_bloque.b_content[1].b_name,0,sizeof(nuevo_bloque.b_content[1].b_name));
+                nuevo_bloque.b_content[1].b_inodo = -1;
+                memset(nuevo_bloque.b_content[2].b_name,0,sizeof(nuevo_bloque.b_content[2].b_name));
+                nuevo_bloque.b_content[2].b_inodo = -1;
+                memset(nuevo_bloque.b_content[3].b_name,0,sizeof(nuevo_bloque.b_content[3].b_name));
+                nuevo_bloque.b_content[3].b_inodo = -1;
+                //::::: escribiendo el nuevo bloque
+                int posicion_bloque = sb_tmp[0].s_block_start  + 64 * pos_bm_bloque;
+                fseek(archivo, posicion_bloque, SEEK_SET);
+                fwrite(&nuevo_bloque, sizeof(BC), 1, archivo);
+                //:::::::::ACTUALIZANDO EL SUPER BLOQUE
+                sb_tmp[0].s_free_blocks_count--;
+                fseek(archivo, ini_particion, SEEK_SET);
+                fwrite(sb_tmp, sizeof(SB), 1, archivo);
+
+                inodo_carp[0].i_block[i] = pos_bm_bloque;
+                // :::::::::::::::: RE - ESCRIBIENDO INODO
+                fseek(archivo,pos_byte_icarp,SEEK_SET);
+                fwrite(inodo_carp,sizeof(TI),1,archivo);
+                return 1;
+            }
+            else
+            {
+                printf("ERROR: El bitmap de bloque se quedo sin espacio para uno nuevo\n");
+                return 0;
+            }
         }
     }
     return 0;
