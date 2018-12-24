@@ -792,7 +792,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                                      full_particion(archivo,particion.part_start,particion.part_size);
                                  else if(strcmp(type_mkfs,"") == 0)
                                     full_particion(archivo,particion.part_start,particion.part_size);
-                                    
+
                                  crear_archivo_users(archivo,particion.part_size,particion.part_start,particion.part_name);
                                  inicializar_journal(archivo,particion.part_start);
                                  printf("Se ha creado un sistema de archivos EXT3 en la particion: %s\n\n",mount_particion->name);
@@ -1040,10 +1040,10 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                 {
                     if(flag_p == 1)
                     {
-                        ejecutar_mkdir(archivo,usuario_logeado,path,1);
+                        ejecutar_mkdir(archivo,usuario_logeado,path,1,0);
                     }
                     else
-                         ejecutar_mkdir(archivo,usuario_logeado,path,0);
+                         ejecutar_mkdir(archivo,usuario_logeado,path,0,0);
                     fclose(archivo);
                 }
                 else
@@ -1100,7 +1100,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
         else if(flag_rem == 1)//========================================================= REM
         {
             if(strcmp(path,"") !=0 )
-            {  
+            {
                 limpiar_path(path);
                 FILE *archivo  = fopen(usuario_logeado->path_particion,"r+b");
                 if(archivo !=NULL)
@@ -1133,7 +1133,6 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                             //crear_ext3 automaticamente realiza un Fast con los bitmap
                             if(crear_ext3(archivo,particion.part_size,particion.part_start,particion.part_name) == 1)
                              {
-                                listar_log(archivo,particion.part_start);
                                 full_particion(archivo,particion.part_start,particion.part_size);
                                  crear_archivo_users(archivo,particion.part_size,particion.part_start,particion.part_name);
                                  listar_log(archivo,particion.part_start);
@@ -1151,7 +1150,37 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                      printf("ERROR: No se puede abrir el archivo de la particion:  ");
                      printf("%s\n\n",id);
                     }
-                    
+
+                }
+                else
+                {
+                     printf("ERROR: no se encunetra montada la articion:  ");
+                     printf("%s\n\n",id);
+                }
+            }
+            else
+                printf("ERROR: para simular una perdida necesita tener un id de particion");
+        }
+        else if(flag_recovery == 1)             //========================================================= RECOVERY
+        {
+            if(strcmp(id,"") !=0)
+            {
+                NODO_MOUNT *mount_particion = get_nodo_mount(id,ptr_mount);
+                if(mount_particion != NULL)
+                {
+                    FILE *archivo =fopen(mount_particion->path_mount,"r+b");
+
+                    if(archivo != NULL)
+                    {
+                        ejecutar_recovery(archivo,usuario_logeado);
+                        fclose(archivo);
+                    }
+                    else
+                    {
+                     printf("ERROR: No se puede abrir el archivo de la particion:  ");
+                     printf("%s\n\n",id);
+                    }
+
                 }
                 else
                 {
@@ -1163,7 +1192,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                 printf("ERROR: para simular una perdida necesita tener un id de particion");
         }
     }
-    
+
 
     /*SE LIBERA LA MEMORIA DE LOS REGISTROS*/
     free(path);

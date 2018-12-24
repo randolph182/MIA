@@ -87,7 +87,35 @@ void listar_log(FILE *archivo,int ini_particion)
     }
 }
 
+void ejecutar_recovery(FILE *archivo,NODO_USR *usr_logeado)
+{
+    SB sb;
+    fseek(archivo,usr_logeado->inicio_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
 
+    int n = sb.s_inodes_count;
+    //RECORREMOS LOS JOURNAL HASTA ENCONTRAR UNO VACIO
+
+    int ini_journal =  usr_logeado->inicio_particion + sizeof(SB);
+    int fin_journal =  ini_journal + (n * sizeof(LOG));
+    int i =-1;
+    LOG journal;
+    for( i= ini_journal; i < fin_journal; i = i + sizeof(LOG))
+    {
+        fseek(archivo,i,SEEK_SET);
+        fread(&journal,sizeof(LOG),1,archivo);
+        if(journal.Journal_Tipo_Operacion != '0')
+        {
+            if(journal.Journal_Tipo_Operacion  == '1') //mkdir
+            {
+                if(strcmp(journal.Journal_contenido,"p") == 0)
+                    ejecutar_mkdir(archivo,usr_logeado,journal.Journal_nombre,1,1);
+                else
+                    ejecutar_mkdir(archivo,usr_logeado,journal.Journal_nombre,0,1);
+            }
+        }
+    }
+}
 
 
 int crear_ext3(FILE *archivo, int size_particion, int inicio_particion, char *name_particion)
@@ -692,7 +720,7 @@ int contar_bytes_block(FILE *archivo,int pos_byte_block)
     return contador;
 }
 
-int ejecutar_mkdir(FILE *archivo,NODO_USR *usr_logeado,char *path,int p)
+int ejecutar_mkdir(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int log)
 {
     //primero listamos todas las carpetas
     CHAR_ARRAY carpetas[30];
@@ -751,12 +779,12 @@ int ejecutar_mkdir(FILE *archivo,NODO_USR *usr_logeado,char *path,int p)
             }
         }
         //si llega hasta aqui es porque si pudo crear todas las carpetas
-        if(p == 1)
+        if(log == 0)
         {
-             registrar_journal(archivo,usr_logeado->inicio_particion,'1','0',path_tmp,"p",'1',664);
-        }
-        else{
-            registrar_journal(archivo,usr_logeado->inicio_particion,'1','0',path_tmp,"",'1',664);
+            if(p == 1)
+                registrar_journal(archivo,usr_logeado->inicio_particion,'1','0',path_tmp,"p",'1',664);
+            else
+                registrar_journal(archivo,usr_logeado->inicio_particion,'1','0',path_tmp,"",'1',664);
         }
 
         return 1;
