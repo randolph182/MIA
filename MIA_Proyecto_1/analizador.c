@@ -36,6 +36,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     int flag_mkfile = 0;
     int flag_cat =0;
     int flag_file =0;
+    int flag_mv =0;
 
     int size = 0;
     char unit= 'k'; //en kilobytes por defecto
@@ -63,7 +64,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     char *fit = (char*)malloc(sizeof(char)*3);
      memset(fit,0,sizeof(fit));
 
-    
+
 
     //FASE2
     char *usr =(char*)malloc(sizeof(char)*10); //10 porque es el limite
@@ -75,7 +76,8 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
 
     char *cont = (char*)malloc(sizeof(char) * 250);
     memset(cont,0,sizeof(cont));
-
+    char *dest = (char*)malloc(sizeof(char) * 250);
+    memset(dest,0,sizeof(dest));
 /*=================== VARIABLES GENERALES ==================*/
 
 
@@ -107,6 +109,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     int flag_usr =0;
     int flag_pwd =0;
     int flag_grp =0;
+    int flag_dest = 0;
 
     while((lista[index_lst] != NULL))    //:::::::::::::::::::::::::::::::::: INICIO DEL WHILE
    {
@@ -236,6 +239,12 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                 index_lst++;
                 memset(acum_comando,0,sizeof(acum_comando));
             }
+            else if(strcasecmp(acum_comando,"mv")==0)
+            {
+                flag_mv =1;
+                index_lst++;
+                memset(acum_comando,0,sizeof(acum_comando));
+            }
             else
             {
                 if(flag_sign_mayor == 1) // ->  //agregar informacion a variables
@@ -339,14 +348,19 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                         strcpy(cont,acum_comando);
                         flag_cont =0;
                     }
+                    else if(flag_dest == 1) //============================================== dest
+                    {
+                        strcpy(dest,acum_comando);
+                        flag_dest =0;
+                    }
                     else if(flag_file == 1 && flag_cat == 1)  //============================================== cat
                     {
-                        
+
                         int result =  ejecutar_cat(usuario_logeado,acum_comando);
                         if(result == 0)
                         {
                             flag_error = 1;
-                            printf("ERROR: no se pudo seguir con la secuencia de archivos en CAT");   
+                            printf("ERROR: no se pudo seguir con la secuencia de archivos en CAT");
                             break;
                         }
                         memset(acum_comando,0,sizeof(acum_comando));
@@ -403,7 +417,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                 else{
                     printf("ERROR: hay problemas con un signo negativo, ya que se esperaba que perteneciera a un add \n\n");
                 }
-                
+
             }
             else if(cont_sign_mnos_cmd == 0) //el objetivo -size- entonces inicia - tambien puede venir un p
             {
@@ -441,6 +455,8 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                      flag_cont = 1;
                 else if(flag_file ==1)
                     flag_file = 1;
+                else if(strcasecmp(acum_comando,"dest") == 0)
+                    flag_dest = 1;
                 else
                 {
                     printf("ERROR: hubo problemas con el parametro: ");
@@ -541,12 +557,17 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                         if(result == 0)
                         {
                             flag_error = 1;
-                            printf("ERROR: no se pudo seguir con la secuencia de archivos en CAT");   
+                            printf("ERROR: no se pudo seguir con la secuencia de archivos en CAT");
                             break;
                         }
                         memset(acum_comando,0,sizeof(acum_comando));
                         printf("\n");
                         flag_file = 0;
+                    }
+                    else if(flag_dest == 1)
+                    {
+                        strcpy(dest,acum_comando);
+                        flag_dest = 0;
                     }
                     memset(acum_comando,0,sizeof(acum_comando));
                     index_lst++; //quitamos las comillas dobles del analisis
@@ -1037,6 +1058,23 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             else
                 printf("ERROR: No se ejecutar MIKFILE porque hace falta el path\n");
         }
+        else if(flag_mv == 1) //========================================================= Mv
+        {
+            if(strcmp(path,"") !=0 && strcmp(dest,"") !=0)
+            {
+                limpiar_path(path);
+                FILE *archivo = fopen(usuario_logeado->path_particion,"r+b");
+                if(archivo!=NULL)
+                {
+                    ejectuar_mv(archivo,usuario_logeado,path,dest);
+                    fclose(archivo);
+                }
+                else
+                    printf("ERROR: no se puede acceder al path: %s en el estado de MV\n\n",usuario_logeado->path_particion);
+            }
+            else
+                printf("ERROR: No se ejecutar MV porque hace falta el path o la direccion del destino\n");
+        }
     }
 
     /*SE LIBERA LA MEMORIA DE LOS REGISTROS*/
@@ -1060,6 +1098,8 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     pwd = NULL;
     free(cont);
     cont = NULL;
+    free(dest);
+    dest = NULL;
     //reseteando flag_error
     flag_error = 0;
 
@@ -1081,5 +1121,5 @@ int ejecutar_cat(NODO_USR *usr_logeado,char * path_file)
         printf("ERROR CON EL PATH EN LA EJECUCION DE CAT");
         return 0;
     }
-    
+
 }

@@ -149,5 +149,10 @@ int nuevo_apt_ind_block_archivo(FILE *archivo,int ini_particion,int *new_bm_ba,i
 int nuevo_ba_en_bapi(FILE *archivo,int ini_particion,int bm_bapi_padre,int nivel);
 int buscar_apt_ino_carp_to_ino_arch(FILE *archivo,int ini_particion,int bm_inocarp,int bm_inoarch,char *name);
 void listar_info_to_archivo(int size,char *path_contenido,int sin_path,char *str2);
+//========================================================== CAT =======================
+int mostrar_contenido_archivo(FILE *archivo,NODO_USR *usr_logeado,char *path_file);
+void imp_block_archivo(FILE *archivo,int ini_particion,int bm_ino_arch);
+
+//========================================================== MOVER =======================
 
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED

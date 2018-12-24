@@ -2278,6 +2278,262 @@ void imp_block_archivo(FILE *archivo,int ini_particion,int bm_ino_arch)
             printf("# %s",block_arch.b_content);
         }
     }
+}
+
+//========================================================== MOVER =======================
+// 1 ; 0
+int ejectuar_mv(FILE *archivo,NODO_USR *usr_logeado,char *path_origen,char *path_destino)
+{
+    char elemen[200];
+    strcpy(elemen,path_destino);
+    int bm_dest = buscar_elemento(archivo,usr_logeado->inicio_particion,elemen);
+    if(bm_dest != -1) //es porque si existe el destino
+    {
+         strcpy(elemen,path_origen);
+         int bm_origen = buscar_elemento(archivo,usr_logeado->inicio_particion,elemen);
+         if(bm_origen != -1) //es porque si existe el origen
+         {
+             //ahora que ya se vifico que existen los 2 path se procede a realizar el moviemiento
+             int result = 0;
+             int result_del =0;
+             char name[15];
+             strcpy(elemen,path_origen);
+             get_last_name_path(elemen,&name);
+             result = insert_in_apt_ino_carpeta(archivo,usr_logeado->inicio_particion,bm_dest,bm_origen,name);
+             strcpy(elemen,path_origen);
+             result_del = delet_element(archivo,usr_logeado->inicio_particion,elemen);
+             if(result == 0 || result_del ==0)
+             {
+                printf("ERROR: hubo problemas con el moviemiento de carpetas en MV revise el codigo\n\n");
+                return 0;
+             }
+         }
+         else
+         {
+             printf("ERROR: no existe el path origen: %s para realizar MV\n",path_origen);
+             return 0;
+         }
+    }
+    else
+    {
+        printf("ERROR: no existe el path destino: %s para realizar MV\n",path_destino);
+        return 0;
+    }
+
+}
 
 
+//bm  o -1
+int buscar_elemento(FILE *archivo,int ini_particion,char *path_elem)
+{
+    //primero listamos todas las carpetas con su archivo
+    CHAR_ARRAY elementos[30];
+    //:::::::::::::::: PROCESO DONDE SE LISTAN LOS ELEMENTOS QUE VIENEN EN EL PATH
+    int contador_elementos = 0;
+    char *path_tmp ;
+    char *nombre_elemento;
+    int size_elem =0;
+    while ((nombre_elemento = strtok_r(path_elem, "/", &path_elem))) //nos movemos carpeta por carpeta
+    {
+        size_elem = strlen(nombre_elemento);
+        if(size_elem < 12)
+        {
+            strcpy(elementos[contador_elementos].info,nombre_elemento);
+            elementos[contador_elementos].estado = 1;
+            contador_elementos++;
+        }
+        else
+        {
+            printf("ERROR: en el strtok se encontro un elemento con mas de 12 caracteres\n");
+            return 0;
+        }
+    }
+
+    int padre = 0; //padre siempre inicia en el inodo 1
+    int hijo = -1;
+
+    for(int i = 0; i < contador_elementos; i++)
+    {
+        verificar_carpeta(archivo,ini_particion,elementos[i].info,padre,&hijo);
+        if(hijo != -1 ) //consultamos si existe la carpeta
+        {
+            padre = hijo;
+            hijo = -1;
+        }
+        else if(hijo == -1) //no existe entonces la creamos
+            return -1;
+    }
+    return padre;
+}
+
+// retorna 1 o 0 ojo el destino tieen que ser un inodo tipo carpeta sino vale
+int insert_in_apt_ino_carpeta(FILE *archivo,int ini_part,int bm_carp,int bm_nuevo,char *nombre_nuevo)
+{
+    SB sb_tmp[1];
+    fseek(archivo,ini_part,SEEK_SET);
+    fread(sb_tmp,sizeof(SB),1,archivo);
+
+    int pos_carp = sb_tmp->s_inode_start + (bm_carp * sizeof(TI));
+    TI inodo_carp;
+    fseek(archivo,pos_carp,SEEK_SET);
+    fread(&inodo_carp,sizeof(TI),1,archivo);
+
+    if(inodo_carp.i_type == '0') //tiene que se carpeta
+    {
+
+        for(int i = 0; i < 12; i++) //por el momento solo 12 apuntadores
+        {
+            if(inodo_carp.i_block[i] != -1)
+            {
+                BC block_carp;
+                int pos_block = sb_tmp->s_block_start + (inodo_carp.i_block[i] * 64);
+                fseek(archivo,pos_block,SEEK_SET);
+                fread(&block_carp,sizeof(BC),1,archivo);
+
+                //tengo que buscar lugares vacios
+                for(int j = 0; j < 4; j++)
+                {
+                    if(block_carp.b_content[j].b_inodo == -1)
+                    {
+                        memset(block_carp.b_content[j].b_name,0,sizeof(block_carp.b_content[j].b_name));
+                        strcpy(block_carp.b_content[j].b_name,nombre_nuevo);
+                        block_carp.b_content[j].b_inodo = bm_nuevo;
+                        //reescribiendo el bloque para que se guarde
+                        fseek(archivo,pos_block,SEEK_SET);
+                        fwrite(&block_carp,sizeof(BC),1,archivo);
+                        return 1;
+                    }
+                }
+
+
+            }
+        }
+
+    }
+    else
+    {
+        printf("ERROR: al tratar de ingresar un elemento en un inodo archivo tiene que ser carpeta\n\n");
+        return 0;
+    }
+}
+
+int get_last_name_path(char *path_elem,char *name_buscado)
+{
+    //primero listamos todas las carpetas con su archivo
+    CHAR_ARRAY elementos[30];
+    //:::::::::::::::: PROCESO DONDE SE LISTAN LOS ELEMENTOS QUE VIENEN EN EL PATH
+    int contador_elementos = 0;
+    char *path_tmp ;
+    char *nombre_elemento;
+    int size_elem =0;
+    while ((nombre_elemento = strtok_r(path_elem, "/", &path_elem))) //nos movemos carpeta por carpeta
+    {
+        size_elem = strlen(nombre_elemento);
+        if(size_elem < 12)
+        {
+            strcpy(elementos[contador_elementos].info,nombre_elemento);
+            elementos[contador_elementos].estado = 1;
+            contador_elementos++;
+        }
+        else
+        {
+            printf("ERROR: en el strtok se encontro un elemento con mas de 12 caracteres\n");
+            return 0;
+        }
+    }
+    int last = contador_elementos-1;
+    strcpy(name_buscado,&elementos[last]);
+}
+
+//retorn 1 0 
+int delet_element(FILE *archivo,int ini_particion,char *path)
+{
+    //primero listamos todas las carpetas con su archivo
+    CHAR_ARRAY elementos[30];
+    //:::::::::::::::: PROCESO DONDE SE LISTAN LOS ELEMENTOS QUE VIENEN EN EL PATH
+    int contador_elementos = 0;
+    char *path_tmp ;
+    char *nombre_elemento;
+    int size_elem =0;
+    while ((nombre_elemento = strtok_r(path, "/", &path))) //nos movemos carpeta por carpeta
+    {
+        size_elem = strlen(nombre_elemento);
+        if(size_elem < 12)
+        {
+            strcpy(elementos[contador_elementos].info,nombre_elemento);
+            elementos[contador_elementos].estado = 1;
+            contador_elementos++;
+        }
+        else
+        {
+            printf("ERROR: en el strtok se encontro un elemento con mas de 12 caracteres\n");
+            return 0;
+        }
+    }
+
+    int padre = 0; //padre siempre inicia en el inodo 1
+    int hijo = -1;
+
+    for(int i = 0; i < contador_elementos; i++)
+    {
+        if(i + 1 == contador_elementos) //significa que estamos en  la ultima carpeta
+        {
+            return buscar_to_eliminar_carp(archivo, ini_particion,padre,elementos[i].info);
+        }
+        else
+        {
+            verificar_carpeta(archivo,ini_particion,elementos[i].info,padre,&hijo);
+            if(hijo != -1 ) //consultamos si existe la carpeta
+            {
+                padre = hijo;
+                hijo = -1;
+            }
+            else if(hijo == -1) //no existe entonces la creamos
+            {
+                return 0;
+            }
+        }
+
+    }
+}
+//retorn 1 - 0
+int buscar_to_eliminar_carp(FILE *archivo,int ini_particion,int bm_padre,char *name_elem)
+{
+    SB sb_tmp[1];
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(sb_tmp,sizeof(SB),1,archivo);
+
+    int pos_inodo = sb_tmp->s_inode_start + (bm_padre * sizeof(TI));
+    TI inodo;
+    fseek(archivo,pos_inodo,SEEK_SET);
+    fread(&inodo,sizeof(TI),1,archivo);
+
+    
+    for(int i = 0; i < 12; i++) //12 por el momento
+    {
+        if(inodo.i_block[i] != -1)
+        {
+            BC bloque;
+            int pos_bloque = sb_tmp->s_block_start + (inodo.i_block[i] * 64);
+            fseek(archivo,pos_bloque,SEEK_SET);
+            fread(&bloque,sizeof(BC),1,archivo);
+            
+            for(int j = 0; j < 4; j++)
+            {
+                if(bloque.b_content[j].b_inodo != -1)
+                {
+                    if(strcmp(bloque.b_content[j].b_name,name_elem) ==0)
+                    {
+                        memset(bloque.b_content[j].b_name,0,sizeof(bloque.b_content[j].b_name));
+                        bloque.b_content[j].b_inodo = -1;
+                        fseek(archivo,pos_bloque,SEEK_SET);
+                        fwrite(&bloque,sizeof(BC),1,archivo);
+                        return 1;
+                    }
+                }
+            }
+            
+        }
+    }
+    return 0;
 }
