@@ -1213,3 +1213,125 @@ void escribir_journal(FILE *archivo,FILE *archivo_dot,int ini_particion,int pos_
         fprintf(archivo_dot,"\n");
     }
 }
+
+
+void reporte_sb(FILE *archivo,int ini_particion, char *path_reporte)
+{
+    char *archivo_dot  = (char*)malloc(sizeof(char) * 100);
+    memset(archivo_dot,0,sizeof(archivo_dot));
+    char *extension = (char*)malloc(sizeof(char)*4);
+    memset(extension,0,sizeof(extension));
+
+    if(cvl_path_carpeta(path_reporte,&archivo_dot,&extension) == 1)
+    {
+      reporte_sb_(archivo,archivo_dot,ini_particion,path_reporte,extension);
+    }
+    else
+        printf("ERROR: Algo salio mal en la creacion de la carpeta con path: %s\n\n",path_reporte);
+    free(archivo_dot);
+    archivo_dot = NULL;
+    free(extension);
+    extension = NULL;
+}
+
+void reporte_sb_(FILE *archivo,char *path_dot,int ini_particion,char *path_reporte,char * extension)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    FILE *archivo_dot;
+    archivo_dot = fopen(path_dot,"w+");
+
+    fprintf(archivo_dot,"digraph mbr{\n");
+    fprintf(archivo_dot,"graph [ratio=fill];\n");
+    fprintf(archivo_dot,"node [label=\"\\N\", fontsize=15, shape=plaintext];\n");
+    fprintf(archivo_dot,"graph [bb=\"0,0,352,154\"];\n");
+    fprintf(archivo_dot,"arset [label=<\n");
+    fprintf(archivo_dot,"<TABLE ALIGN=\"LEFT\">\n");
+    fprintf(archivo_dot,"<TR>");
+    fprintf(archivo_dot,"<TD> <B> NOMBRE </B> </TD> ");
+    fprintf(archivo_dot,"<TD> <B> VALOR </B> </TD>");
+    fprintf(archivo_dot,"</TR>\n");
+
+    char tamanio [50];
+    sprintf(tamanio,"%d",sb.s_filesystem_type);
+    concat_2_val(archivo_dot,"s_filesystem_type",tamanio,3);
+
+    sprintf(tamanio,"%d",sb.s_inodes_count);
+    concat_2_val(archivo_dot,"s_inodes_count",tamanio,3);
+
+    sprintf(tamanio,"%d",sb.s_blocks_count);
+    concat_2_val(archivo_dot,"s_blocks_count",tamanio,3);
+
+
+    sprintf(tamanio,"%d",sb.s_free_blocks_count);
+    concat_2_val(archivo_dot,"s_free_blocks_count",tamanio,3);
+
+    sprintf(tamanio,"%d",sb.s_free_inodes_count);
+    concat_2_val(archivo_dot,"s_free_inodes_count",tamanio,3);
+
+    concat_2_val(archivo_dot,"s_mtime",sb.s_mtime,3);
+
+    concat_2_val(archivo_dot,"s_umtime",sb.s_umtime,3);
+
+    sprintf(tamanio,"%d",sb.s_mnt_count);
+    concat_2_val(archivo_dot,"s_mnt_count",tamanio,3);
+
+    sprintf(tamanio,"%d",sb.s_magic);
+    concat_2_val(archivo_dot,"s_magic",tamanio,3);
+
+    sprintf(tamanio,"%d",sb.s_inode_size);
+    concat_2_val(archivo_dot,"s_inode_size",tamanio,3);
+    
+    sprintf(tamanio,"%d",sb.s_block_size);
+    concat_2_val(archivo_dot,"s_block_size",tamanio,3);
+
+    sprintf(tamanio,"%d",sb.s_first_ino);
+    concat_2_val(archivo_dot,"s_first_ino",tamanio,3);
+
+        sprintf(tamanio,"%d",sb.s_first_blo);
+    concat_2_val(archivo_dot,"s_first_blo",tamanio,3);
+
+        sprintf(tamanio,"%d",sb.s_bm_inode_start);
+    concat_2_val(archivo_dot,"s_bm_inode_start",tamanio,3);
+
+        sprintf(tamanio,"%d",sb.s_bm_block_start);
+    concat_2_val(archivo_dot,"s_bm_block_start",tamanio,3);
+
+        sprintf(tamanio,"%d",sb.s_inode_start);
+    concat_2_val(archivo_dot,"s_inode_start",tamanio,3);
+
+            sprintf(tamanio,"%d",sb.s_block_start);
+    concat_2_val(archivo_dot,"s_block_start",tamanio,3);
+
+    fprintf(archivo_dot,"</TABLE>\n");
+    fprintf(archivo_dot,">, ];\n");
+    fprintf(archivo_dot,"\n}");
+
+   fclose(archivo_dot);
+
+   char *comando = (char*)malloc(sizeof(char)*100);
+   memset(comando,0,sizeof(comando));
+   strcat(comando,"dot ");
+   strcat(comando,path_dot);
+   strcat(comando," -o ");
+   strcat(comando,path_reporte);
+
+   if(strcasecmp(extension,"png") ==0)
+   {
+    strcat(comando," -Tpng");
+   }
+   else if(strcasecmp(extension,"jpg") ==0)
+   {
+    strcat(comando," -Tjpg");
+   }
+   else if(strcasecmp(extension,"pdf") ==0)
+   {
+    strcat(comando," -Tpdf");
+   }
+
+  // printf("%s\n",comando);
+   int flag = system(comando);
+     printf("Reporte Generado!\n\n");
+}
