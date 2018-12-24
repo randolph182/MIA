@@ -741,6 +741,10 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                                 {
                                     reporte_bm_bloque(archivo,particion.part_start,path);
                                 }
+                                else if(strcasecmp(name,"Journaling") == 0)
+                                {
+                                    reporteLOG(archivo,particion.part_start,path);
+                                }
                             }
                             else
                             {

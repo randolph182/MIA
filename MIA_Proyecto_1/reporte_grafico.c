@@ -575,7 +575,7 @@ int sacar_porcentaje(int val_disco, int val_actual)
     return resultado;
 }
 
-//path del reporte es a donde lo voy a graficar 
+//path del reporte es a donde lo voy a graficar
 void reporteTree(FILE *archivo,int ini_particion, char *path_reporte)
 {
     char *archivo_dot  = (char*)malloc(sizeof(char) * 100);
@@ -713,7 +713,7 @@ void escribir_inodo(FILE * archivo,FILE *archivo_dot,int ini_particion,int bm_bl
         fprintf(archivo_dot,"inodo");
         fprintf(archivo_dot,"%d",bm_inodo);
         fprintf(archivo_dot,"\n");
-        
+
     }
     for(int i = 0; i < 15; i++)
     {
@@ -745,7 +745,7 @@ void escribir_bloque_carpeta(FILE * archivo,FILE *archivo_dot,int ini_particion,
     fprintf(archivo_dot,"\t\t{ BLOQUE CARPETA ");//  );
     fprintf(archivo_dot,"%d",bm_bloque);
     fprintf(archivo_dot," }|\n");
-    
+
     for(int i = 0; i < 4; i++)
     {
         if(bc_actual.b_content[i].b_inodo != -1)
@@ -781,7 +781,7 @@ void escribir_bloque_carpeta(FILE * archivo,FILE *archivo_dot,int ini_particion,
             {
                 escribir_inodo( archivo,archivo_dot,ini_particion,bm_bloque,bc_actual.b_content[i].b_inodo);
             }
-            
+
         }
     }
 }
@@ -819,7 +819,7 @@ void escribir_bloque_archivo(FILE * archivo,FILE *archivo_dot,int ini_particion,
     fprintf(archivo_dot,"block");
     fprintf(archivo_dot,"%d",bm_bloque);
     fprintf(archivo_dot,"\n");
-    
+
 }
 
 void reporteInode(FILE *archivo,int ini_particion, char *path_reporte)
@@ -854,7 +854,7 @@ void reporteInode_(FILE *archivo,int ini_particion,char *path_dot,char *path_rep
     fprintf(archivo_dot,"rankdir=\"LR\";\n");
     fprintf(archivo_dot,"node [shape=record];\n");
     fprintf(archivo_dot,"style=\"bold, filled, striped\";\n");
-    
+
     //parte donde escribimos todos los inodos
     int ini_bm_inodo = sb.s_bm_inode_start;
     int fin_bm_inodo = sb.s_bm_inode_start + sb.s_inodes_count;
@@ -973,7 +973,7 @@ void escribir_inodo_tipo2(FILE * archivo,FILE *archivo_dot,int ini_particion,int
         fprintf(archivo_dot,"inodo");
         fprintf(archivo_dot,"%d",bm_inodo_actual);
         fprintf(archivo_dot,"\n");
-        
+
     }
 }
 
@@ -1004,7 +1004,7 @@ void reporte_bm_inodo_(FILE *archivo,int ini_particion,char *path_reporte)
 
     FILE *archivo_repo;
     archivo_repo = fopen(path_reporte,"w+"); //SI EXISTE O SI NO EXISTE LO CREA
-    
+
     int ini_bm_inodo = sb.s_bm_inode_start;
     int fin_bm_inodo = sb.s_bm_inode_start + sb.s_inodes_count;
 
@@ -1017,7 +1017,7 @@ void reporte_bm_inodo_(FILE *archivo,int ini_particion,char *path_reporte)
             fprintf(archivo_repo,"\n");
             count_bm_inodo = 0;
         }
-            
+
 
         fseek(archivo, i, SEEK_SET);
         fread(&bit, sizeof(char), 1, archivo);
@@ -1054,7 +1054,7 @@ void reporte_bm_bloque_(FILE *archivo,int ini_particion,char *path_reporte)
 
     FILE *archivo_repo;
     archivo_repo = fopen(path_reporte,"w+"); //SI EXISTE O SI NO EXISTE LO CREA
-    
+
     int ini_bm_inodo = sb.s_bm_block_start;
     int fin_bm_inodo = sb.s_bm_block_start + (3*sb.s_inodes_count);
 
@@ -1067,11 +1067,149 @@ void reporte_bm_bloque_(FILE *archivo,int ini_particion,char *path_reporte)
             fprintf(archivo_repo,"\n");
             count_bm_inodo = 0;
         }
-            
+
         fseek(archivo, i, SEEK_SET);
         fread(&bit, sizeof(char), 1, archivo);
         fprintf(archivo_repo,"%c",bit);
         count_bm_inodo++;
     }
     fclose(archivo_repo);
+}
+
+
+
+void reporteLOG(FILE *archivo,int ini_particion, char *path_reporte)
+{
+    char *archivo_dot  = (char*)malloc(sizeof(char) * 100);
+    memset(archivo_dot,0,sizeof(archivo_dot));
+    char *extension = (char*)malloc(sizeof(char)*4);
+    memset(extension,0,sizeof(extension));
+
+    if(cvl_path_carpeta(path_reporte,&archivo_dot,&extension) == 1)
+    {
+      reporteLOG_(archivo,ini_particion,archivo_dot,path_reporte,extension);
+    }
+    else
+        printf("ERROR: Algo salio mal en la creacion de la carpeta con path: %s\n\n",path_reporte);
+    free(archivo_dot);
+    archivo_dot = NULL;
+    free(extension);
+    extension = NULL;
+}
+
+void reporteLOG_(FILE *archivo,int ini_particion,char *path_dot,char *path_reporte,char *extension)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    FILE *archivo_dot;
+    archivo_dot = fopen(path_dot,"w+"); //SI EXISTE O SI NO EXISTE LO CREA
+
+    fprintf(archivo_dot,"digraph INODE{\n");
+    fprintf(archivo_dot,"rankdir=\"LR\";\n");
+    fprintf(archivo_dot,"node [shape=record];\n");
+    fprintf(archivo_dot,"style=\"bold, filled, striped\";\n");
+
+    //parte donde escribimos todos los journals
+    int ini_log = ini_particion + sizeof(SB);
+    int fin_log = ini_log + (sb.s_inodes_count * sizeof(LOG));
+
+    LOG log_actual;
+    int cont_jouornal = 0;
+    int cont_jouornal_anterior = -1;
+    for (int i = ini_log; i < fin_log; i = i + sizeof(LOG))
+    {
+        fseek(archivo, i, SEEK_SET);
+        fread(&log_actual, sizeof(LOG), 1, archivo);
+
+        if(log_actual.Journal_Tipo_Operacion != '0')
+        {
+            escribir_journal(archivo,archivo_dot,ini_particion,i,cont_jouornal_anterior,cont_jouornal);
+        }
+        cont_jouornal_anterior = cont_jouornal;
+        cont_jouornal++;
+    }
+
+    //escribir_inodo_tipo2
+
+    fprintf(archivo_dot,"\n}");
+    fclose(archivo_dot);
+
+   char *comando = (char*)malloc(sizeof(char)*100);
+   memset(comando,0,sizeof(comando));
+
+   strcat(comando,"dot ");
+   strcat(comando,path_dot);
+   strcat(comando," -o ");
+   strcat(comando,path_reporte);
+
+   if(strcasecmp(extension,"png") ==0)
+   {
+    strcat(comando," -Tpng");
+   }
+   else if(strcasecmp(extension,"jpg") ==0)
+   {
+    strcat(comando," -Tjpg");
+   }
+   else if(strcasecmp(extension,"pdf") ==0)
+   {
+    strcat(comando," -Tpdf");
+   }
+
+  // printf("%s\n",comando);
+   int flag = system(comando);
+     printf("Reporte Generado!\n\n");
+}
+
+
+void escribir_journal(FILE *archivo,FILE *archivo_dot,int ini_particion,int pos_log,int bit_anterior,int bit_actual)
+{
+
+    LOG log;
+    fseek(archivo,pos_log,archivo);
+    fread(&log,sizeof(LOG),1,archivo);
+
+    fprintf(archivo_dot,"\tnode[width=2,style=\"filled\",fillcolor=\"orange\"];\n");
+    fprintf(archivo_dot,"\tlog");
+    fprintf(archivo_dot,"%d",bit_actual);
+    fprintf(archivo_dot,"[fillcolor=\"orange\",label=\"\n");
+    fprintf(archivo_dot,"\t\t{ JOURNAL ");//  );
+    fprintf(archivo_dot,"%d",bit_actual);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ Journal_Tipo_Operacion\t| ");
+    fprintf(archivo_dot,"%c",log.Journal_Tipo_Operacion);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ Journal_tipo\t| ");
+    fprintf(archivo_dot,"%c",log.Journal_tipo);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ Journal_nombre\t| ");
+    fprintf(archivo_dot,log.Journal_nombre);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ Journal_contenido\t| ");
+    fprintf(archivo_dot,log.Journal_contenido);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ Journal_fecha\t| ");
+    fprintf(archivo_dot,log.Journal_fecha);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ Journal_propietario\t| ");
+    fprintf(archivo_dot,"%c",log.Journal_propietario);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ Journal_permisos\t| ");
+    fprintf(archivo_dot,"%d",log.Journal_permisos);
+    fprintf(archivo_dot," }|\n");
+
+
+    fprintf(archivo_dot,"\t\"];\n");
+
+    if(bit_anterior != -1)
+    {
+        //haciendo enlace
+        fprintf(archivo_dot,"\tlog");
+        fprintf(archivo_dot,"%d",bit_anterior);
+        fprintf(archivo_dot," -> ");
+        fprintf(archivo_dot,"log");
+        fprintf(archivo_dot,"%d",bit_actual);
+        fprintf(archivo_dot,"\n");
+    }
 }
