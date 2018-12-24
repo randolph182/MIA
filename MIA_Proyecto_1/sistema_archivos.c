@@ -2537,3 +2537,16 @@ int buscar_to_eliminar_carp(FILE *archivo,int ini_particion,int bm_padre,char *n
     }
     return 0;
 }
+
+//========================================================== REM =======================
+int ejecutar_rem(FILE *archivo,NODO_USR *usr_logeado,char *path)
+{
+    char elemen[200];
+    strcpy(elemen,path);
+    int result = delet_element(archivo,usr_logeado->inicio_particion,elemen);
+    if(result == 0)
+    {
+        printf("ERROR no se pudo eliminar el archivo %s \n",path);
+        return 0;
+    }
+}

@@ -37,6 +37,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     int flag_cat =0;
     int flag_file =0;
     int flag_mv =0;
+    int flag_rem = 0;
 
     int size = 0;
     char unit= 'k'; //en kilobytes por defecto
@@ -242,6 +243,12 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             else if(strcasecmp(acum_comando,"mv")==0)
             {
                 flag_mv =1;
+                index_lst++;
+                memset(acum_comando,0,sizeof(acum_comando));
+            }
+            else if(strcasecmp(acum_comando,"rem")==0)
+            {
+                flag_rem =1;
                 index_lst++;
                 memset(acum_comando,0,sizeof(acum_comando));
             }
@@ -1075,7 +1082,25 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             else
                 printf("ERROR: No se ejecutar MV porque hace falta el path o la direccion del destino\n");
         }
+        else if(flag_rem == 1)//========================================================= REM
+        {
+            if(strcmp(path,"") !=0 )
+            {  
+                limpiar_path(path);
+                FILE *archivo  = fopen(usuario_logeado->path_particion,"r+b");
+                if(archivo !=NULL)
+                {
+                    ejecutar_rem(archivo,usuario_logeado,path);
+                    fclose(archivo);
+                }
+                else
+                    printf("ERROR: el path de la particion que se encuntra montada no pudo ser accedida en REM\n");
+            }
+            else
+                printf("ERROR: para ejecutar REM se necesita que tenga un path\n");
+        }
     }
+    
 
     /*SE LIBERA LA MEMORIA DE LOS REGISTROS*/
     free(path);

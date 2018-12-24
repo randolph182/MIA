@@ -154,5 +154,17 @@ int mostrar_contenido_archivo(FILE *archivo,NODO_USR *usr_logeado,char *path_fil
 void imp_block_archivo(FILE *archivo,int ini_particion,int bm_ino_arch);
 
 //========================================================== MOVER =======================
+int ejectuar_mv(FILE *archivo,NODO_USR *usr_logeado,char *path_origen,char *path_destino);
+//bm  o -1
+int buscar_elemento(FILE *archivo,int ini_particion,char *path_elem);
+// retorna 1 o 0 ojo el destino tieen que ser un inodo tipo carpeta sino vale
+int insert_in_apt_ino_carpeta(FILE *archivo,int ini_part,int bm_carp,int bm_nuevo,char *nombre_nuevo);
+int get_last_name_path(char *path_elem,char *name_buscado);
+//retorn 1 0 
+int delet_element(FILE *archivo,int ini_particion,char *path);
+//retorn 1 - 0
+int buscar_to_eliminar_carp(FILE *archivo,int ini_particion,int bm_padre,char *name_elem);
+
+//========================================================== REM =======================
 
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED
