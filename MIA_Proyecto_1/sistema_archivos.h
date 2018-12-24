@@ -74,10 +74,10 @@ struct JOURNALING
 {
     char Journal_Tipo_Operacion;    //El tipo de operación a realizarse
     char Journal_tipo;              //Si es Archivo(0), si es carpeta(1)
-    char Journal_nombre[12];        //Nombre archivo o directorio
+    char Journal_nombre[200];        //Nombre archivo o directorio
     char Journal_contenido[200];    //Si hay datos contenidos
     char Journal_fecha[16];         //Fecha de la transacción
-    int Journal_propietario;        //Es el propietario archivo o directorio
+    char Journal_propietario;        //Es el propietario archivo o directorio
     int Journal_permisos;           //Son los permisos que tiene el archivo o directorio
 };
 
@@ -101,7 +101,9 @@ struct BLOQUE_APUNTADORES
 {
     int b_pointers[16]; //Array con los apuntadores hacia bloques (de archivo o carpeta)
 };
+//========================================================== JOURNAL =======================
 
+//=================================================================================
 int crear_ext3(FILE *archivo,int size_particion,int inicio_particion,char *name_particion);
 void crear_archivo_users(FILE *archivo,int size_particion,int inicio_particion,char *name_particion);
 
@@ -166,5 +168,5 @@ int delet_element(FILE *archivo,int ini_particion,char *path);
 int buscar_to_eliminar_carp(FILE *archivo,int ini_particion,int bm_padre,char *name_elem);
 
 //========================================================== REM =======================
-
+int ejecutar_rem(FILE *archivo,NODO_USR *usr_logeado,char *path);
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED

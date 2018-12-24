@@ -1,5 +1,95 @@
 #include "sistema_archivos.h"
 
+void inicializar_journal(FILE *archivo,int ini_particion)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+    int n = sb.s_inodes_count;
+    int inicio_log = ini_particion + sizeof(SB);
+    int size_reservado_log = inicio_log + (n * sizeof(LOG));
+    //escribiendo logs
+
+    LOG journal;
+    for(int i = inicio_log; i < size_reservado_log; i = i + sizeof(LOG))
+    {
+        journal.Journal_Tipo_Operacion ='0'; //cero significa que el journal no ha sido modificado
+        fseek(archivo,i,SEEK_SET);
+        fwrite(&journal,sizeof(LOG),1,archivo);
+    }
+}
+// 1 -0
+int registrar_journal(FILE *archivo,int ini_particion,char tipo_op,char tipo_log,char *nombre,char *contenido,char propietario,int permisos)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    int n = sb.s_inodes_count;
+    //RECORREMOS LOS JOURNAL HASTA ENCONTRAR UNO VACIO
+
+    int ini_journal =  ini_particion + sizeof(SB);
+    int fin_journal =  ini_journal + (n * sizeof(LOG));
+    int i =-1;
+    LOG journal;
+    for( i= ini_journal; i < fin_journal; i = i + sizeof(LOG))
+    {
+        fseek(archivo,i,SEEK_SET);
+        fread(&journal,sizeof(LOG),1,archivo);
+        if(journal.Journal_Tipo_Operacion == '0')
+            break;
+    }
+    if(i != -1)
+    {
+        time_t tiempo = time(0);
+        struct tm *tlocal = localtime(&tiempo);
+        char fecha[16];
+        strftime(fecha, 16, "%d/%m/%y", tlocal);
+
+        journal.Journal_Tipo_Operacion = tipo_op;
+        journal.Journal_tipo = tipo_log;
+        memset(journal.Journal_nombre,0,sizeof(journal.Journal_nombre));
+        strcpy(journal.Journal_nombre,nombre);
+        if(strcmp(contenido,"") !=0)
+            strcpy(journal.Journal_contenido,contenido);
+        strcpy(journal.Journal_fecha,fecha);
+        journal.Journal_propietario = propietario;
+        journal.Journal_permisos = permisos;
+        fseek(archivo,i,SEEK_SET);
+        fwrite(&journal,sizeof(LOG),1,archivo);
+        return 1;
+    }
+    else{
+        printf("ADVERTENCIA!! SE QUEDO SIN ESPARCIO PARA MAS JOURNALINGS\n\n");
+        return 0;
+    }
+
+}
+void listar_log(FILE *archivo,int ini_particion)
+{
+     SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    int n = sb.s_inodes_count;
+    //RECORREMOS LOS JOURNAL HASTA ENCONTRAR UNO VACIO
+
+    int ini_journal =  ini_particion + sizeof(SB);
+    int fin_journal =  ini_journal + (n * sizeof(LOG));
+    int i =-1;
+    LOG journal;
+    for( i= ini_journal; i < fin_journal; i = i + sizeof(LOG))
+    {
+        fseek(archivo,i,SEEK_SET);
+        fread(&journal,sizeof(LOG),1,archivo);
+        if(journal.Journal_Tipo_Operacion != '0')
+            printf("%s\n",journal.Journal_nombre);
+    }
+}
+
+
+
+
 int crear_ext3(FILE *archivo, int size_particion, int inicio_particion, char *name_particion)
 {
     double calculo_bloque = (size_particion - sizeof(SB)) / (1 + sizeof(LOG) + 3 + sizeof(TI) + 3 * sizeof(BC));
@@ -608,7 +698,8 @@ int ejecutar_mkdir(FILE *archivo,NODO_USR *usr_logeado,char *path,int p)
     CHAR_ARRAY carpetas[30];
     //:::::::::::::::: PROCESO DONDE SE LISTAN LAS CARPETAS QUE VIENEN EN EL PATH
     int contador_carpeta = 0;
-    char *path_tmp ;
+    char path_tmp[200];
+    strcpy(path_tmp,path);
     char *nombre_carpeta;
     int fin =0;
     while ((nombre_carpeta = strtok_r(path, "/", &path))) //nos movemos carpeta por carpeta
@@ -655,13 +746,27 @@ int ejecutar_mkdir(FILE *archivo,NODO_USR *usr_logeado,char *path,int p)
                 else
                 {
                     printf("ERROR: no se pudo seguir con la secuencia de creacion de carpetas con path: %s\n",path);
-                    break;
+                    return 0;
                 }
             }
         }
+        //si llega hasta aqui es porque si pudo crear todas las carpetas
+        if(p == 1)
+        {
+             registrar_journal(archivo,usr_logeado->inicio_particion,'1','0',path_tmp,"p",'1',664);
+        }
+        else{
+            registrar_journal(archivo,usr_logeado->inicio_particion,'1','0',path_tmp,"",'1',664);
+        }
+
+        return 1;
     }
     else
-        printf("Problemas con el path  %s\n",path);
+    {
+        printf("Problemas con el path  %s\n",path_tmp);
+        return 0;
+    }
+
 
 }
 
@@ -2445,7 +2550,7 @@ int get_last_name_path(char *path_elem,char *name_buscado)
     strcpy(name_buscado,&elementos[last]);
 }
 
-//retorn 1 0 
+//retorn 1 0
 int delet_element(FILE *archivo,int ini_particion,char *path)
 {
     //primero listamos todas las carpetas con su archivo
@@ -2508,7 +2613,7 @@ int buscar_to_eliminar_carp(FILE *archivo,int ini_particion,int bm_padre,char *n
     fseek(archivo,pos_inodo,SEEK_SET);
     fread(&inodo,sizeof(TI),1,archivo);
 
-    
+
     for(int i = 0; i < 12; i++) //12 por el momento
     {
         if(inodo.i_block[i] != -1)
@@ -2517,7 +2622,7 @@ int buscar_to_eliminar_carp(FILE *archivo,int ini_particion,int bm_padre,char *n
             int pos_bloque = sb_tmp->s_block_start + (inodo.i_block[i] * 64);
             fseek(archivo,pos_bloque,SEEK_SET);
             fread(&bloque,sizeof(BC),1,archivo);
-            
+
             for(int j = 0; j < 4; j++)
             {
                 if(bloque.b_content[j].b_inodo != -1)
@@ -2532,7 +2637,7 @@ int buscar_to_eliminar_carp(FILE *archivo,int ini_particion,int bm_padre,char *n
                     }
                 }
             }
-            
+
         }
     }
     return 0;

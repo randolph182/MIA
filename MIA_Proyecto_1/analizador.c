@@ -38,6 +38,8 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     int flag_file =0;
     int flag_mv =0;
     int flag_rem = 0;
+    int flag_recovery  = 0;
+    int flag_loss = 0;
 
     int size = 0;
     char unit= 'k'; //en kilobytes por defecto
@@ -249,6 +251,18 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             else if(strcasecmp(acum_comando,"rem")==0)
             {
                 flag_rem =1;
+                index_lst++;
+                memset(acum_comando,0,sizeof(acum_comando));
+            }
+            else if(strcasecmp(acum_comando,"recovery")==0)
+            {
+                flag_recovery =1;
+                index_lst++;
+                memset(acum_comando,0,sizeof(acum_comando));
+            }
+            else if(strcasecmp(acum_comando,"loss")==0)
+            {
+                flag_loss =1;
                 index_lst++;
                 memset(acum_comando,0,sizeof(acum_comando));
             }
@@ -778,8 +792,9 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                                      full_particion(archivo,particion.part_start,particion.part_size);
                                  else if(strcmp(type_mkfs,"") == 0)
                                     full_particion(archivo,particion.part_start,particion.part_size);
-
+                                    
                                  crear_archivo_users(archivo,particion.part_size,particion.part_start,particion.part_name);
+                                 inicializar_journal(archivo,particion.part_start);
                                  printf("Se ha creado un sistema de archivos EXT3 en la particion: %s\n\n",mount_particion->name);
                              }
                         }
@@ -1098,6 +1113,54 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             }
             else
                 printf("ERROR: para ejecutar REM se necesita que tenga un path\n");
+        }
+        else if(flag_loss == 1)             //========================================================= LOSS
+        {
+            if(strcmp(id,"") !=0)
+            {
+                NODO_MOUNT *mount_particion = get_nodo_mount(id,ptr_mount);
+                if(mount_particion != NULL)
+                {
+                    FILE *archivo =fopen(mount_particion->path_mount,"r+b");
+
+                    if(archivo != NULL)
+                    {
+                        int inicio_particion =0;
+                        PTR particion = buscar_particion(archivo,mount_particion->name);
+
+                        if(particion.part_status == '1')
+                        {
+                            //crear_ext3 automaticamente realiza un Fast con los bitmap
+                            if(crear_ext3(archivo,particion.part_size,particion.part_start,particion.part_name) == 1)
+                             {
+                                listar_log(archivo,particion.part_start);
+                                full_particion(archivo,particion.part_start,particion.part_size);
+                                 crear_archivo_users(archivo,particion.part_size,particion.part_start,particion.part_name);
+                                 listar_log(archivo,particion.part_start);
+                                 //printf("Se ha creado un sistema de archivos EXT3 en la particion: %s\n\n",mount_particion->name);
+                             }
+                        }
+                        else
+                        {
+                            printf("ERROR:hay problemas con encontrar la particion con nombre: %s\n\n",mount_particion->name);
+                        }
+                        fclose(archivo);
+                    }
+                    else
+                    {
+                     printf("ERROR: No se puede abrir el archivo de la particion:  ");
+                     printf("%s\n\n",id);
+                    }
+                    
+                }
+                else
+                {
+                     printf("ERROR: no se encunetra montada la articion:  ");
+                     printf("%s\n\n",id);
+                }
+            }
+            else
+                printf("ERROR: para simular una perdida necesita tener un id de particion");
         }
     }
     
