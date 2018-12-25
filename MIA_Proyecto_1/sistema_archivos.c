@@ -1500,6 +1500,18 @@ int ejecutar_mkfile(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int siz
     {
         if(i + 1 == contador_elementos) //estamos en la ultimo posicion donde usualmente se declararan los archivos
         {
+            //el padre es la carpeta entonces
+                            //aplicando permisos
+            if(log == 0) //solo si no esta enfase de recuperacion
+            {
+                int resultado = verificar_permisos(archivo,usr_logeado,bm_padre,1);
+                if(resultado == 0)
+                {
+                    printf("ERROR: El usuario %s no tiene permisos para crear archivos :'v\n\n",usr_logeado->nombre_usr);
+                    return 0;
+                }
+            }
+
             //parte donde se va a crear el nuevo archivo
             //debo revisar permisos del inodo padre para crear archvio
             //*debo hacer un metodo que cree un inodo tipo archivo y retorne su pos en bitmap
