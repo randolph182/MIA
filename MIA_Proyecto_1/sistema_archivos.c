@@ -768,6 +768,7 @@ int ejecutar_mkdir(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int log)
             }
             else if(hijo == -1) //no existe entonces la creamos
             {
+                //aplicando permisos
                 int new_bm = 0;
                 int exito = crear_carpeta_mkdir(archivo,usr_logeado->inicio_particion,carpetas[i].info, padre,&new_bm,usr_logeado->id,usr_logeado->id_grp);
                 if(exito !=0 )
@@ -782,7 +783,7 @@ int ejecutar_mkdir(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int log)
                 }
             }
         }
-        //si llega hasta aqui es porque si pudo crear todas las carpetas y si log == 1 es porque viene uno 
+        //si llega hasta aqui es porque si pudo crear todas las carpetas y si log == 1 es porque viene una recuperacion 
         if(log == 0)
         {
             if(p == 1)
@@ -1593,17 +1594,7 @@ int ejecutar_mkfile(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int siz
     }
 }
 
-int verificar_permisos(FILE *archivo,NODO_USR *usr_logeado,int bm_inodo,int tipo_permiso)
-{
-    SB sb_tmp[1];
-    fseek(archivo,usr_logeado->inicio_particion,SEEK_SET);
-    fread(sb_tmp,sizeof(SB),1,archivo);
 
-    int pos_ti = sb_tmp[0].s_inode_start + (bm_inodo * sizeof(TI));
-    TI ti_act;
-    fseek(archivo,pos_ti,SEEK_SET);
-
-}
 
 int crear_inodo_archivo(FILE *archivo,NODO_USR *usr_logeado)
 {
@@ -2735,4 +2726,62 @@ int ejecutar_rem(FILE *archivo,NODO_USR *usr_logeado,char *path)
         printf("ERROR no se pudo eliminar el archivo %s \n",path);
         return 0;
     }
+}
+
+//retorn 1 o 0
+//tipo permiso es la accion que desea realizar 
+//LISTADO DE TIPO PERMISO
+// 1-> permisos de escritura
+// 2-> permiso de lectura
+int verificar_permisos(FILE *archivo,NODO_USR *usr_logeado,int bm_inodo,int tipo_permiso)
+{
+    SB sb_tmp[1];
+    fseek(archivo,usr_logeado->inicio_particion,SEEK_SET);
+    fread(sb_tmp,sizeof(SB),1,archivo);
+
+    int pos_ti = sb_tmp[0].s_inode_start + (bm_inodo * sizeof(TI));
+    TI inodo;
+    fseek(archivo,pos_ti,SEEK_SET);
+    fread(&inodo,sizeof(TI),1,archivo);
+
+    if(usr_logeado->id == inodo.i_uid) //se aplican permisos de usuario
+    {
+        if(tipo_permiso == 1) //se quiere una escritura
+        {
+            char perm_inod[4];
+            sprintf(perm_inod,"%d",inodo.i_perm);
+            //escritura -> 2 ;escritura y ejecucion -> 3 lecutra y escritura -> 6 todos -> 7
+            if(perm_inod[0] == '2' || perm_inod[0] == '3' || perm_inod[0] == '6' || perm_inod[0] == '7' )
+            {
+                return 1;
+            }
+        }
+    }
+    else if(usr_logeado->id_grp == inodo.i_gid) //se aplican permisos de grupo
+    {
+        if(tipo_permiso == 1) //se quiere una escritura
+        {
+            char perm_inod[4];
+            sprintf(perm_inod,"%d",inodo.i_perm);
+            //escritura -> 2 ;escritura y ejecucion -> 3 lecutra y escritura -> 6 todos -> 7
+            if(perm_inod[1] == '2' || perm_inod[1] == '3' || perm_inod[1] == '6' || perm_inod[1] == '7' )
+            {
+                return 1;
+            }
+        }
+    }
+    else //sino encontro permisos de usuario o de grupo entonces se aplican permisos de otros
+    {
+        if(tipo_permiso == 1) //se quiere una escritura
+        {
+            char perm_inod[4];
+            sprintf(perm_inod,"%d",inodo.i_perm);
+            //escritura -> 2 ;escritura y ejecucion -> 3 lecutra y escritura -> 6 todos -> 7
+            if(perm_inod[2] == '2' || perm_inod[2] == '3' || perm_inod[2] == '6' || perm_inod[2] == '7' )
+            {
+                return 1;
+            }
+        }
+    }
+    return 0;
 }

@@ -145,7 +145,7 @@ int crear_carpeta_bloque_ap(FILE *archivo,char *nombre_c,int ini_particion,int b
 
 //========================================================== METODOS QUE SE UTILIZARON PARA MKFILE =======================
 int ejecutar_mkfile(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int size,char *contenido,int log);
-int verificar_permisos(FILE *archivo,NODO_USR *usr_logeado,int bm_inodo,int tipo_permiso);
+
 int crear_inodo_archivo(FILE *archivo,NODO_USR *usr_logeado);
 int buscar_archivo(FILE *archivo,int ini_particion,int bm_inocarp,char *nombre_archivo);
 int buscar_archivo_bapi(FILE *archivo,int ini_particion,char *nombre_archivo,int bm_bap,int nivel);
@@ -166,11 +166,14 @@ int buscar_elemento(FILE *archivo,int ini_particion,char *path_elem);
 // retorna 1 o 0 ojo el destino tieen que ser un inodo tipo carpeta sino vale
 int insert_in_apt_ino_carpeta(FILE *archivo,int ini_part,int bm_carp,int bm_nuevo,char *nombre_nuevo);
 int get_last_name_path(char *path_elem,char *name_buscado);
-//retorn 1 0 
+//retorn 1 0
 int delet_element(FILE *archivo,int ini_particion,char *path);
 //retorn 1 - 0
 int buscar_to_eliminar_carp(FILE *archivo,int ini_particion,int bm_padre,char *name_elem);
 
 //========================================================== REM =======================
 int ejecutar_rem(FILE *archivo,NODO_USR *usr_logeado,char *path);
+
+//========================================================== PERMISOS =======================
+int verificar_permisos(FILE *archivo,NODO_USR *usr_logeado,int bm_inodo,int tipo_permiso);
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED
