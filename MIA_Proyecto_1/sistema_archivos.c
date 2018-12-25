@@ -769,6 +769,15 @@ int ejecutar_mkdir(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int log)
             else if(hijo == -1) //no existe entonces la creamos
             {
                 //aplicando permisos
+                if(log == 0) //solo si no esta enfase de recuperacion
+                {
+                    int resultado = verificar_permisos(archivo,usr_logeado,padre,1);
+                    if(resultado == 0)
+                    {
+                        printf("ERROR: El usuario %s no tiene permisos para crear carpetas :'v\n\n",usr_logeado->nombre_usr);
+                        return 0;
+                    }
+                }
                 int new_bm = 0;
                 int exito = crear_carpeta_mkdir(archivo,usr_logeado->inicio_particion,carpetas[i].info, padre,&new_bm,usr_logeado->id,usr_logeado->id_grp);
                 if(exito !=0 )
