@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "admin_disco.h"
-
+#include "lista_users.h"
 
 #include <sys/types.h>
 #include <dirent.h>

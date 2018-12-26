@@ -796,10 +796,12 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                                              printf("ERROR: necesita un path en la ruta para ejecutar el reporte ls\n\n");
                                         }
                                         else{
+                                            char ruta_tmp[200];
+                                            strcpy(ruta_tmp,ruta);
                                             int bm_elemento = buscar_elemento(archivo,particion.part_start,ruta);
                                             if(bm_elemento != -1)
                                             {
-                                                reporteLS(archivo,particion.part_start,path,bm_elemento,lst_usr);
+                                                reporteLS(archivo,particion.part_start,path,bm_elemento,lst_usr,ruta_tmp);
                                             }
                                             else{
                                                 printf("ERROR: problemas ejecutando ls en la parte de buscar el elemento \n");

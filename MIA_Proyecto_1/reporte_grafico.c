@@ -1603,7 +1603,7 @@ void escribir_cont_archivo(FILE *archivo,FILE *archivo_repo,int ini_particion,in
 
 
 
-void reporteLS(FILE *archivo,int ini_particion, char *path_reporte,int bm_inodo,LISTA_USR *lst_usr)
+void reporteLS(FILE *archivo,int ini_particion, char *path_reporte,int bm_inodo,LISTA_USR *lst_usr,char *ruta)
 {
     char *archivo_dot  = (char*)malloc(sizeof(char) * 100);
     memset(archivo_dot,0,sizeof(archivo_dot));
@@ -1612,7 +1612,7 @@ void reporteLS(FILE *archivo,int ini_particion, char *path_reporte,int bm_inodo,
 
     if(cvl_path_carpeta(path_reporte,&archivo_dot,&extension) == 1)
     {
-       reporteLS_(archivo,archivo_dot,ini_particion,path_reporte,bm_inodo,lst_usr);
+       reporteLS_(archivo,archivo_dot,ini_particion,path_reporte,bm_inodo,lst_usr,extension,ruta);
     }
     else
         printf("ERROR: Algo salio mal en la creacion de la carpeta con path: %s\n\n",path_reporte);
@@ -1622,43 +1622,157 @@ void reporteLS(FILE *archivo,int ini_particion, char *path_reporte,int bm_inodo,
     extension = NULL;
 }
 
-void reporteLS_(FILE *archivo,char *path_dot,int ini_particion,char *path_reporte,int bm_inodo,LISTA_USR *lst_usr)
+void reporteLS_(FILE *archivo,char *path_dot,int ini_particion,char *path_reporte,int bm_inodo,LISTA_USR *lst_usr,char *extension,char *ruta)
 {
     SB sb;
     fseek(archivo,ini_particion,SEEK_SET);
     fread(&sb,sizeof(SB),1,archivo);
 
-    FILE *archivo_dot;
-    archivo_dot = fopen(path_dot,"w+"); //SI EXISTE O SI NO EXISTE LO CREA
+    //sacando al inodo
+    int pos_inodo = sb.s_inode_start + (bm_inodo * sizeof(TI));
+    TI inodo;
+    fseek(archivo,pos_inodo,SEEK_SET);
+    fread(&inodo,sizeof(TI),1,archivo);
 
-    
+    //antes de todo vergueo necesito saber si fue posible encontrar el nombre del usurio y el grupo sino que truene
+    char nombre_grp[15];
+    char nombre_usr[15];
+    int result = 0;
+    result =  get_nombre_usr_by_id(lst_usr, inodo.i_uid,&nombre_usr);
+    if(result != 0)
+    {
+         result =  get_nombre_grp_by_id(lst_usr, inodo.i_gid,&nombre_grp);  
+         if(result != 0 )
+         {
+             //ahora si se puede continuar
+            FILE *archivo_dot;
+            archivo_dot = fopen(path_dot,"w+"); //SI EXISTE O SI NO EXISTE LO CREA
 
-    fprintf(archivo,"digraph ls{\n");
-    fprintf(archivo,"graph [ratio=fill];\n");
-    fprintf(archivo,"node [label=\"\\N\", fontsize=15, shape=plaintext];\n");
-    fprintf(archivo,"graph [bb=\"0,0,352,154\"];\n");
-    fprintf(archivo,"arset [label=<\n");
-    fprintf(archivo,"<TABLE ALIGN=\"LEFT\">\n");
-    fprintf(archivo,"<TR>");
-    fprintf(archivo,"<TD> <B> PERMISOS </B> </TD> ");
-    fprintf(archivo,"<TD> <B> OWNER </B> </TD>");
-    fprintf(archivo,"<TD> <B> GRUPO </B> </TD> ");
-    fprintf(archivo,"<TD> <B> SIZE </B> </TD>");
-    fprintf(archivo,"<TD> <B> FECHA </B> </TD> ");
-    fprintf(archivo,"<TD> <B> TIPO </B> </TD>");
-    fprintf(archivo,"<TD> <B> NAME </B> </TD>");
-    fprintf(archivo,"</TR>\n");
 
-    //calculo de tamanio de disk
-    // char tamanio [50];
-    // sprintf(tamanio,"%d",mbr_tmp[0].mbr_tamanio_disk);
-    // strcat(&tamanio," bytes");
-    // concat_2_val(archivo,"tamanio_disk",tamanio,3);
+            fprintf(archivo_dot,"digraph ls{\n");
+            fprintf(archivo_dot,"graph [ratio=fill];\n");
+            fprintf(archivo_dot,"node [label=\"\\N\", fontsize=15, shape=plaintext];\n");
+            fprintf(archivo_dot,"graph [bb=\"0,0,352,154\"];\n");
+            fprintf(archivo_dot,"arset [label=<\n");
+            fprintf(archivo_dot,"<TABLE ALIGN=\"LEFT\">\n");
+            fprintf(archivo_dot,"<TR>");
+            fprintf(archivo_dot,"<TD> <B> PERMISOS </B> </TD> ");
+            fprintf(archivo_dot,"<TD> <B> OWNER </B> </TD>");
+            fprintf(archivo_dot,"<TD> <B> GRUPO </B> </TD> ");
+            fprintf(archivo_dot,"<TD> <B> SIZE </B> </TD>");
+            fprintf(archivo_dot,"<TD> <B> FECHA </B> </TD> ");
+            fprintf(archivo_dot,"<TD> <B> TIPO </B> </TD>");
+            fprintf(archivo_dot,"<TD> <B> NAME </B> </TD>");
+            fprintf(archivo_dot,"</TR>\n");
+            
+            char permisos[4];
+            sprintf(permisos,"%d",inodo.i_perm);
+            
+            fprintf(archivo_dot,"<TR>");
+            fprintf(archivo_dot,"<TD> ");
+            decidir_permiso(archivo_dot,permisos[0]);
+            decidir_permiso(archivo_dot,permisos[1]);
+            decidir_permiso(archivo_dot,permisos[2]);
+            fprintf(archivo_dot," </TD>");
 
-    // //concatenando fecha de creacion
-    // concat_2_val(archivo,"fecha de creacion",mbr_tmp[0].mbr_fecha_creacion,2);
+            fprintf(archivo_dot,"<TD>");
+            fprintf(archivo_dot,nombre_usr);
+            fprintf(archivo_dot," </TD>");
 
-    // fclose(archivo_repo);
-    // printf("REPORTE FILE GENERADO\n");
+            fprintf(archivo_dot,"<TD>");
+            fprintf(archivo_dot,nombre_grp);
+            fprintf(archivo_dot," </TD>");
+
+
+            fprintf(archivo_dot,"<TD>");
+            fprintf(archivo_dot,"%d",inodo.i_size);
+            fprintf(archivo_dot," </TD>");
+
+            fprintf(archivo_dot,"<TD>");
+            fprintf(archivo_dot,inodo.i_ctime);
+            fprintf(archivo_dot," </TD>");
+
+            fprintf(archivo_dot,"<TD>");
+            fprintf(archivo_dot,"%c",inodo.i_type);
+            fprintf(archivo_dot," </TD>");
+
+            fprintf(archivo_dot,"<TD>");
+            fprintf(archivo_dot,ruta);
+            fprintf(archivo_dot," </TD>");
+
+            fprintf(archivo_dot,"</TR>\n");
+
+            fprintf(archivo_dot,"</TABLE>\n");
+            fprintf(archivo_dot,">, ];\n");
+            fprintf(archivo_dot,"\n}");
+
+            fclose(archivo_dot);
+
+            char *comando = (char*)malloc(sizeof(char)*100);
+            memset(comando,0,sizeof(comando));
+            strcat(comando,"dot ");
+            strcat(comando,path_dot);
+            strcat(comando," -o ");
+            strcat(comando,path_reporte);
+
+            if(strcasecmp(extension,"png") ==0)
+            {
+                strcat(comando," -Tpng");
+            }
+            else if(strcasecmp(extension,"jpg") ==0)
+            {
+                strcat(comando," -Tjpg");
+            }
+            else if(strcasecmp(extension,"pdf") ==0)
+            {
+                strcat(comando," -Tpdf");
+            }
+
+            // printf("%s\n",comando);
+            int flag = system(comando);
+                printf("Reporte Generado!\n\n");
+         }
+         else
+            printf("ERROR no se pudo hacer el reporte ls porque el nombre de grupo no se encontro\n\n");
+    }
+    else
+        printf("ERROR no se pudo hacer el reporte ls porque el nombre de usuario no se encontro\n\n");
+   
+}
+
+void decidir_permiso(FILE *archivo_dot,char tipo_permiso)
+{
+    if(tipo_permiso == '0')
+    {
+        fprintf(archivo_dot,"---");
+    }
+    else if(tipo_permiso == '1')
+    {
+        fprintf(archivo_dot,"--x");
+    }
+    else if(tipo_permiso == '2')
+    {
+        fprintf(archivo_dot,"-w-");
+    }
+    else if(tipo_permiso == '3')
+    {
+        fprintf(archivo_dot,"-wx");
+    }
+    else if(tipo_permiso == '4')
+    {
+        fprintf(archivo_dot,"r--");
+    }
+    else if(tipo_permiso == '5')
+    {
+        fprintf(archivo_dot,"r-x");
+    }
+    else if(tipo_permiso == '6')
+    {
+        fprintf(archivo_dot,"rw-");
+    }
+    else if(tipo_permiso == '7')
+    {
+        fprintf(archivo_dot,"rwx");
+    }
 }
 
