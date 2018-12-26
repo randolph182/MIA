@@ -2464,7 +2464,7 @@ void imp_block_archivo(FILE *archivo,int ini_particion,int bm_ino_arch)
     fread(&ino_arch,sizeof(TI),1,archivo);
 
 
-    for(int i = 0; i < 15; i++)
+    for(int i = 0; i < 12; i++)
     {
         if(ino_arch.i_block[i] != -1)
         {
@@ -2805,4 +2805,62 @@ int verificar_permisos(FILE *archivo,NODO_USR *usr_logeado,int bm_inodo,int tipo
         }
     }
     return 0;
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; METODOS ALTERNOS::::::::::::::::::::::::::::::
+
+int get_bm_inode_archivo(FILE *archivo,int ini_particion,char *path_archivo)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    //primero listamos todas las carpetas con su archivo
+    CHAR_ARRAY elementos[30];
+    //:::::::::::::::: PROCESO DONDE SE LISTAN LAS CARPETAS QUE VIENEN EN EL PATH
+    int contador_elementos = 0;
+    char path_tmp[200] ;
+    strcpy(path_tmp,path_archivo);
+    char *nombre_elemento;
+    while ((nombre_elemento = strtok_r(path_archivo, "/", &path_archivo))) //nos movemos carpeta por carpeta
+    {
+        strcpy(elementos[contador_elementos].info,nombre_elemento);
+        elementos[contador_elementos].estado = 1;
+        contador_elementos++;
+    }
+
+    int bm_padre =0;
+    int bm_hijo= -1;
+    int bm_archivo=0;
+    //:::::::::::::::::: VAMOAS A IR RECORRIENDO TODOS LOS ELEMENTOS HASTA LLEGAR AL ARCHIVO
+    for(int i = 0; i < contador_elementos; i++)
+    {
+        if(i + 1 == contador_elementos) //estamos en la ultimo posicion donde usualmente se declararan los archivos
+        {
+            int existe = buscar_archivo(archivo,ini_particion,bm_padre,&elementos[i]);
+            if(existe != -1) //significa que si
+            {
+                return existe;
+            }
+            else
+            {
+                printf("ERROR: no se pudo encontrar el archivo con path %s para mostrar su info en creacion de reporte\n\n",path_tmp);
+                return -1;
+            }
+        }
+        else
+        {
+            verificar_carpeta(archivo,ini_particion,&elementos[i],bm_padre,&bm_hijo);
+            if(bm_hijo != -1 ) //consultamos si existe la carpeta
+            {
+                bm_padre = bm_hijo;
+                bm_hijo = -1;
+            }
+            else if(bm_hijo == -1 ) //no existe entonces la creamos confirmamos p
+            {
+                printf("ERROR: no se puede crear no se puede acceder al archivo con path:  %s para mostrar su contenido porque el path es incorrecto\n\n",path_tmp);
+                return -1;
+            }
+        }
+    }
 }

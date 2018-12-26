@@ -1370,7 +1370,7 @@ void reporte_blocks_(FILE *archivo,int ini_particion,char *path_dot,char *path_r
     FILE *archivo_dot;
     archivo_dot = fopen(path_dot,"w+"); //SI EXISTE O SI NO EXISTE LO CREA
     int bm_tmp = -1;
-    fprintf(archivo_dot,"digraph INODE{\n");
+    fprintf(archivo_dot,"digraph BLOCKS{\n");
     fprintf(archivo_dot,"rankdir=\"LR\";\n");
     fprintf(archivo_dot,"node [shape=record];\n");
     fprintf(archivo_dot,"style=\"bold, filled, striped\";\n");
@@ -1476,7 +1476,7 @@ void sacar_info_bloque_carpeta(FILE *archivo,FILE *archivo_dot,int ini_part,int 
         fprintf(archivo_dot,"%d",bm_block_actual);
         fprintf(archivo_dot,"\n");
 
-        
+
     }
     *bm_block_ant = bm_block_actual;
 
@@ -1526,7 +1526,139 @@ void sacar_info_bloque_archivo(FILE *archivo,FILE *archivo_dot,int ini_part,int 
         fprintf(archivo_dot,"%d",bm_block_actual);
         fprintf(archivo_dot,"\n");
 
-        
+
     }
     *bm_block_ant = bm_block_actual;
 }
+
+//::::::::::::::::::::::: METODOS USADOS PARA EL REPO FILE :::::::::::::::::::::::
+void reporteFile(FILE *archivo,int ini_particion, char *path_reporte,int bm_ino_arch)
+{
+    char *archivo_dot  = (char*)malloc(sizeof(char) * 100);
+    memset(archivo_dot,0,sizeof(archivo_dot));
+    char *extension = (char*)malloc(sizeof(char)*4);
+    memset(extension,0,sizeof(extension));
+
+    if(cvl_path_carpeta(path_reporte,&archivo_dot,&extension) == 1)
+    {
+       reporteFile_(archivo,ini_particion,path_reporte,bm_ino_arch);
+    }
+    else
+        printf("ERROR: Algo salio mal en la creacion de la carpeta con path: %s\n\n",path_reporte);
+    free(archivo_dot);
+    archivo_dot = NULL;
+    free(extension);
+    extension = NULL;
+}
+
+void reporteFile_(FILE *archivo,int ini_particion,char *path_reporte,int bm_ino_arch)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    FILE *archivo_repo;
+    archivo_repo = fopen(path_reporte,"w+"); //SI EXISTE O SI NO EXISTE LO CREA
+
+    int pos_block_archivo = sb.s_block_start + (bm_ino_arch * 64);
+    BA bloque_archivo;
+    fseek(archivo,pos_block_archivo,SEEK_SET);
+    fread(&bloque_archivo,sizeof(BA),1,archivo);
+
+    escribir_cont_archivo(archivo,archivo_repo,ini_particion,bm_ino_arch);
+
+    fclose(archivo_repo);
+    printf("REPORTE FILE GENERADO\n");
+}
+
+
+
+void escribir_cont_archivo(FILE *archivo,FILE *archivo_repo,int ini_particion,int bm_ino_arch)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+    //get inodo archivo
+    int pos_inoarch = sb.s_inode_start + (bm_ino_arch *  sizeof(TI));
+    TI ino_arch;
+    fseek(archivo,pos_inoarch,SEEK_SET);
+    fread(&ino_arch,sizeof(TI),1,archivo);
+
+
+    for(int i = 0; i < 12; i++)
+    {
+        if(ino_arch.i_block[i] != -1)
+        {
+            BA block_arch;
+            int pos_ba = sb.s_block_start + (64 * ino_arch.i_block[i]);
+            fseek(archivo,pos_ba,SEEK_SET);
+            fread(&block_arch,sizeof(BA),1,archivo);
+            fprintf(archivo_repo,block_arch.b_content);
+        }
+    }
+}
+
+
+
+
+
+
+void reporteLS(FILE *archivo,int ini_particion, char *path_reporte,int bm_inodo,LISTA_USR *lst_usr)
+{
+    char *archivo_dot  = (char*)malloc(sizeof(char) * 100);
+    memset(archivo_dot,0,sizeof(archivo_dot));
+    char *extension = (char*)malloc(sizeof(char)*4);
+    memset(extension,0,sizeof(extension));
+
+    if(cvl_path_carpeta(path_reporte,&archivo_dot,&extension) == 1)
+    {
+       reporteLS_(archivo,archivo_dot,ini_particion,path_reporte,bm_inodo,lst_usr);
+    }
+    else
+        printf("ERROR: Algo salio mal en la creacion de la carpeta con path: %s\n\n",path_reporte);
+    free(archivo_dot);
+    archivo_dot = NULL;
+    free(extension);
+    extension = NULL;
+}
+
+void reporteLS_(FILE *archivo,char *path_dot,int ini_particion,char *path_reporte,int bm_inodo,LISTA_USR *lst_usr)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    FILE *archivo_dot;
+    archivo_dot = fopen(path_dot,"w+"); //SI EXISTE O SI NO EXISTE LO CREA
+
+    
+
+    fprintf(archivo,"digraph ls{\n");
+    fprintf(archivo,"graph [ratio=fill];\n");
+    fprintf(archivo,"node [label=\"\\N\", fontsize=15, shape=plaintext];\n");
+    fprintf(archivo,"graph [bb=\"0,0,352,154\"];\n");
+    fprintf(archivo,"arset [label=<\n");
+    fprintf(archivo,"<TABLE ALIGN=\"LEFT\">\n");
+    fprintf(archivo,"<TR>");
+    fprintf(archivo,"<TD> <B> PERMISOS </B> </TD> ");
+    fprintf(archivo,"<TD> <B> OWNER </B> </TD>");
+    fprintf(archivo,"<TD> <B> GRUPO </B> </TD> ");
+    fprintf(archivo,"<TD> <B> SIZE </B> </TD>");
+    fprintf(archivo,"<TD> <B> FECHA </B> </TD> ");
+    fprintf(archivo,"<TD> <B> TIPO </B> </TD>");
+    fprintf(archivo,"<TD> <B> NAME </B> </TD>");
+    fprintf(archivo,"</TR>\n");
+
+    //calculo de tamanio de disk
+    // char tamanio [50];
+    // sprintf(tamanio,"%d",mbr_tmp[0].mbr_tamanio_disk);
+    // strcat(&tamanio," bytes");
+    // concat_2_val(archivo,"tamanio_disk",tamanio,3);
+
+    // //concatenando fecha de creacion
+    // concat_2_val(archivo,"fecha de creacion",mbr_tmp[0].mbr_fecha_creacion,2);
+
+    // fclose(archivo_repo);
+    // printf("REPORTE FILE GENERADO\n");
+}
+

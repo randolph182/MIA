@@ -54,6 +54,13 @@ void escribir_journal(FILE *archivo,FILE *archivo_dot,int ini_particion,int pos_
 void reporte_sb(FILE *archivo,int ini_particion, char *path_reporte);
 void reporte_sb_(FILE *archivo,char *path_dot,int ini_particion,char *path_reporte,char * extension);
 
+//::::::::::::::::::::::: METODOS USADOS PARA EL REPO FILE :::::::::::::::::::::::
+
+void reporteFile(FILE *archivo,int ini_particion, char *path_reporte,int bm_ino_arch);
+void reporteFile_(FILE *archivo,int ini_particion,char *path_reporte,int bm_ino_arch);
+
+void escribir_cont_archivo(FILE *archivo,FILE *archivo_repo,int ini_particion,int bm_ino_arch);
+
 
 
 

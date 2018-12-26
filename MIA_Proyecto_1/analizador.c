@@ -81,6 +81,9 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     memset(cont,0,sizeof(cont));
     char *dest = (char*)malloc(sizeof(char) * 250);
     memset(dest,0,sizeof(dest));
+    char *ruta = (char*)malloc(sizeof(char) * 250);
+    memset(ruta,0,sizeof(ruta));
+
 /*=================== VARIABLES GENERALES ==================*/
 
 
@@ -113,6 +116,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     int flag_pwd =0;
     int flag_grp =0;
     int flag_dest = 0;
+    int flag_ruta =0;
 
     while((lista[index_lst] != NULL))    //:::::::::::::::::::::::::::::::::: INICIO DEL WHILE
    {
@@ -388,6 +392,11 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                         printf("\n");
                         flag_file = 0;
                     }
+                    else if(flag_ruta == 1) //============================================== ruta
+                    {
+                        strcpy(ruta,acum_comando);
+                        flag_ruta = 0;
+                    }
                     if((lista[index_lst] != '\n') && (lista[index_lst] != '\r')) //salto de linea o un return
                         index_lst++;
 
@@ -478,6 +487,8 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                     flag_file = 1;
                 else if(strcasecmp(acum_comando,"dest") == 0)
                     flag_dest = 1;
+                else if(strcasecmp(acum_comando,"ruta") ==0)
+                    flag_ruta = 1;
                 else
                 {
                     printf("ERROR: hubo problemas con el parametro: ");
@@ -589,6 +600,11 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                     {
                         strcpy(dest,acum_comando);
                         flag_dest = 0;
+                    }
+                    else if(flag_ruta == 1)
+                    {
+                        strcpy(ruta,acum_comando);
+                        flag_ruta = 0;
                     }
                     memset(acum_comando,0,sizeof(acum_comando));
                     index_lst++; //quitamos las comillas dobles del analisis
@@ -753,7 +769,46 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                                 {
                                     reporte_blocks(archivo,particion.part_start,path);
                                 }
-
+                                else if(strcasecmp(name,"file") ==0)
+                                {
+                                    if(strcmp(ruta,"") == 0)
+                                    {
+                                        printf("ERROR: necesita un path en la ruta para ejecutar el reporte file\n\n");
+                                    }
+                                    else
+                                    {
+                                        int bm_archivo = get_bm_inode_archivo(archivo,particion.part_start,ruta);
+                                        if(bm_archivo != -1)
+                                        {
+                                            reporteFile(archivo,particion.part_start,path,bm_archivo);
+                                        }
+                                    }
+                                }
+                                else if(strcasecmp(name,"ls") == 0)
+                                {
+                                    LISTA_USR *lst_usr = (LISTA_USR*)malloc(sizeof(LISTA_USR));
+                                    inicializar_lst_usr(lst_usr);
+                                    consultar_usuarios(archivo,particion.part_start,particion.part_size,mount_particion->path_mount,lst_usr);
+                                    if(lst_usr->size !=0)
+                                    {
+                                        if(strcmp(ruta,"") == 0)
+                                        {
+                                             printf("ERROR: necesita un path en la ruta para ejecutar el reporte ls\n\n");
+                                        }
+                                        else{
+                                            int bm_elemento = buscar_elemento(archivo,particion.part_start,ruta);
+                                            if(bm_elemento != -1)
+                                            {
+                                                reporteLS(archivo,particion.part_start,path,bm_elemento,lst_usr);
+                                            }
+                                            else{
+                                                printf("ERROR: problemas ejecutando ls en la parte de buscar el elemento \n");
+                                            }
+                                        }
+                                    }
+                                    else
+                                        printf("ERROR: En el archivo de Usuarios no hay informacion ");
+                                }
                             }
                             else
                             {
