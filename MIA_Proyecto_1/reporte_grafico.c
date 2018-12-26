@@ -575,6 +575,8 @@ int sacar_porcentaje(int val_disco, int val_actual)
     return resultado;
 }
 
+//::::::::::::::::::::::: METODOS USADOS PARA EL TREE:::::::::::::::::::::::
+
 //path del reporte es a donde lo voy a graficar
 void reporteTree(FILE *archivo,int ini_particion, char *path_reporte)
 {
@@ -822,6 +824,7 @@ void escribir_bloque_archivo(FILE * archivo,FILE *archivo_dot,int ini_particion,
 
 }
 
+//::::::::::::::::::::::: METODOS USADOS PARA EL REPO INODE:::::::::::::::::::::::
 void reporteInode(FILE *archivo,int ini_particion, char *path_reporte)
 {
     char *archivo_dot  = (char*)malloc(sizeof(char) * 100);
@@ -977,6 +980,7 @@ void escribir_inodo_tipo2(FILE * archivo,FILE *archivo_dot,int ini_particion,int
     }
 }
 
+//::::::::::::::::::::::: METODOS USADOS PARA EL REPO DE BM DE INODO:::::::::::::::::::::::
 void reporte_bm_inodo(FILE *archivo,int ini_particion, char *path_reporte)
 {
     char *archivo_dot  = (char*)malloc(sizeof(char) * 100);
@@ -1027,6 +1031,7 @@ void reporte_bm_inodo_(FILE *archivo,int ini_particion,char *path_reporte)
     fclose(archivo_repo);
 }
 
+//::::::::::::::::::::::: METODOS USADOS PARA EL REPO DE BM DE BLOQUE:::::::::::::::::::::::
 void reporte_bm_bloque(FILE *archivo,int ini_particion, char *path_reporte)
 {
     char *archivo_dot  = (char*)malloc(sizeof(char) * 100);
@@ -1077,7 +1082,7 @@ void reporte_bm_bloque_(FILE *archivo,int ini_particion,char *path_reporte)
 }
 
 
-
+//::::::::::::::::::::::: METODOS USADOS PARA EL REPO DE JOURNALING:::::::::::::::::::::::
 void reporteLOG(FILE *archivo,int ini_particion, char *path_reporte)
 {
     char *archivo_dot  = (char*)malloc(sizeof(char) * 100);
@@ -1214,7 +1219,7 @@ void escribir_journal(FILE *archivo,FILE *archivo_dot,int ini_particion,int pos_
     }
 }
 
-
+//::::::::::::::::::::::: METODOS USADOS PARA EL REPO SUPER BLOQUE :::::::::::::::::::::::
 void reporte_sb(FILE *archivo,int ini_particion, char *path_reporte)
 {
     char *archivo_dot  = (char*)malloc(sizeof(char) * 100);
@@ -1283,7 +1288,7 @@ void reporte_sb_(FILE *archivo,char *path_dot,int ini_particion,char *path_repor
 
     sprintf(tamanio,"%d",sb.s_inode_size);
     concat_2_val(archivo_dot,"s_inode_size",tamanio,3);
-    
+
     sprintf(tamanio,"%d",sb.s_block_size);
     concat_2_val(archivo_dot,"s_block_size",tamanio,3);
 
@@ -1334,4 +1339,194 @@ void reporte_sb_(FILE *archivo,char *path_dot,int ini_particion,char *path_repor
   // printf("%s\n",comando);
    int flag = system(comando);
      printf("Reporte Generado!\n\n");
+}
+
+//::::::::::::::::::::::: METODOS USADOS PARA EL REPO DE BLOQUES :::::::::::::::::::::::
+void reporte_blocks(FILE *archivo,int ini_particion,char *path_reporte)
+{
+    char *archivo_dot  = (char*)malloc(sizeof(char) * 100);
+    memset(archivo_dot,0,sizeof(archivo_dot));
+    char *extension = (char*)malloc(sizeof(char)*4);
+    memset(extension,0,sizeof(extension));
+
+    if(cvl_path_carpeta(path_reporte,&archivo_dot,&extension) == 1)
+    {
+        reporte_blocks_(archivo,ini_particion,archivo_dot,path_reporte,extension);
+    }
+    else
+        printf("ERROR: Algo salio mal en la creacion de la carpeta con path: %s\n\n",path_reporte);
+    free(archivo_dot);
+    archivo_dot = NULL;
+    free(extension);
+    extension = NULL;
+}
+
+void reporte_blocks_(FILE *archivo,int ini_particion,char *path_dot,char *path_reporte,char *extension)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    FILE *archivo_dot;
+    archivo_dot = fopen(path_dot,"w+"); //SI EXISTE O SI NO EXISTE LO CREA
+    int bm_tmp = -1;
+    fprintf(archivo_dot,"digraph INODE{\n");
+    fprintf(archivo_dot,"rankdir=\"LR\";\n");
+    fprintf(archivo_dot,"node [shape=record];\n");
+    fprintf(archivo_dot,"style=\"bold, filled, striped\";\n");
+
+    inode_admin(archivo,archivo_dot,ini_particion,0,&bm_tmp);
+
+    fprintf(archivo_dot,"\n}\n");
+   fclose(archivo_dot);
+   char *comando = (char*)malloc(sizeof(char)*100);
+   memset(comando,0,sizeof(comando));
+   strcat(comando,"dot ");
+   strcat(comando,path_dot);
+   strcat(comando," -o ");
+   strcat(comando,path_reporte);
+
+   if(strcasecmp(extension,"png") ==0)
+   {
+    strcat(comando," -Tpng");
+   }
+   else if(strcasecmp(extension,"jpg") ==0)
+   {
+    strcat(comando," -Tjpg");
+   }
+   else if(strcasecmp(extension,"pdf") ==0)
+   {
+    strcat(comando," -Tpdf");
+   }
+
+  // printf("%s\n",comando);
+   int flag = system(comando);
+     printf("Reporte Generado!\n\n");
+}
+
+void inode_admin(FILE *archivo,FILE *archivo_dot,int ini_part,int bm_inodo,int *bm_block_ant)
+{
+    //primero sacamos el inodo
+    SB sb;
+    fseek(archivo,ini_part,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    TI inodo_actual;
+    int pos_inodo = sb.s_inode_start + (bm_inodo * sizeof(TI));
+    fseek(archivo,pos_inodo,SEEK_SET);
+    fread(&inodo_actual,sizeof(TI),1,archivo);
+
+
+    for(int i = 0; i < 12; i++)
+    {
+        if(inodo_actual.i_block[i] != -1)
+        {
+            if(inodo_actual.i_type == '0') //de tipo carpeta
+            {
+                sacar_info_bloque_carpeta(archivo,archivo_dot,ini_part,&*bm_block_ant,inodo_actual.i_block[i]);
+            }
+            else if(inodo_actual.i_type == '1') //de tipo archivo
+            {
+                sacar_info_bloque_archivo(archivo,archivo_dot,ini_part,&*bm_block_ant,inodo_actual.i_block[i]);
+            }
+        }
+    }
+
+}
+
+void sacar_info_bloque_carpeta(FILE *archivo,FILE *archivo_dot,int ini_part,int *bm_block_ant,int bm_block_actual)
+{
+    SB sb;
+    fseek(archivo,ini_part,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    BC bc_actual;
+    int pos_bloque = sb.s_block_start + (bm_block_actual * 64);
+    fseek(archivo,pos_bloque,SEEK_SET);
+    fread(&bc_actual,sizeof(BC),1,archivo);
+
+    fprintf(archivo_dot,"\tnode[width=2,style=\"filled\",fillcolor=\"olivedrab2\"];\n");
+    fprintf(archivo_dot,"\tblock");
+    fprintf(archivo_dot,"%d",bm_block_actual);
+    fprintf(archivo_dot,"[fillcolor=\"olivedrab2\",label=\"\n");
+    fprintf(archivo_dot,"\t\t{ BLOQUE CARPETA ");//  );
+    fprintf(archivo_dot,"%d",bm_block_actual);
+    fprintf(archivo_dot," }|\n");
+
+    for(int i = 0; i < 4; i++)
+    {
+        if(bc_actual.b_content[i].b_inodo != -1)
+        {
+            fprintf(archivo_dot,"\t\t{");
+            fprintf(archivo_dot,bc_actual.b_content[i].b_name);
+            fprintf(archivo_dot,"\t| ");
+            fprintf(archivo_dot,"%d",bc_actual.b_content[i].b_inodo);
+            fprintf(archivo_dot," }|\n");
+        }
+    }
+    fprintf(archivo_dot,"\t\"];\n");
+
+    if(*bm_block_ant != -1)
+    {
+            //haciendo enlace
+        fprintf(archivo_dot,"\tblock");
+        fprintf(archivo_dot,"%d",*bm_block_ant);
+        fprintf(archivo_dot," -> ");
+        fprintf(archivo_dot,"block");
+        fprintf(archivo_dot,"%d",bm_block_actual);
+        fprintf(archivo_dot,"\n");
+
+        
+    }
+    *bm_block_ant = bm_block_actual;
+
+    for(int i = 0; i < 4; i++) //fijo apunta a un inodo
+    {
+        if(bc_actual.b_content[i].b_inodo != -1)
+        {
+            if(strcmp(bc_actual.b_content[i].b_name,".") != 0 && strcmp(bc_actual.b_content[i].b_name,"..") != 0)
+            {
+                inode_admin(archivo,archivo_dot,ini_part,bc_actual.b_content[i].b_inodo,&*bm_block_ant);
+            }
+
+        }
+    }
+}
+
+void sacar_info_bloque_archivo(FILE *archivo,FILE *archivo_dot,int ini_part,int *bm_block_ant,int bm_block_actual)
+{
+    SB sb;
+    fseek(archivo,ini_part,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    BA ba_actual;
+    int pos_bloque = sb.s_block_start + (bm_block_actual * 64);
+    fseek(archivo,pos_bloque,SEEK_SET);
+    fread(&ba_actual,sizeof(BA),1,archivo);
+
+    fprintf(archivo_dot,"\tnode[width=2,style=\"filled\",fillcolor=\"deepskyblue3\"];\n");
+    fprintf(archivo_dot,"\tblock");
+    fprintf(archivo_dot,"%d",bm_block_actual);
+    fprintf(archivo_dot,"[fillcolor=\"deepskyblue3\",label=\"\n");
+    fprintf(archivo_dot,"\t\t{ BLOQUE ARCHIVO ");//  );
+    fprintf(archivo_dot,"%d",bm_block_actual);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\t{ ");
+    fprintf(archivo_dot,ba_actual.b_content);
+    fprintf(archivo_dot," }|\n");
+    fprintf(archivo_dot,"\t\"];\n");
+
+    if(*bm_block_ant != -1)
+    {
+            //haciendo enlace
+        fprintf(archivo_dot,"\tblock");
+        fprintf(archivo_dot,"%d",*bm_block_ant);
+        fprintf(archivo_dot," -> ");
+        fprintf(archivo_dot,"block");
+        fprintf(archivo_dot,"%d",bm_block_actual);
+        fprintf(archivo_dot,"\n");
+
+        
+    }
+    *bm_block_ant = bm_block_actual;
 }

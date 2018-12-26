@@ -749,6 +749,10 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                                 {
                                     reporte_sb(archivo,particion.part_start,path);
                                 }
+                                else if(strcasecmp(name,"block") == 0)
+                                {
+                                    reporte_blocks(archivo,particion.part_start,path);
+                                }
 
                             }
                             else

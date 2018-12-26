@@ -25,6 +25,36 @@ void concatenar_particion(int sizePtr,char *acum,PTR particiones[],int itera,int
 
 int sacar_porcentaje(int val_disco, int val_actual);
 
+//::::::::::::::::::::::: METODOS USADOS PARA EL TREE:::::::::::::::::::::::
 void reporteTree(FILE *archivo,int ini_particion, char *path_reporte);
+void reporteTree_(FILE *archivo,int ini_particion,char *path_dot,char *path_reporte,char *extension);
+void escribir_inodo(FILE * archivo,FILE *archivo_dot,int ini_particion,int bm_bloque,int bm_inodo);
+void escribir_bloque_carpeta(FILE * archivo,FILE *archivo_dot,int ini_particion,int bm_inodo,int bm_bloque);
+void escribir_bloque_archivo(FILE * archivo,FILE *archivo_dot,int ini_particion,int bm_inodo,int bm_bloque);
+
+//::::::::::::::::::::::: METODOS USADOS PARA EL REPO INODE:::::::::::::::::::::::
+void reporteInode(FILE *archivo,int ini_particion, char *path_reporte);
+void reporteInode_(FILE *archivo,int ini_particion,char *path_dot,char *path_reporte,char *extension);
+void escribir_inodo_tipo2(FILE * archivo,FILE *archivo_dot,int ini_particion,int bm_inodo_anterior,int bm_inodo_actual);
+
+//::::::::::::::::::::::: METODOS USADOS PARA EL REPO DE BM DE INODO:::::::::::::::::::::::
+void reporte_bm_inodo(FILE *archivo,int ini_particion, char *path_reporte);
+void reporte_bm_inodo_(FILE *archivo,int ini_particion,char *path_reporte);
+
+//::::::::::::::::::::::: METODOS USADOS PARA EL REPO DE BM DE BLOQUE:::::::::::::::::::::::
+void reporte_bm_bloque(FILE *archivo,int ini_particion, char *path_reporte);
+void reporte_bm_bloque_(FILE *archivo,int ini_particion,char *path_reporte);
+
+//::::::::::::::::::::::: METODOS USADOS PARA EL REPO  DE JOURNALING:::::::::::::::::::::::
+void reporteLOG(FILE *archivo,int ini_particion, char *path_reporte);
+void reporteLOG_(FILE *archivo,int ini_particion,char *path_dot,char *path_reporte,char *extension);
+void escribir_journal(FILE *archivo,FILE *archivo_dot,int ini_particion,int pos_log,int bit_anterior,int bit_actual);
+
+//::::::::::::::::::::::: METODOS USADOS PARA EL REPO DE SUPERBLOQUE:::::::::::::::::::::::
+void reporte_sb(FILE *archivo,int ini_particion, char *path_reporte);
+void reporte_sb_(FILE *archivo,char *path_dot,int ini_particion,char *path_reporte,char * extension);
+
+
+
 
 #endif // REPORTE_GRAFICO_H_INCLUDED
