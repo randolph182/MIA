@@ -679,7 +679,7 @@ void escribir_inodo(FILE * archivo,FILE *archivo_dot,int ini_particion,int bm_bl
     fprintf(archivo_dot,inodo_actual.i_mtime);
     fprintf(archivo_dot," }|\n");
 
-    for(int i = 0; i < 15; i++)
+    for(int i = 0; i < 12; i++)
     {
         if(inodo_actual.i_block[i] != -1)
         {
@@ -717,7 +717,7 @@ void escribir_inodo(FILE * archivo,FILE *archivo_dot,int ini_particion,int bm_bl
         fprintf(archivo_dot,"\n");
 
     }
-    for(int i = 0; i < 15; i++)
+    for(int i = 0; i < 12; i++)
     {
         if(inodo_actual.i_block[i] != -1)
         {
@@ -946,7 +946,7 @@ void escribir_inodo_tipo2(FILE * archivo,FILE *archivo_dot,int ini_particion,int
     fprintf(archivo_dot,inodo_actual.i_mtime);
     fprintf(archivo_dot," }|\n");
 
-    for(int i = 0; i < 15; i++)
+    for(int i = 0; i < 12; i++)
     {
         if(inodo_actual.i_block[i] != -1)
         {
@@ -1005,7 +1005,7 @@ void reporte_bm_inodo_(FILE *archivo,int ini_particion,char *path_reporte)
     SB sb;
     fseek(archivo,ini_particion,SEEK_SET);
     fread(&sb,sizeof(SB),1,archivo);
-
+    limpiar_path(path_reporte);
     FILE *archivo_repo;
     archivo_repo = fopen(path_reporte,"w+"); //SI EXISTE O SI NO EXISTE LO CREA
 
@@ -1056,7 +1056,7 @@ void reporte_bm_bloque_(FILE *archivo,int ini_particion,char *path_reporte)
     SB sb;
     fseek(archivo,ini_particion,SEEK_SET);
     fread(&sb,sizeof(SB),1,archivo);
-
+    limpiar_path(path_reporte);
     FILE *archivo_repo;
     archivo_repo = fopen(path_reporte,"w+"); //SI EXISTE O SI NO EXISTE LO CREA
 
@@ -1641,7 +1641,7 @@ void reporteLS_(FILE *archivo,char *path_dot,int ini_particion,char *path_report
     result =  get_nombre_usr_by_id(lst_usr, inodo.i_uid,&nombre_usr);
     if(result != 0)
     {
-         result =  get_nombre_grp_by_id(lst_usr, inodo.i_gid,&nombre_grp);  
+         result =  get_nombre_grp_by_id(lst_usr, inodo.i_gid,&nombre_grp);
          if(result != 0 )
          {
              //ahora si se puede continuar
@@ -1664,10 +1664,10 @@ void reporteLS_(FILE *archivo,char *path_dot,int ini_particion,char *path_report
             fprintf(archivo_dot,"<TD> <B> TIPO </B> </TD>");
             fprintf(archivo_dot,"<TD> <B> NAME </B> </TD>");
             fprintf(archivo_dot,"</TR>\n");
-            
+
             char permisos[4];
             sprintf(permisos,"%d",inodo.i_perm);
-            
+
             fprintf(archivo_dot,"<TR>");
             fprintf(archivo_dot,"<TD> ");
             decidir_permiso(archivo_dot,permisos[0]);
@@ -1737,7 +1737,7 @@ void reporteLS_(FILE *archivo,char *path_dot,int ini_particion,char *path_report
     }
     else
         printf("ERROR no se pudo hacer el reporte ls porque el nombre de usuario no se encontro\n\n");
-   
+
 }
 
 void decidir_permiso(FILE *archivo_dot,char tipo_permiso)

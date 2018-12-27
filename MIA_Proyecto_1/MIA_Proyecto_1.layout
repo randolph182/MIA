@@ -2,34 +2,9 @@
 <CodeBlocks_layout_file>
 	<FileVersion major="1" minor="0" />
 	<ActiveTarget name="Debug" />
-	<File name="analizador.h" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="reporte_grafico.h" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="455" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="lista_ajuste.c" open="1" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="3253" topLine="71" />
-		</Cursor>
-	</File>
-	<File name="analizador.c" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="49000" topLine="1140" />
-		</Cursor>
-	</File>
-	<File name="admin_disco.c" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="8759" topLine="212" />
-		</Cursor>
-	</File>
-	<File name="sistema_archivos.h" open="1" top="0" tabpos="14" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="9318" topLine="152" />
-		</Cursor>
-	</File>
-	<File name="reporte_grafico.c" open="1" top="1" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="50239" topLine="1535" />
+			<Cursor1 position="332" topLine="0" />
 		</Cursor>
 	</File>
 	<File name="admin_disco.h" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -37,14 +12,29 @@
 			<Cursor1 position="322" topLine="5" />
 		</Cursor>
 	</File>
-	<File name="reporte_grafico.h" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="sistema_archivos.h" open="1" top="0" tabpos="14" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="332" topLine="0" />
+			<Cursor1 position="9318" topLine="152" />
 		</Cursor>
 	</File>
-	<File name="mount.h" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="analizador.h" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="934" topLine="0" />
+			<Cursor1 position="455" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="lista_users.c" open="1" top="1" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4562" topLine="163" />
+		</Cursor>
+	</File>
+	<File name="lista_users.h" open="1" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="239" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="analizador.c" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="32047" topLine="786" />
 		</Cursor>
 	</File>
 	<File name="vector_lst.h" open="1" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -57,9 +47,24 @@
 			<Cursor1 position="103491" topLine="2731" />
 		</Cursor>
 	</File>
+	<File name="reporte_grafico.c" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="53469" topLine="1617" />
+		</Cursor>
+	</File>
 	<File name="main.c" open="1" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="400" topLine="3" />
+		</Cursor>
+	</File>
+	<File name="lista_ajuste.c" open="1" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="3253" topLine="71" />
+		</Cursor>
+	</File>
+	<File name="mount.h" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="934" topLine="0" />
 		</Cursor>
 	</File>
 	<File name="mount.c" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -67,14 +72,9 @@
 			<Cursor1 position="4772" topLine="147" />
 		</Cursor>
 	</File>
-	<File name="lista_users.c" open="1" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="admin_disco.c" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="941" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="lista_users.h" open="1" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="239" topLine="0" />
+			<Cursor1 position="8759" topLine="212" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>

@@ -227,7 +227,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                 index_lst++;
                 memset(acum_comando,0,sizeof(acum_comando));
             }
-            else if(strcasecmp(acum_comando,"p")==0)
+            else if(strcasecmp(acum_comando,"p")== 0  && flag_type != 1)
             {
                 flag_p =1;
                 index_lst++;

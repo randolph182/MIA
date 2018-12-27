@@ -800,7 +800,7 @@ int ejecutar_mkdir(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int log)
             else
                 registrar_journal(archivo,usr_logeado->inicio_particion,'1','0',path_tmp,"",'1',664);
         }
-
+        printf("exito se ha creado la carpeta %s\n",path_tmp);
         return 1;
     }
     else
@@ -828,7 +828,7 @@ void verificar_carpeta(FILE *archivo,int ini_particion,char *nombre_c,int bm_pad
     //recorremos sus apuntadores directos
     int pos_byte_bh; //BLOQUE HIJO
     int i =0;
-    for( i= 0; i < 15; i++) // 12   APUNTADORES DIRECTOS
+    for( i= 0; i < 12; i++) // 12   APUNTADORES DIRECTOS
     {
          if(inodo_padre[0].i_block[i] != -1 && inodo_padre[0].i_type == '0') //accedemos a su apuntador de contenido y que sea decarpeta
          {
@@ -877,7 +877,7 @@ int crear_carpeta_mkdir(FILE * archivo,int ini_particion,char *nombre,int bm_pad
     //:::::::::::::::::: SE RECORREN SUS APUNTADORES
     int pos_byte_bh;
     int i =0;
-    for(i = 0; i < 15; i++)
+    for(i = 0; i < 12; i++)
     {
         if(i == 12)
         {
@@ -1696,7 +1696,7 @@ int buscar_archivo(FILE *archivo,int ini_particion,int bm_inocarp,char *nombre_a
     fseek(archivo,pos_inocarp,SEEK_SET);
     fread(&inodo_carpeta,sizeof(TI),1,archivo);
     //apuntadores del indo carpeta
-    for(int i = 0; i < 15; i++)
+    for(int i = 0; i < 12; i++)
     {
         if(inodo_carpeta.i_block[i] != -1)
         {
@@ -1968,7 +1968,7 @@ int nuevo_apt_block_archivo(FILE *archivo,int ini_particion,int bm_ino_arch)
 
     int bm_bloque_archivos = -1;
     int apt_encontrado = 0;
-    for(int i = 0; i < 15; i++)
+    for(int i = 0; i < 12; i++)
     {
         if(i == 12)
         {
