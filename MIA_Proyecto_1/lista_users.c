@@ -164,6 +164,21 @@ int get_id_grp(LISTA_USR *const usrs,char * grp_usr)
     return 0; //no existe
 }
 
+int get_id_usr(LISTA_USR *const usrs,char * name_usr)
+{
+    NODO_USR *tmp = usrs->primero;
+    while(tmp !=NULL)
+    {
+        if(tmp->id !=0 && tmp->tipo == 'U') //si esta activo el usuario y es tipo usuario
+        {
+            if(strcmp(tmp->nombre_usr,name_usr) == 0)
+                return tmp->id;
+        }
+        tmp = tmp->siguiente;
+    }
+    return 0; //no existe
+}
+
 //retorna 1 o 0 si jala
 int get_nombre_grp_by_id(LISTA_USR *const lista, int idgrp,char *name_grupo)
 {

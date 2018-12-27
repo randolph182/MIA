@@ -176,4 +176,13 @@ int ejecutar_rem(FILE *archivo,NODO_USR *usr_logeado,char *path);
 
 //========================================================== PERMISOS =======================
 int verificar_permisos(FILE *archivo,NODO_USR *usr_logeado,int bm_inodo,int tipo_permiso);
+
+
+
+//======================================FUNCIONALIDADES DEL LOGIN =========================================
+int eliminar_grupo_o_usuario(FILE *archivo,LISTA_USR *usuarios, int ini_particion,char *name,int tipo);
+
+
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED
+
+

@@ -792,7 +792,7 @@ int ejecutar_mkdir(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int log)
                 }
             }
         }
-        //si llega hasta aqui es porque si pudo crear todas las carpetas y si log == 1 es porque viene una recuperacion 
+        //si llega hasta aqui es porque si pudo crear todas las carpetas y si log == 1 es porque viene una recuperacion
         if(log == 0)
         {
             if(p == 1)
@@ -1529,7 +1529,7 @@ int ejecutar_mkfile(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int siz
                     {
                         char *nueva_cadena  =  (char*)malloc(sizeof(char)*1024);
                         memset(nueva_cadena,0,sizeof(nueva_cadena));
-                        
+
                         if(log == 0)
                         {
                             if(strcmp(contenido,"") == 0)
@@ -1541,14 +1541,14 @@ int ejecutar_mkfile(FILE *archivo,NODO_USR *usr_logeado,char *path,int p,int siz
                         }
                         else
                             strcpy(nueva_cadena,contenido);
-                        
+
                         if(nueva_cadena != NULL)
                         {
                             int result_set_info_archivo = insertar_info_archivo(archivo,usr_logeado->inicio_particion,bm_arch,nueva_cadena);
                             if(result_set_info_archivo == 1)
                             {
                                 printf("se inserto adecuadamente la informacion\n");
-                                
+
                                 if(log == 0)
                                 {
                                     registrar_journal(archivo,usr_logeado->inicio_particion,'2','1',path_tmp,nueva_cadena,'1','664');
@@ -2750,7 +2750,7 @@ int ejecutar_rem(FILE *archivo,NODO_USR *usr_logeado,char *path)
 }
 
 //retorn 1 o 0
-//tipo permiso es la accion que desea realizar 
+//tipo permiso es la accion que desea realizar
 //LISTADO DE TIPO PERMISO
 // 1-> permisos de escritura
 // 2-> permiso de lectura
@@ -2863,4 +2863,79 @@ int get_bm_inode_archivo(FILE *archivo,int ini_particion,char *path_archivo)
             }
         }
     }
+}
+
+
+
+int eliminar_grupo_o_usuario(FILE *archivo,LISTA_USR *usuarios, int ini_particion,char *name,int tipo)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    //nos hubicamos en el inodod que contiene los archivos
+    TI inodo;
+    int pos_inodo =  sb.s_inode_start + sizeof(TI);
+    fseek(archivo,pos_inodo,SEEK_SET);
+    fread(&inodo,sizeof(TI),1,archivo);
+
+    //ahora nos vamos recorriendo los bloques de archivos hasta ncontrar un nombre que coincida con el name_usr
+    //si sale pisitivo hacemos las respectivas validaciones hasta que logremos darlo de baja
+
+    for(int  i = 0; i < 12; i++)
+    {
+        if(inodo.i_block[i] != -1) //es porque posee informacion
+        {
+            //sacamos el bloque de archivo par ala informacion
+            BA bloque_archivo;
+            int pos_bloque = sb.s_block_start + (inodo.i_block[i] * 64);
+            fseek(archivo,pos_bloque,SEEK_SET);
+            fread(&bloque_archivo,sizeof(BA),1,archivo);
+            if(strstr(bloque_archivo.b_content,name) != NULL) //es porque ese bloque si posee al nombre del usuario o grupo
+            {
+                int pos_b_content =0;
+                int pos_name =0;
+                int size_name = strlen(name);
+                int id_del = 0;
+                if(tipo == 1)
+                   id_del = get_id_usr(usuarios,name);
+                else if(tipo == 2)
+                    id_del = get_id_grp(usuarios,name);
+
+                if(id_del != 0)
+                {
+                    char id_buscado[3];
+                    sprintf(id_buscado,"%d",id_del);
+                    //j es quien lleva la posicion del contenido y por el cual vamos a modificar
+                    for(int j = 0; j < strlen(bloque_archivo.b_content); j++)
+                    {
+                        if(bloque_archivo.b_content[j] == id_buscado[0])
+                        {
+                            bloque_archivo.b_content[j] = '0';
+                            //reescribiendo la informacion
+                            fseek(archivo,pos_bloque,SEEK_SET);
+                            fwrite(&bloque_archivo,sizeof(BA),1,archivo);
+
+                            if(tipo == 1)
+                                printf("El usuario %s ha sido removido\n",name);
+                            else
+                                printf("El grupo %s ha sido removido\n",name);
+                            return 1;
+                        }
+                    }
+                }
+                else
+                    {
+                        if(tipo == 1)
+                            printf("ERROR: El usuario %s no existe\n",name);
+                        else
+                            printf("ERROR:El grupo %s no exsite\n",name);
+                        return 1;
+                    }
+
+
+            }
+        }
+    }
+
 }

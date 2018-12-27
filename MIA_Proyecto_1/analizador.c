@@ -1091,7 +1091,23 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             {
                  if(strcmp(name,"") != 0)
                 {
-                    printf("ADVERTENCIA: EL COMANDO RMGRP NO HA SIDO CONFIGURADO\n");
+                    FILE *archivo = fopen(usuario_logeado->path_particion,"r+b");
+                    if(archivo != NULL){
+                        // printf("ADVERTENCIA: EL COMANDO RMGRP NO HA SIDO CONFIGURADO\n");
+                        LISTA_USR *lst_usr = (LISTA_USR*)malloc(sizeof(LISTA_USR));
+                        inicializar_lst_usr(lst_usr);
+                        consultar_usuarios(archivo,usuario_logeado->inicio_particion,usuario_logeado->size_particion,usuario_logeado->path_particion,lst_usr);
+                        if(lst_usr->size != 0)
+                        {
+                            eliminar_grupo_o_usuario(archivo,lst_usr,usuario_logeado->inicio_particion,name,2);
+                        }
+                        else
+                            printf("ERROR: En el archivo de Usuarios no hay informacion ");
+                        fclose(archivo);
+                    }
+                    else{
+                        printf("ERROR no se pudo acceder al path del archivo en el ambito de rmusr\n");
+                    }
                 }
                  else
                     printf("ERROR: Para ejecutar RMGRP es necesario tener name\n");
@@ -1105,7 +1121,25 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             {
                  if(strcmp(usr,"") != 0)
                 {
-                    printf("ADVERTENCIA: EL COMANDO RMGRP NO HA SIDO CONFIGURADO\n");
+                    FILE *archivo = fopen(usuario_logeado->path_particion,"r+b");
+                    if(archivo != NULL){
+                        // printf("ADVERTENCIA: EL COMANDO RMGRP NO HA SIDO CONFIGURADO\n");
+                        LISTA_USR *lst_usr = (LISTA_USR*)malloc(sizeof(LISTA_USR));
+                        inicializar_lst_usr(lst_usr);
+                        consultar_usuarios(archivo,usuario_logeado->inicio_particion,usuario_logeado->size_particion,usuario_logeado->path_particion,lst_usr);
+                        if(lst_usr->size != 0)
+                        {
+                           eliminar_grupo_o_usuario(archivo,lst_usr,usuario_logeado->inicio_particion,usr,1);
+                        }
+                        else
+                            printf("ERROR: En el archivo de Usuarios no hay informacion ");
+
+                        fclose(archivo);
+
+                    }
+                    else{
+                        printf("ERROR no se pudo acceder al path del archivo en el ambito de rmusr\n");
+                    }
                 }
                  else
                     printf("ERROR: Para ejecutar RMUSR es necesario tener usr\n");
