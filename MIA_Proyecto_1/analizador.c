@@ -40,7 +40,11 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     int flag_rem = 0;
     int flag_recovery  = 0;
     int flag_loss = 0;
+    int flag_chmod = 0;
+    int flag_ugo = 0;
+    int flag_r =0;
 
+    int perm_ugo =0;
     int size = 0;
     char unit= 'k'; //en kilobytes por defecto
     char type= 'p'; //primaria por defecto
@@ -234,6 +238,13 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                 memset(acum_comando,0,sizeof(acum_comando));
                 cont_sign_mnos_cmd = 0;
             }
+            else if(strcasecmp(acum_comando,"r") == 0 )
+            {
+                flag_r = 1;
+                index_lst++;
+                memset(acum_comando,0,sizeof(acum_comando));
+                cont_sign_mnos_cmd = 0;
+            }
             else if(strcasecmp(acum_comando,"mkfile")==0)
             {
                 flag_mkfile =1;
@@ -267,6 +278,12 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             else if(strcasecmp(acum_comando,"loss")==0)
             {
                 flag_loss =1;
+                index_lst++;
+                memset(acum_comando,0,sizeof(acum_comando));
+            }
+            else if(strcasecmp(acum_comando,"chmod")==0)
+            {
+                flag_chmod =1;
                 index_lst++;
                 memset(acum_comando,0,sizeof(acum_comando));
             }
@@ -377,6 +394,11 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                     {
                         strcpy(dest,acum_comando);
                         flag_dest =0;
+                    }
+                    else if(flag_ugo == 1) //============================================== UGO
+                    {
+                        perm_ugo = atoi(acum_comando);
+                        flag_ugo = 0;
                     }
                     else if(flag_file == 1 && flag_cat == 1)  //============================================== cat
                     {
@@ -489,6 +511,8 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                     flag_dest = 1;
                 else if(strcasecmp(acum_comando,"ruta") ==0)
                     flag_ruta = 1;
+                else if(strcasecmp(acum_comando,"ugo") ==0)
+                    flag_ugo = 1;
                 else
                 {
                     printf("ERROR: hubo problemas con el parametro: ");
@@ -1307,6 +1331,35 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             }
             else
                 printf("ERROR: para simular una perdida necesita tener un id de particion");
+        }
+        else if(flag_chmod == 1)
+        {
+
+            if(strcmp(path,"") !=0 && perm_ugo != 0)
+            {
+                FILE *archivo = fopen(usuario_logeado->path_particion,"r+b");
+                if(archivo!=NULL)
+                {
+                    int resultado = 0;
+                    limpiar_path(path);
+                    if(flag_p == 1)
+                    {
+                        resultado = ejecutar_chmod(archivo,usuario_logeado,perm_ugo,1,path);
+                    }
+                    else
+                         resultado = ejecutar_chmod(archivo,usuario_logeado,perm_ugo,0,path);
+
+                    if(resultado == 1)
+                        printf("permisos cambiados\n");
+                    else
+                        printf("Error no se pudo cambiar los permisos\n");
+                    fclose(archivo);
+                }
+                else
+                    printf("ERROR: no se puede acceder al path: %s en el estado de MKFILE\n\n",usuario_logeado->path_particion);
+            }
+            else
+                printf("ERROR: No se ejecutar CHMOD  porque hace falta  path, o UGO \n");
         }
     }
 

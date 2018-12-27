@@ -2939,3 +2939,103 @@ int eliminar_grupo_o_usuario(FILE *archivo,LISTA_USR *usuarios, int ini_particio
     }
 
 }
+//======================================FUNCIONALIDADES DEL CHMOD =========================================
+int ejecutar_chmod(FILE *archivo,NODO_USR *usr_logeado,int ugo,int r,char *path)
+{
+
+    //primero listamos todas las carpetas con su archivo
+    CHAR_ARRAY elementos[30];
+    //:::::::::::::::: PROCESO DONDE SE LISTAN LAS CARPETAS QUE VIENEN EN EL PATH
+    int contador_elementos = 0;
+    char path_tmp[200] ;
+    strcpy(path_tmp,path);
+    char *nombre_elemento;
+    while ((nombre_elemento = strtok_r(path, "/", &path))) //nos movemos carpeta por carpeta
+    {
+        strcpy(elementos[contador_elementos].info,nombre_elemento);
+        elementos[contador_elementos].estado = 1;
+        contador_elementos++;
+    }
+
+    int bm_padre =0;
+    int bm_hijo= -1;
+    int bm_archivo=0;
+
+    //:::::::::::::::::: VAMOAS A IR RECORRIENDO TODOS LOS ELEMENTOS HASTA LLEGAR AL ARCHIVO
+    for(int i = 0; i < contador_elementos; i++)
+    {
+        if(i + 1 == contador_elementos) //estamos en la ultimo posicion donde usualmente se declararan los archivos o la ultima carpeta
+        {
+            char path_tmp2[200];
+            strcpy(path_tmp2,path_tmp);
+
+            int existe = buscar_elemento(archivo,usr_logeado->inicio_particion,path_tmp);
+            if(existe != -1)
+            {
+                int resultado =  cambiar_permiso_inodo(archivo,usr_logeado,ugo,existe);
+                if(resultado  == 1)
+                {
+                    printf("Exito se han cambiado los permisos para la ruta %s\n",path_tmp);
+                    return 1;
+                }
+            }
+            else
+            {
+                printf("ERROR: el elemento %s no existe\n",elementos[i].info);
+                return 0;
+            }
+
+        }
+        else
+        {
+            verificar_carpeta(archivo,usr_logeado->inicio_particion,&elementos[i],bm_padre,&bm_hijo);
+            if(bm_hijo != -1 ) //consultamos si existe la carpeta
+            {
+                bm_padre = bm_hijo;
+                bm_hijo = -1;
+                //cambiandole los permisos al inodo 
+                if(r == 1) //cambia todas las carpetas del path sino no lo hace 
+                    cambiar_permiso_inodo(archivo,usr_logeado,ugo,bm_padre);
+            }
+            else if(bm_hijo == -1 ) //no existe entonces la creamos confirmamos p
+            {
+                printf("ERROR: no se puede crear no se puede acceder al archivo con path:  %s para mostrar su contenido porque el path es incorrecto\n\n",path_tmp);
+                return 0;
+            }
+        }
+    }
+
+    
+}
+
+//retorna  1   0
+int cambiar_permiso_inodo(FILE *archivo,NODO_USR *usr_logeado,int ugo,int bm_inodo)
+{
+    SB sb;
+    fseek(archivo,usr_logeado->inicio_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    TI inodo;
+    int pos_inodo = sb.s_inode_start + (bm_inodo * sizeof(TI));
+    fseek(archivo,pos_inodo,SEEK_SET);
+    fread(&inodo,sizeof(TI),1,archivo);
+    
+    //antes de realizar la accion debemos comprbar que sea root o se asu propio usuario
+    if(usr_logeado->id == 1) //es porque es root
+    {
+        inodo.i_perm = ugo;
+    }
+    else if(inodo.i_uid == usr_logeado->id) //es porque si es su propia carpeta o rachivo
+    {
+        inodo.i_perm = ugo;
+    }
+    else
+    {
+        printf("ERROR: no se pudeo cambiar permisos en el inodo:%d porue no es root o porque el usuario logeado no es propietario\n",bm_inodo);
+        return 0;
+    }
+    //guardando la informacion 
+    fseek(archivo,pos_inodo,SEEK_SET);
+    fwrite(&inodo,sizeof(TI),1,archivo);
+    return 1;
+}
