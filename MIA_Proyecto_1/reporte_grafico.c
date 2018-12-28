@@ -808,7 +808,16 @@ void escribir_bloque_archivo(FILE * archivo,FILE *archivo_dot,int ini_particion,
     fprintf(archivo_dot,"%d",bm_bloque);
     fprintf(archivo_dot," }|\n");
     fprintf(archivo_dot,"\t\t{ ");
-    fprintf(archivo_dot,ba_actual.b_content);
+
+    for(int i = 0; i < strlen(ba_actual.b_content); i++)
+    {
+        if(ba_actual.b_content[i] == '\n')
+            fprintf(archivo_dot,"\\n");
+        else
+            fprintf(archivo_dot,"%c",ba_actual.b_content[i]);
+    }
+
+
     fprintf(archivo_dot," }|\n");
     fprintf(archivo_dot,"\t\"];\n");
     //haciendo enlace

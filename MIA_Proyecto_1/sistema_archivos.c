@@ -2427,7 +2427,17 @@ int mostrar_contenido_archivo(FILE *archivo,NODO_USR *usr_logeado,char *path_fil
             int existe = buscar_archivo(archivo,usr_logeado->inicio_particion,bm_padre,&elementos[i]);
             if(existe != -1) //significa que si
             {
-                imp_block_archivo(archivo,usr_logeado->inicio_particion, existe);
+                //parte donde verificamos los permisos
+                if(verificar_permisos(archivo,usr_logeado,existe,2) == 1)
+                {
+                    imp_block_archivo(archivo,usr_logeado->inicio_particion, existe);
+                }
+                else
+                {
+                    printf("Error el usuario actual %s no tiene permisos de lectura \n\n",usr_logeado->nombre_usr);
+                    return 0;
+                }
+                
             }
             else
             {
@@ -2765,14 +2775,23 @@ int verificar_permisos(FILE *archivo,NODO_USR *usr_logeado,int bm_inodo,int tipo
     fseek(archivo,pos_ti,SEEK_SET);
     fread(&inodo,sizeof(TI),1,archivo);
 
-    if(usr_logeado->id == inodo.i_uid) //se aplican permisos de usuario
+    if(usr_logeado->id == 1)
+        return 1;
+    else if(usr_logeado->id == inodo.i_uid) //se aplican permisos de usuario
     {
+        char perm_inod[4];
+        sprintf(perm_inod,"%d",inodo.i_perm);
         if(tipo_permiso == 1) //se quiere una escritura
         {
-            char perm_inod[4];
-            sprintf(perm_inod,"%d",inodo.i_perm);
             //escritura -> 2 ;escritura y ejecucion -> 3 lecutra y escritura -> 6 todos -> 7
             if(perm_inod[0] == '2' || perm_inod[0] == '3' || perm_inod[0] == '6' || perm_inod[0] == '7' )
+            {
+                return 1;
+            }
+        }
+        else if(tipo_permiso == 2) //permisos de lectura
+        {
+            if(perm_inod[0] == '4' || perm_inod[0] == '5' || perm_inod[0] == '6' || perm_inod[0] == '7' )
             {
                 return 1;
             }
@@ -2780,12 +2799,21 @@ int verificar_permisos(FILE *archivo,NODO_USR *usr_logeado,int bm_inodo,int tipo
     }
     else if(usr_logeado->id_grp == inodo.i_gid) //se aplican permisos de grupo
     {
+        char perm_inod[4];
+        sprintf(perm_inod,"%d",inodo.i_perm);
         if(tipo_permiso == 1) //se quiere una escritura
         {
-            char perm_inod[4];
-            sprintf(perm_inod,"%d",inodo.i_perm);
+            
             //escritura -> 2 ;escritura y ejecucion -> 3 lecutra y escritura -> 6 todos -> 7
             if(perm_inod[1] == '2' || perm_inod[1] == '3' || perm_inod[1] == '6' || perm_inod[1] == '7' )
+            {
+                return 1;
+            }
+            
+        }
+        else if(tipo_permiso == 2) //permisos de lectura
+        {
+            if(perm_inod[1] == '4' || perm_inod[1] == '5' || perm_inod[1] == '6' || perm_inod[1] == '7' )
             {
                 return 1;
             }
@@ -2793,12 +2821,20 @@ int verificar_permisos(FILE *archivo,NODO_USR *usr_logeado,int bm_inodo,int tipo
     }
     else //sino encontro permisos de usuario o de grupo entonces se aplican permisos de otros
     {
+        char perm_inod[4];
+        sprintf(perm_inod,"%d",inodo.i_perm);
         if(tipo_permiso == 1) //se quiere una escritura
         {
-            char perm_inod[4];
-            sprintf(perm_inod,"%d",inodo.i_perm);
+            
             //escritura -> 2 ;escritura y ejecucion -> 3 lecutra y escritura -> 6 todos -> 7
             if(perm_inod[2] == '2' || perm_inod[2] == '3' || perm_inod[2] == '6' || perm_inod[2] == '7' )
+            {
+                return 1;
+            }
+        }
+        else if(tipo_permiso == 2) //permisos de lectura
+        {
+            if(perm_inod[2] == '4' || perm_inod[2] == '5' || perm_inod[2] == '6' || perm_inod[2] == '7' )
             {
                 return 1;
             }
@@ -2886,16 +2922,13 @@ int eliminar_grupo_o_usuario(FILE *archivo,LISTA_USR *usuarios, int ini_particio
     {
         if(inodo.i_block[i] != -1) //es porque posee informacion
         {
-            //sacamos el bloque de archivo par ala informacion
+            //sacamos el bloque de archivo para la informacion
             BA bloque_archivo;
             int pos_bloque = sb.s_block_start + (inodo.i_block[i] * 64);
             fseek(archivo,pos_bloque,SEEK_SET);
             fread(&bloque_archivo,sizeof(BA),1,archivo);
             if(strstr(bloque_archivo.b_content,name) != NULL) //es porque ese bloque si posee al nombre del usuario o grupo
             {
-                int pos_b_content =0;
-                int pos_name =0;
-                int size_name = strlen(name);
                 int id_del = 0;
                 if(tipo == 1)
                    id_del = get_id_usr(usuarios,name);
@@ -2906,21 +2939,96 @@ int eliminar_grupo_o_usuario(FILE *archivo,LISTA_USR *usuarios, int ini_particio
                 {
                     char id_buscado[3];
                     sprintf(id_buscado,"%d",id_del);
+                    int size_id = strlen(id_buscado);
                     //j es quien lleva la posicion del contenido y por el cual vamos a modificar
                     for(int j = 0; j < strlen(bloque_archivo.b_content); j++)
                     {
-                        if(bloque_archivo.b_content[j] == id_buscado[0])
+                        //encontro el numero pero no sabemos si el de grupo o usuario
+                        if(bloque_archivo.b_content[j] == id_buscado[0]) //[0] <- primera coincidencia
                         {
-                            bloque_archivo.b_content[j] = '0';
-                            //reescribiendo la informacion
-                            fseek(archivo,pos_bloque,SEEK_SET);
-                            fwrite(&bloque_archivo,sizeof(BA),1,archivo);
+                            int pos_j = j;
+                            char *acum_id = (char*)malloc(sizeof(char)*3);
+                            memset(acum_id,0,sizeof(acum_id));
+                            char *acumulador = (char*)malloc(sizeof(char)*1);
+                            memset(acumulador,0,sizeof(acumulador));
+                            if(size_id > 1) //es porque el id posee mas de un digito
+                            {
+                                for(int k = 0; k < size_id; k++)
+                                {
+                                    acumulador[0] = bloque_archivo.b_content[pos_j];
+                                    strcat(acum_id,acumulador);
+                                    if(j == strlen(bloque_archivo.b_content))
+                                        break;
+                                    pos_j++;
+                                }
+                            }
+                            else{
+                                acumulador[0] = bloque_archivo.b_content[pos_j];
+                                strcat(acum_id,acumulador);
+                            }
 
-                            if(tipo == 1)
-                                printf("El usuario %s ha sido removido\n",name);
-                            else
-                                printf("El grupo %s ha sido removido\n",name);
-                            return 1;
+                            if(strcmp(id_buscado,acum_id) == 0) //si son iguales
+                            {
+                                int salir = 0;
+                                while(pos_j != strlen(bloque_archivo.b_content))
+                                {
+                                    if(bloque_archivo.b_content[pos_j] == 44) //coma en ascii
+                                    {
+                                        if( (pos_j + 1) != strlen(bloque_archivo.b_content))
+                                        {
+                                            pos_j++;
+                                            if(tipo == 1)
+                                            {
+                                                acumulador[0] = bloque_archivo.b_content[pos_j];
+                                                if(bloque_archivo.b_content[pos_j] == 'U')
+                                                {
+
+                                                    for(int pos = 0; pos < size_id; pos++)
+                                                    {
+                                                        bloque_archivo.b_content[j] = '0';
+                                                        j++;
+                                                    }
+
+                                                  //  bloque_archivo.b_content[j] = '0';
+                                                    //reescribiendo la informacion
+                                                    fseek(archivo,pos_bloque,SEEK_SET);
+                                                    fwrite(&bloque_archivo,sizeof(BA),1,archivo);
+                                                    printf("El usuario %s ha sido removido\n",name);
+                                                    free(acumulador);
+                                                    free(acum_id);
+                                                    return 1;
+                                                }
+                                            }
+                                            if(tipo == 2)
+                                            {
+                                                if(bloque_archivo.b_content[pos_j] == 'G')
+                                                {
+                                                    for(int pos = 0; pos < size_id; pos++)
+                                                    {
+                                                        bloque_archivo.b_content[j] = '0';
+                                                        j++;
+                                                    }
+                                                    //bloque_archivo.b_content[j] = '0';
+                                                    //reescribiendo la informacion
+                                                    fseek(archivo,pos_bloque,SEEK_SET);
+                                                    fwrite(&bloque_archivo,sizeof(BA),1,archivo);
+                                                     printf("El grupo %s ha sido removido\n",name);
+                                                     free(acumulador);
+                                                     free(acum_id);
+                                                     return 1;
+                                                }
+                                            }
+
+                                        }
+                                    }
+                                    pos_j++;
+                                }
+                                printf("ERROR: no se pudo eliminar el usuario %s\n",name);
+                                return 0;
+                            }
+                            pos_j = j;
+                            free(acumulador);
+                            free(acum_id);
                         }
                     }
                 }
@@ -2940,6 +3048,7 @@ int eliminar_grupo_o_usuario(FILE *archivo,LISTA_USR *usuarios, int ini_particio
 
 }
 //======================================FUNCIONALIDADES DEL CHMOD =========================================
+
 int ejecutar_chmod(FILE *archivo,NODO_USR *usr_logeado,int ugo,int r,char *path)
 {
 
@@ -2975,8 +3084,13 @@ int ejecutar_chmod(FILE *archivo,NODO_USR *usr_logeado,int ugo,int r,char *path)
                 int resultado =  cambiar_permiso_inodo(archivo,usr_logeado,ugo,existe);
                 if(resultado  == 1)
                 {
-                    printf("Exito se han cambiado los permisos para la ruta %s\n",path_tmp);
+                    printf("Exito se han cambiado los permisos para la ruta %s\n",path_tmp2);
                     return 1;
+                }
+                else
+                {
+                    printf("ERROR: no se pudieron cambiar los permisos para la ruta %s\n",path_tmp2);
+                    return 0;
                 }
             }
             else
@@ -2993,8 +3107,8 @@ int ejecutar_chmod(FILE *archivo,NODO_USR *usr_logeado,int ugo,int r,char *path)
             {
                 bm_padre = bm_hijo;
                 bm_hijo = -1;
-                //cambiandole los permisos al inodo 
-                if(r == 1) //cambia todas las carpetas del path sino no lo hace 
+                //cambiandole los permisos al inodo
+                if(r == 1) //cambia todas las carpetas del path sino no lo hace
                     cambiar_permiso_inodo(archivo,usr_logeado,ugo,bm_padre);
             }
             else if(bm_hijo == -1 ) //no existe entonces la creamos confirmamos p
@@ -3005,7 +3119,7 @@ int ejecutar_chmod(FILE *archivo,NODO_USR *usr_logeado,int ugo,int r,char *path)
         }
     }
 
-    
+
 }
 
 //retorna  1   0
@@ -3019,7 +3133,7 @@ int cambiar_permiso_inodo(FILE *archivo,NODO_USR *usr_logeado,int ugo,int bm_ino
     int pos_inodo = sb.s_inode_start + (bm_inodo * sizeof(TI));
     fseek(archivo,pos_inodo,SEEK_SET);
     fread(&inodo,sizeof(TI),1,archivo);
-    
+
     //antes de realizar la accion debemos comprbar que sea root o se asu propio usuario
     if(usr_logeado->id == 1) //es porque es root
     {
@@ -3034,7 +3148,7 @@ int cambiar_permiso_inodo(FILE *archivo,NODO_USR *usr_logeado,int ugo,int bm_ino
         printf("ERROR: no se pudeo cambiar permisos en el inodo:%d porue no es root o porque el usuario logeado no es propietario\n",bm_inodo);
         return 0;
     }
-    //guardando la informacion 
+    //guardando la informacion
     fseek(archivo,pos_inodo,SEEK_SET);
     fwrite(&inodo,sizeof(TI),1,archivo);
     return 1;

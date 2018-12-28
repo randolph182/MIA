@@ -183,7 +183,8 @@ int verificar_permisos(FILE *archivo,NODO_USR *usr_logeado,int bm_inodo,int tipo
 int eliminar_grupo_o_usuario(FILE *archivo,LISTA_USR *usuarios, int ini_particion,char *name,int tipo);
 
 //======================================FUNCIONALIDADES DEL CHMOD =========================================
-
+int ejecutar_chmod(FILE *archivo,NODO_USR *usr_logeado,int ugo,int r,char *path);
+int cambiar_permiso_inodo(FILE *archivo,NODO_USR *usr_logeado,int ugo,int bm_inodo);
 
 #endif // SISTEMA_ARCHIVOS_H_INCLUDED
 

@@ -1332,7 +1332,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
             else
                 printf("ERROR: para simular una perdida necesita tener un id de particion");
         }
-        else if(flag_chmod == 1)
+        else if(flag_chmod == 1)  //========================================================= CHMOD
         {
 
             if(strcmp(path,"") !=0 && perm_ugo != 0)
@@ -1342,7 +1342,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                 {
                     int resultado = 0;
                     limpiar_path(path);
-                    if(flag_p == 1)
+                    if(flag_r == 1)
                     {
                         resultado = ejecutar_chmod(archivo,usuario_logeado,perm_ugo,1,path);
                     }
@@ -1396,11 +1396,13 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
 int ejecutar_cat(NODO_USR *usr_logeado,char * path_file)
 {
     FILE *archivo = fopen(usr_logeado->path_particion,"r+b");
+    char path_tmp[200];
+    strcpy(path_tmp,path_file);
     if(archivo!=NULL)
     {
         if(mostrar_contenido_archivo(archivo,usr_logeado,path_file) == 0)
         {
-            printf("ERROR no se pudo imprimir con el path: %s",path_file);
+            printf("ERROR no se pudo imprimir con el path: %s",path_tmp);
         }
     }
     else
