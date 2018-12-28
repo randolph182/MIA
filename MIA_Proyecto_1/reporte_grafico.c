@@ -1101,7 +1101,7 @@ void reporteLOG(FILE *archivo,int ini_particion, char *path_reporte)
 
     if(cvl_path_carpeta(path_reporte,&archivo_dot,&extension) == 1)
     {
-      reporteLOG_(archivo,ini_particion,archivo_dot,path_reporte,extension);
+       reporteLOG_(archivo,ini_particion,archivo_dot,path_reporte,extension);
     }
     else
         printf("ERROR: Algo salio mal en la creacion de la carpeta con path: %s\n\n",path_reporte);
@@ -1132,6 +1132,23 @@ void reporteLOG_(FILE *archivo,int ini_particion,char *path_dot,char *path_repor
     LOG log_actual;
     int cont_jouornal = 0;
     int cont_jouornal_anterior = -1;
+    int i = ini_log;
+    while(i < fin_log)
+    {
+        fseek(archivo, i, SEEK_SET);
+        fread(&log_actual, sizeof(LOG), 1, archivo);
+
+        if(log_actual.Journal_Tipo_Operacion != '0')
+        {
+            escribir_journal(archivo,archivo_dot,ini_particion,i,cont_jouornal_anterior,cont_jouornal);
+        }
+        else
+            break;
+        cont_jouornal_anterior = cont_jouornal;
+        cont_jouornal++;
+        i = i + sizeof(LOG);
+    }
+    /*
     for (int i = ini_log; i < fin_log; i = i + sizeof(LOG))
     {
         fseek(archivo, i, SEEK_SET);
@@ -1144,8 +1161,7 @@ void reporteLOG_(FILE *archivo,int ini_particion,char *path_dot,char *path_repor
         cont_jouornal_anterior = cont_jouornal;
         cont_jouornal++;
     }
-
-    //escribir_inodo_tipo2
+*/
 
     fprintf(archivo_dot,"\n}");
     fclose(archivo_dot);
@@ -1171,9 +1187,10 @@ void reporteLOG_(FILE *archivo,int ini_particion,char *path_dot,char *path_repor
     strcat(comando," -Tpdf");
    }
 
-  // printf("%s\n",comando);
    int flag = system(comando);
      printf("Reporte Generado!\n\n");
+    free(comando);
+    comando = NULL;
 }
 
 
@@ -1181,7 +1198,7 @@ void escribir_journal(FILE *archivo,FILE *archivo_dot,int ini_particion,int pos_
 {
 
     LOG log;
-    fseek(archivo,pos_log,archivo);
+    fseek(archivo,pos_log,SEEK_SET);
     fread(&log,sizeof(LOG),1,archivo);
 
     fprintf(archivo_dot,"\tnode[width=2,style=\"filled\",fillcolor=\"orange\"];\n");

@@ -1038,6 +1038,16 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                                     if(result !=0)
                                     {
                                         printf("EXITO el usuario %s fue registrado!! en el grupo %s \n",usr,grp);
+                                        char *acum_tmp = (char*)malloc(sizeof(char)*100);
+                                        memset(acum_tmp,0,sizeof(acum_tmp));
+                                        strcat(acum_tmp,usr);
+                                        strcat(acum_tmp,",");
+                                        strcat(acum_tmp,grp);
+                                        strcat(acum_tmp,",");
+                                        strcat(acum_tmp,pwd);
+                                        registrar_journal(archivo,usuario_logeado->inicio_particion,'5','1',acum_tmp,"U",'1',777);
+                                        free(acum_tmp);
+                                        acum_tmp = NULL;
                                     }
                                     else
                                         printf("Error: no se pudo registrar el usuario por problemas en la actualizacion del archivo\n\n");
@@ -1085,6 +1095,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                                     if(result !=0)
                                     {
                                         printf("EXITO el grupo %s fue registrado!!\n",name);
+                                        registrar_journal(archivo,usuario_logeado->inicio_particion,'6','1',name,"G",'1',777);
                                     }
                                     else
                                         printf("Error: no se pudo registrar el grupo por problemas en la actualizacion del archivo\n\n");
@@ -1229,7 +1240,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                 FILE *archivo = fopen(usuario_logeado->path_particion,"r+b");
                 if(archivo!=NULL)
                 {
-                    ejectuar_mv(archivo,usuario_logeado,path,dest);
+                    ejectuar_mv(archivo,usuario_logeado,path,dest,0);
                     fclose(archivo);
                 }
                 else
@@ -1246,7 +1257,7 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
                 FILE *archivo  = fopen(usuario_logeado->path_particion,"r+b");
                 if(archivo !=NULL)
                 {
-                    ejecutar_rem(archivo,usuario_logeado,path);
+                    ejecutar_rem(archivo,usuario_logeado,path,0);
                     fclose(archivo);
                 }
                 else
@@ -1381,8 +1392,8 @@ void iniciar_analisis(char *lista,LISTA_MOUNT *const ptr_mount,NODO_USR *const u
     caracter=NULL;
     free(usr);
     usr = NULL;
-    free(pwd);
-    pwd = NULL;
+    //free(pwd);
+    //pwd = NULL;
     free(cont);
     cont = NULL;
     free(dest);

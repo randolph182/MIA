@@ -117,6 +117,37 @@ void ejecutar_recovery(FILE *archivo,NODO_USR *usr_logeado)
             {
                 ejecutar_mkfile(archivo,usr_logeado,journal.Journal_nombre,1,0,journal.Journal_contenido,1);
             }
+            else if(journal.Journal_Tipo_Operacion == '3') //mover
+            {
+                ejectuar_mv(archivo,usr_logeado,journal.Journal_nombre,journal.Journal_contenido,1);
+            }
+            else if(journal.Journal_Tipo_Operacion == '4') //remover
+            {
+                ejecutar_rem(archivo,usr_logeado,journal.Journal_nombre,1);
+            }
+            else if(journal.Journal_Tipo_Operacion == '5') //mkusr
+            {
+                CHAR_ARRAY info[30];
+                //:::::::::::::::: PROCESO DONDE SE LISTAN LAS CARPETAS QUE VIENEN EN EL PATH
+                char *usr = (char*)malloc(sizeof(char)*50);
+                memset(usr,0,sizeof(usr));
+                strcpy(usr,journal.Journal_nombre);
+                int contador = 0;
+                char *nombre_usr;
+                int fin =0;
+                while ((nombre_usr = strtok_r(usr, ",", &usr))) //nos movemos carpeta por carpeta
+                {
+                        strcpy(info[contador].info,nombre_usr);
+                        info[contador].estado = 1;
+                        contador++;
+                }
+                int result = registrar_en_archivo(archivo,usr_logeado->inicio_particion,info[0].info,info[1].info,info[2].info,'U');
+            }
+            else if(journal.Journal_Tipo_Operacion == '6') //mkgrp
+            {
+                 int result = registrar_en_archivo(archivo,usr_logeado->inicio_particion,"",journal.Journal_nombre,"",'G');
+            }
+
         }
     }
 }
@@ -2490,7 +2521,7 @@ void imp_block_archivo(FILE *archivo,int ini_particion,int bm_ino_arch)
 
 //========================================================== MOVER =======================
 // 1 ; 0
-int ejectuar_mv(FILE *archivo,NODO_USR *usr_logeado,char *path_origen,char *path_destino)
+int ejectuar_mv(FILE *archivo,NODO_USR *usr_logeado,char *path_origen,char *path_destino,int log)
 {
     char elemen[200];
     strcpy(elemen,path_destino);
@@ -2517,6 +2548,15 @@ int ejectuar_mv(FILE *archivo,NODO_USR *usr_logeado,char *path_origen,char *path
                     {
                         printf("ERROR: hubo problemas con el moviemiento de carpetas en MV revise el codigo\n\n");
                         return 0;
+                    }
+                    else
+                    {
+                        printf("EXITO: se ha realizado un mv");
+                        if(log == 0) //log no esta activo
+                        {
+                            registrar_journal(archivo,usr_logeado->inicio_particion,'3','0',path_origen,path_destino,'1',777);
+                        }
+                        return 1;
                     }
                 }
                 else
@@ -2758,7 +2798,7 @@ int buscar_to_eliminar_carp(FILE *archivo,int ini_particion,int bm_padre,char *n
 }
 
 //========================================================== REM =======================
-int ejecutar_rem(FILE *archivo,NODO_USR *usr_logeado,char *path)
+int ejecutar_rem(FILE *archivo,NODO_USR *usr_logeado,char *path,int log)
 {
     char elemen[200];
     strcpy(elemen,path);
@@ -2777,6 +2817,10 @@ int ejecutar_rem(FILE *archivo,NODO_USR *usr_logeado,char *path)
             }
             del_bm_inodo(archivo,usr_logeado->inicio_particion,last_bm);
             printf("El path del elemento %s fue removido\n",path);
+            if(log == 0)
+            {
+                registrar_journal(archivo,usr_logeado->inicio_particion,'4','0',path,"",'1',777);
+            }
             return 1;
         }
         else
@@ -2803,7 +2847,7 @@ int permisos_inodo_rem(FILE *archivo,NODO_USR *usr_logeado,char *path, int *last
     //:::::::::::::::: PROCESO DONDE SE LISTAN LAS CARPETAS QUE VIENEN EN EL PATH
     int contador_elementos = 0;
     char *nombre_elemento;
-    char *path_tmp[200];
+    char path_tmp[200];
     strcpy(path_tmp,path);
 
     while ((nombre_elemento = strtok_r(path, "/", &path))) //nos movemos carpeta por carpeta

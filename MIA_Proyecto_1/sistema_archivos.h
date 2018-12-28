@@ -160,7 +160,7 @@ int mostrar_contenido_archivo(FILE *archivo,NODO_USR *usr_logeado,char *path_fil
 void imp_block_archivo(FILE *archivo,int ini_particion,int bm_ino_arch);
 
 //========================================================== MOVER =======================
-int ejectuar_mv(FILE *archivo,NODO_USR *usr_logeado,char *path_origen,char *path_destino);
+int ejectuar_mv(FILE *archivo,NODO_USR *usr_logeado,char *path_origen,char *path_destino,int log);
 //bm  o -1
 int buscar_elemento(FILE *archivo,int ini_particion,char *path_elem);
 // retorna 1 o 0 ojo el destino tieen que ser un inodo tipo carpeta sino vale
@@ -172,7 +172,7 @@ int delet_element(FILE *archivo,int ini_particion,char *path);
 int buscar_to_eliminar_carp(FILE *archivo,int ini_particion,int bm_padre,char *name_elem);
 
 //========================================================== REM =======================
-int ejecutar_rem(FILE *archivo,NODO_USR *usr_logeado,char *path);
+int ejecutar_rem(FILE *archivo,NODO_USR *usr_logeado,char *path,int log);
 int permisos_inodo_rem(FILE *archivo,NODO_USR *usr_logeado,char *path,int *last_bm);
 // int eliminar_bit_rem(FILE *)
 //========================================================== PERMISOS =======================
