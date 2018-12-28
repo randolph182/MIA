@@ -2437,7 +2437,7 @@ int mostrar_contenido_archivo(FILE *archivo,NODO_USR *usr_logeado,char *path_fil
                     printf("Error el usuario actual %s no tiene permisos de lectura \n\n",usr_logeado->nombre_usr);
                     return 0;
                 }
-                
+
             }
             else
             {
@@ -2501,20 +2501,31 @@ int ejectuar_mv(FILE *archivo,NODO_USR *usr_logeado,char *path_origen,char *path
          int bm_origen = buscar_elemento(archivo,usr_logeado->inicio_particion,elemen);
          if(bm_origen != -1) //es porque si existe el origen
          {
-             //ahora que ya se vifico que existen los 2 path se procede a realizar el moviemiento
-             int result = 0;
-             int result_del =0;
-             char name[15];
-             strcpy(elemen,path_origen);
-             get_last_name_path(elemen,&name);
-             result = insert_in_apt_ino_carpeta(archivo,usr_logeado->inicio_particion,bm_dest,bm_origen,name);
-             strcpy(elemen,path_origen);
-             result_del = delet_element(archivo,usr_logeado->inicio_particion,elemen);
-             if(result == 0 || result_del ==0)
-             {
-                printf("ERROR: hubo problemas con el moviemiento de carpetas en MV revise el codigo\n\n");
-                return 0;
-             }
+             //verificando permisos
+                if(verificar_permisos(archivo,usr_logeado,bm_origen,1) == 1)
+                {
+                     //ahora que ya se vifico que existen los 2 path se procede a realizar el moviemiento
+                    int result = 0;
+                    int result_del =0;
+                    char name[15];
+                    strcpy(elemen,path_origen);
+                    get_last_name_path(elemen,&name);
+                    result = insert_in_apt_ino_carpeta(archivo,usr_logeado->inicio_particion,bm_dest,bm_origen,name);
+                    strcpy(elemen,path_origen);
+                    result_del = delet_element(archivo,usr_logeado->inicio_particion,elemen);
+                    if(result == 0 || result_del ==0)
+                    {
+                        printf("ERROR: hubo problemas con el moviemiento de carpetas en MV revise el codigo\n\n");
+                        return 0;
+                    }
+                }
+                else
+                {
+                    printf("ERROR: es usuario:%s no tiene permisos de escritura para mover\n",usr_logeado->nombre_usr);
+                    return 0;
+                }
+
+
          }
          else
          {
@@ -2751,13 +2762,177 @@ int ejecutar_rem(FILE *archivo,NODO_USR *usr_logeado,char *path)
 {
     char elemen[200];
     strcpy(elemen,path);
-    int result = delet_element(archivo,usr_logeado->inicio_particion,elemen);
-    if(result == 0)
+    int last_bm = -1;
+    int es_posible = permisos_inodo_rem(archivo,usr_logeado,elemen,&last_bm);
+    if(es_posible == 1)
     {
-        printf("ERROR no se pudo eliminar el archivo %s \n",path);
-        return 0;
+        strcpy(elemen,path);
+        if(last_bm != -1)
+        {
+            int result = delet_element(archivo,usr_logeado->inicio_particion,elemen);
+            if(result == 0)
+            {
+                printf("ERROR no se pudo eliminar el archivo %s \n",path);
+                return 0;
+            }
+            del_bm_inodo(archivo,usr_logeado->inicio_particion,last_bm);
+            printf("El path del elemento %s fue removido\n",path);
+            return 1;
+        }
+        else
+        {
+            printf("ERROR: no se puede completar el comando rem porque el ultimo bm del path: %s no fue encontrado",path);
+            return 0;
+        }
+    }
+    else
+    {
+        printf("No se pudo completar el comando Rem por falta de permisos en el path %s\n",path);
+    }
+
+}
+
+int permisos_inodo_rem(FILE *archivo,NODO_USR *usr_logeado,char *path, int *last_bm)
+{
+    SB sb;
+    fseek(archivo,usr_logeado->inicio_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+
+    //primero listamos todas las carpetas con su archivo
+    CHAR_ARRAY elementos[30];
+    //:::::::::::::::: PROCESO DONDE SE LISTAN LAS CARPETAS QUE VIENEN EN EL PATH
+    int contador_elementos = 0;
+    char *nombre_elemento;
+    char *path_tmp[200];
+    strcpy(path_tmp,path);
+
+    while ((nombre_elemento = strtok_r(path, "/", &path))) //nos movemos carpeta por carpeta
+    {
+        strcpy(elementos[contador_elementos].info,nombre_elemento);
+        elementos[contador_elementos].estado = 1;
+        contador_elementos++;
+    }
+
+    int bm_padre =0;
+    int bm_hijo= -1;
+    int bm_archivo=0;
+    //:::::::::::::::::: VAMOAS A IR RECORRIENDO TODOS LOS ELEMENTOS HASTA LLEGAR AL ARCHIVO
+    for(int i = 0; i < contador_elementos; i++)
+    {
+        if(i + 1 == contador_elementos) //estamos en la ultimo posicion donde usualmente se declararan los archivos
+        {
+            char path_tmp2[200];
+            strcpy(path_tmp2,path_tmp);
+
+            int existe = buscar_elemento(archivo,usr_logeado->inicio_particion,path_tmp);
+            if(existe != -1) //significa que si
+            {
+                if(verificar_permisos(archivo,usr_logeado,bm_padre,1) == 0)
+                {
+                    printf("ERROR: el usuario logeado no tiene permisos sobre una de las carpeta del path %s\n",path_tmp);
+                    return 0;
+                }
+                *last_bm = existe;
+                return 1;
+            }
+            else
+            {
+                printf("ERROR: no se pudo encontrar el archivo con path %s para mostrar su info en creacion de reporte\n\n",path_tmp2);
+                return 0;
+            }
+        }
+        else
+        {
+            verificar_carpeta(archivo,usr_logeado->inicio_particion,&elementos[i],bm_padre,&bm_hijo);
+            if(bm_hijo != -1 ) //consultamos si existe la carpeta
+            {
+                bm_padre = bm_hijo;
+                bm_hijo = -1;
+                if(verificar_permisos(archivo,usr_logeado,bm_padre,1) == 0)
+                {
+                    printf("ERROR: el usuario logeado no tiene permisos sobre una de las carpeta del path %s\n",path_tmp);
+                    return 0;
+                }
+
+            }
+            else if(bm_hijo == -1 ) //no existe entonces la creamos confirmamos p
+            {
+                printf("ERROR: no se puede crear no se puede acceder al archivo con path:  %s para mostrar su contenido porque el path es incorrecto\n\n",path_tmp);
+                return 0;
+            }
+        }
     }
 }
+
+
+void del_bm_inodo(FILE *archivo,int ini_particion,int bm_inodo)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+    TI inodo_actual;
+    int pos_inodo = sb.s_inode_start + (bm_inodo * sizeof(TI));
+    fseek(archivo,pos_inodo,SEEK_SET);
+    fread(&inodo_actual,sizeof(TI),1,archivo);
+    //eliminamos su bm
+
+    int pos_bm_inodo = sb.s_bm_inode_start + bm_inodo;
+    fseek(archivo,pos_bm_inodo,SEEK_SET);
+    fwrite("0",sizeof(char),1,archivo);
+
+
+    for(int i = 0; i < 12; i++)
+    {
+        if(inodo_actual.i_block[i] != -1)
+        {
+            if(inodo_actual.i_type == '0') //carpeta
+                del_bm_bloque(archivo,ini_particion,inodo_actual.i_block[i],0);
+            else if(inodo_actual.i_type == '1') //archivo
+                del_bm_bloque(archivo,ini_particion,inodo_actual.i_block[i],1);
+        }
+    }
+
+
+}
+
+void del_bm_bloque(FILE *archivo,int ini_particion,int bm_bloque,int tipo)
+{
+    SB sb;
+    fseek(archivo,ini_particion,SEEK_SET);
+    fread(&sb,sizeof(SB),1,archivo);
+    BC bc_actual;
+    if(tipo == 0) //carpeta
+    {
+        int pos_bloque = sb.s_block_start + (bm_bloque * 64);
+        fseek(archivo,pos_bloque,SEEK_SET);
+        fread(&bc_actual,sizeof(BC),1,archivo);
+    }
+    //eliminando el bit
+
+    int pos_bm_bloque = sb.s_bm_block_start + bm_bloque;
+    fseek(archivo,pos_bm_bloque,SEEK_SET);
+    fwrite("0",sizeof(char),1,archivo);
+
+    if(tipo == 0) //carpeta
+    {
+        for(int i = 0; i < 4; i++)
+        {
+            if(bc_actual.b_content[i].b_inodo != -1)
+            {
+                if(strcmp(bc_actual.b_content[i].b_name,".") != 0 && strcmp(bc_actual.b_content[i].b_name,"..") != 0)
+                {
+                    del_bm_inodo(archivo,ini_particion,bc_actual.b_content[i].b_inodo);
+                }
+
+            }
+        }
+    }
+
+
+
+}
+
+
 
 //retorn 1 o 0
 //tipo permiso es la accion que desea realizar
@@ -2803,13 +2978,13 @@ int verificar_permisos(FILE *archivo,NODO_USR *usr_logeado,int bm_inodo,int tipo
         sprintf(perm_inod,"%d",inodo.i_perm);
         if(tipo_permiso == 1) //se quiere una escritura
         {
-            
+
             //escritura -> 2 ;escritura y ejecucion -> 3 lecutra y escritura -> 6 todos -> 7
             if(perm_inod[1] == '2' || perm_inod[1] == '3' || perm_inod[1] == '6' || perm_inod[1] == '7' )
             {
                 return 1;
             }
-            
+
         }
         else if(tipo_permiso == 2) //permisos de lectura
         {
@@ -2825,7 +3000,7 @@ int verificar_permisos(FILE *archivo,NODO_USR *usr_logeado,int bm_inodo,int tipo
         sprintf(perm_inod,"%d",inodo.i_perm);
         if(tipo_permiso == 1) //se quiere una escritura
         {
-            
+
             //escritura -> 2 ;escritura y ejecucion -> 3 lecutra y escritura -> 6 todos -> 7
             if(perm_inod[2] == '2' || perm_inod[2] == '3' || perm_inod[2] == '6' || perm_inod[2] == '7' )
             {

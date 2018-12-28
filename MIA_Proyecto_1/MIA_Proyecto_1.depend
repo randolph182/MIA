@@ -180,10 +180,10 @@
 	"lista_ajuste.h"
 	"sistema_archivos.h"
 
-1545954137 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/sistema_archivos.c
+1545978007 source:/home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/sistema_archivos.c
 	"sistema_archivos.h"
 
-1545940844 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/sistema_archivos.h
+1545972116 /home/rm/Documentos/Git_Proyectos/MIA/MIA_Proyecto_1/sistema_archivos.h
 	"admin_disco.h"
 	"lista_simple.h"
 	"lista_users.h"

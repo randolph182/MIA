@@ -173,7 +173,8 @@ int buscar_to_eliminar_carp(FILE *archivo,int ini_particion,int bm_padre,char *n
 
 //========================================================== REM =======================
 int ejecutar_rem(FILE *archivo,NODO_USR *usr_logeado,char *path);
-
+int permisos_inodo_rem(FILE *archivo,NODO_USR *usr_logeado,char *path,int *last_bm);
+// int eliminar_bit_rem(FILE *)
 //========================================================== PERMISOS =======================
 int verificar_permisos(FILE *archivo,NODO_USR *usr_logeado,int bm_inodo,int tipo_permiso);
 
