@@ -3,10 +3,12 @@ from django.shortcuts import render, redirect, render_to_response
 from django.template import RequestContext
 from django.http import HttpResponse
 
-from streaming.forms import form_login,form_registro,form_registro2
+from streaming.forms import form_login,form_registro,form_registro2,form_csv
 from django.contrib import messages
 from streaming.models import Usuario
 from django.db import connection
+
+from django.http import HttpResponseRedirect
 
 # Create your views here.
 def home(request):
@@ -98,3 +100,16 @@ def logout(request):
 
 def administrador(request):
 	return render(request,'usuario/administrador/administrador.html')
+
+def archivoCSV(request):
+	if request.method == 'POST' :
+		csv_form = form_csv(request.POST, request.FILES)
+		if csv_form.is_valid():
+			info = request.POST['file']
+			print(info)
+			return HttpResponseRedirect('/success/url/')
+		else:
+			print("no es valido papu")
+	else:
+		csv_form = form_csv()
+	return render(request, 'usuario/administrador/cargaArchivo.html',{'csv_form':csv_form})

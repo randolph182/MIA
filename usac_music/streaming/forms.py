@@ -39,7 +39,11 @@ class form_registro2(forms.Form):
     widgets = {
             'password': forms.PasswordInput(),
         }
-    
+
+class form_csv(forms.Form):
+    file = forms.FileField()
+
+
 class form_registro(forms.ModelForm):
     class Meta:
         model = Usuario
