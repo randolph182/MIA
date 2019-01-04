@@ -38,16 +38,24 @@ def login(request):
 		if login_form.is_valid:
 			nombre_usr = request.POST['nombre']
 			passw = request.POST['password']
-			try:
-				verificacion = Usuario.objects.filter(nombre=nombre_usr, password=passw).exists()
-				if verificacion == True:
-					messages.success(request, 'Logeado exitosamente') 
-					print(nombre_usr)
-					print(passw)
-				else:
-					messages.warning(request, 'El usuario o la contrasenia son incorrectos') 
-			except Exception:
-				messages.warning(request, 'Algo salio mal en la validacion de usuarios') 
+			cursor = connection.cursor()
+			cursor.execute("SELECT id_usuario,rol FROM usuario WHERE nombre = '"+nombre_usr+"' AND password = '"+passw+"';")
+			usr = cursor.fetchone()
+
+			if usr != None:
+				id_usr = usr[0]
+				rol_usr = usr[1]
+				print(id_usr)
+				print(rol_usr)
+				cursor.close()
+				request.session['id_usr'] = id_usr
+				request.session['rol_usr'] = rol_usr
+				request.session['name_usr'] = nombre_usr
+				if rol_usr == 'administrador':
+					return render(request,'usuario/administrador/administrador.html')
+				messages.success(request, 'Logeado exitosamente')
+			else:
+				messages.warning(request, 'El usuario o la contrasenia son incorrectos')
 	else:
 		login_form = form_login()
 	return render(request, 'usuario/login.html',{'login_form':login_form})
@@ -81,3 +89,12 @@ def registro_usr(request):
 	else:
 		registro_form = form_registro2()
 	return render(request, 'usuario/registro.html',{'registro_form':registro_form})
+
+def logout(request):
+	request.session['id_usr'] = ""
+	request.session['rol_usr'] = 0
+	request.session['name_usr'] = ""
+	return render(request, 'inicio/home.html')
+
+def administrador(request):
+	return render(request,'usuario/administrador/administrador.html')
