@@ -105,11 +105,23 @@ def archivoCSV(request):
 	if request.method == 'POST' :
 		csv_form = form_csv(request.POST, request.FILES)
 		if csv_form.is_valid():
-			info = request.POST['file']
-			print(info)
-			return HttpResponseRedirect('/success/url/')
+			f = request.FILES['file'] #obtenemos los datos del archivo
+			i = 0   #iterador de lineas
+			for chunk in f.chunks():
+				lineas = chunk.split('\n')
+				for linea in lineas:
+					if i != 0:
+						elementos = linea.split(',')
+						num_elm = 0
+						for elemento in elementos:
+							print(str(num_elm) + ": "+ elemento)
+							num_elm = num_elm + 1
+					i = i + 1
+			print("numero de lineas del doc  = ")
+			print(i)
+			# return HttpResponseRedirect('/success/url/')
 		else:
-			print("no es valido papu")
+			messages.warning(request, 'Hay problemas para subir el archivo')
 	else:
 		csv_form = form_csv()
 	return render(request, 'usuario/administrador/cargaArchivo.html',{'csv_form':csv_form})

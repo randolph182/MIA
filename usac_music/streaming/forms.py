@@ -41,7 +41,7 @@ class form_registro2(forms.Form):
         }
 
 class form_csv(forms.Form):
-    file = forms.FileField()
+    file = forms.FileField( label='Selecciona el archivo csv')
 
 
 class form_registro(forms.ModelForm):
