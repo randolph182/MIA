@@ -1,0 +1,200 @@
+
+================================================ registro de usuarios ============================================================================
+
+create or replace PROCEDURE registroUsuario(nNombre VARCHAR2,nApellido VARCHAR2,nPass VARCHAR2,
+                                  nEmail VARCHAR2,nTel INTEGER,nFoto VARCHAR2,
+                                  nGenero VARCHAR2,nFecha_nac DATE,nFecha_reg DATE,
+                                  nDir VARCHAR2, nRol VARCHAR2,namePais VARCHAR2)
+IS
+--Declaracion de variables 
+--variables que verifican si existe pais y usuario para insertarlo
+t_pais number;
+t_usuario number;
+idPais integer;
+BEGIN
+--Declaracion de los procedimientos
+    t_pais := 0;  --le asignamos valor
+    t_usuario := 0;
+
+    SELECT COUNT(*) INTO t_pais 
+    FROM pais
+    WHERE nombre = namePais;
+
+    SELECT COUNT(*) INTO t_usuario
+    FROM usuario
+    WHERE correo = nEmail; --los usuarios pueden tener casi los mismos atributos pero no el mismo correo
+
+    IF t_pais != 0 AND t_usuario = 0 THEN --si pais existe y usaurio no 
+        --obteniendo el id del pais
+        SELECT id_pais INTO idPais
+        FROM pais
+        WHERE nombre = namePais;
+        --insersion de los nuevos datos 
+        INSERT INTO usuario(nombre,apellidos,password,correo,telefono,fotografia,genero,fecha_nacimiento,fecha_registro,direccion,rol,pais_id_pais) 
+        VALUES(nNombre,nApellido,nPass,nEmail,nTel,nFoto,nGenero,nFecha_nac,nFecha_reg,nDir,nRol,idPais);
+        
+    ELSIF t_pais = 0 AND t_usuario = 0 THEN --su pais no existe y usuario no existe
+        INSERT INTO pais(nombre) VALUES(namePais);
+        
+        SELECT id_pais INTO idPais
+        FROM pais
+        WHERE nombre = namePais;
+        
+        INSERT INTO usuario(nombre,apellidos,password,correo,telefono,fotografia,genero,fecha_nacimiento,fecha_registro,direccion,rol,pais_id_pais) 
+        VALUES(nNombre,nApellido,nPass,nEmail,nTel,nFoto,nGenero,nFecha_nac,nFecha_reg,nDir,nRol,idPais);
+        
+    END IF;
+END;
+
+================================================ CARGA MASIVA ============================================================================
+
+create or replace PROCEDURE archivoCSV(nSong VARCHAR2,fechaSong Date,generoSong VARCHAR2,
+                                  nArtista VARCHAR2,nAlbum VARCHAR2,fechaAlbum Date,
+                                  generoAlbum VARCHAR2,fechaArtista DATE,paisArtista VARCHAR2,rutaCancion VARCHAR2)
+IS
+--Declaracion de variables 
+--variables que verifican si existe cancionpara insertarlo
+c_song number;
+
+idPais integer;
+idArtista integer;
+idGenero_song integer;
+idGenero_album integer;
+idAlbum integer;
+idSong integer;
+BEGIN
+--Declaracion de los procedimientos
+    BEGIN
+        idPais := ingresoPais(paisArtista);
+        idArtista := ingresoArtista(nArtista,fechaArtista,'----',idPais);
+        idGenero_album := ingresoGenero(generoAlbum);
+        idGenero_song :=  ingresoGenero(generoSong);
+        idAlbum := ingresoAlbum(nAlbum,fechaAlbum,'----',idGenero_album,idArtista);
+    END;
+    --conteo de las canciones para verificar si no existen repetidas
+    c_song := 0;
+
+    SELECT COUNT(*) INTO c_song
+    FROM cancion
+    WHERE nombre = nSong;
+
+    IF c_song = 0 THEN --SIGNIFICA QUE NO HAY UNA CANCION CON EL NOMBRE ENTRANTE SE CREA
+        INSERT INTO cancion(nombre,fecha_lanzamiento,genero_id_genero,artista_id_artista,ruta_cancion)
+        VALUES(nSong,fechaSong,idGenero_song,idArtista,rutaCancion);
+    END IF;
+    --luego de haber insertado en la tabla de canciones buscamos su id para insertarla en la tabla intermedia entre cancion y album
+
+    SELECT id_cancion INTO idSong
+    FROM cancion
+    WHERE nombre = nSong;
+
+    INSERT INTO albm_song(cancion_id_cancion,album_id_album)
+    VALUES(idSong,idAlbum);
+
+END;
+
+================================================ FUNCION INGRESO ALBUM ============================================================================
+
+create or replace FUNCTION ingresoAlbum(nAlbum IN VARCHAR2,fecha IN DATE,foto IN VARCHAR2,id_genero IN INTEGER,id_artista IN INTEGER) 
+   RETURN INTEGER --RETORNA EL ID DEL ALBUM
+   IS
+   c_album INTEGER; --CONTADOR DE ALBUM
+   idAlbum INTEGER;   --ID DEL ALBUM QUE SE RETORNARA
+
+BEGIN 
+    --conteo de album
+    c_album := 0;
+    SELECT COUNT(*) INTO c_album 
+    FROM album
+    WHERE nombre = nAlbum;
+
+    IF c_album = 0 THEN --NO EXISTE LO CREAMOS
+        INSERT INTO album(nombre,fecha_lanzamiento,fotografia,genero_id_genero,artista_id_artista) VALUES(nAlbum,fecha,foto,id_genero,id_artista);
+    --NO IMPORTANDO SI EXISTIA O NO ACA OBTENEMOS EL ID DEL ALBUM PORQUE NOS ASEGURAMOS ANTES DE INSERTARLO
+    END IF;
+
+    SELECT id_album INTO idAlbum
+    FROM album
+    WHERE nombre = nAlbum;
+
+  RETURN idAlbum;
+END ingresoAlbum;
+
+================================================ FUNCION INGRESO ARTISTA ============================================================================
+create or replace FUNCTION ingresoArtista(nArtista IN VARCHAR2,fecha IN DATE,foto IN VARCHAR2,id_pais IN INTEGER) 
+   RETURN INTEGER --RETORNA EL ID DEL GENERO
+   IS
+   c_artista INTEGER; --CONTADOR DE GENERO
+   idArtista INTEGER;   --ID DEL GENERO QUE SE RETORNARA
+
+BEGIN 
+    --conteo de genero
+    c_artista := 0;
+    SELECT COUNT(*) INTO c_artista 
+    FROM artista
+    WHERE nombre = nArtista;
+
+    IF c_artista = 0 THEN --NO EXISTE LO CREAMOS
+        INSERT INTO artista(nombre,fecha_nacimiento,fotografia,pais_id_pais) VALUES(nArtista,fecha,foto,id_pais);
+    --NO IMPORTANDO SI EXISTIA O NO ACA OBTENEMOS EL ID DEL GENERO PORQUE NOS ASEGURAMOS ANTES DE INSERTARLO
+    END IF;
+
+    SELECT id_artista INTO idArtista
+    FROM artista
+    WHERE nombre = nArtista;
+
+  RETURN idArtista;
+END ingresoArtista;
+
+================================================ FUNCION INGRESO GENERO ============================================================================
+
+create or replace FUNCTION ingresoGenero(nGenero IN VARCHAR2) 
+   RETURN INTEGER --RETORNA EL ID DEL GENERO
+   IS
+   c_genero number; --CONTADOR DE GENERO
+   idGenero INTEGER;   --ID DEL GENERO QUE SE RETORNARA
+
+BEGIN 
+    --conteo de genero
+    c_genero := 0;
+    SELECT COUNT(*) INTO c_genero 
+    FROM genero
+    WHERE nombre = nGenero;
+
+    IF c_genero = 0 THEN --NO EXISTE LO CREAMOS
+        INSERT INTO genero(nombre) VALUES(nGenero);
+    --NO IMPORTANDO SI EXISTIA O NO ACA OBTENEMOS EL ID DEL GENERO PORQUE NOS ASEGURAMOS ANTES DE INSERTARLO
+    END IF;
+
+    SELECT id_genero INTO idGenero
+    FROM genero
+    WHERE nombre = nGenero;
+
+  RETURN idGenero;
+END ingresoGenero;
+
+================================================ FUNCION INGRESO PAIS ============================================================================
+create or replace FUNCTION ingresoPais(nPais IN VARCHAR2) 
+   RETURN INTEGER --RETORNA EL ID DEL PAIS
+   IS
+   c_pais number; --CONTADOR DE PAIS
+   idPais INTEGER;   --ID DEL PAIS QUE SE RETORNARA
+
+BEGIN 
+    --conteo de pais
+    c_pais := 0;
+    SELECT COUNT(*) INTO c_pais 
+    FROM pais
+    WHERE nombre = nPais;
+
+    IF c_pais = 0 THEN --NO EXISTE LO CREAMOS
+        INSERT INTO pais(nombre) VALUES(nPais);
+    --NO IMPORTANDO SI EXISTIA O NO ACA OBTENEMOS EL ID DEL PAIS PORQUE NOS ASEGURAMOS ANTES DE INSERTARLO
+    END IF;
+    SELECT id_pais INTO idPais
+    FROM pais
+    WHERE nombre = nPais;
+
+  RETURN idPais;
+END ingresoPais;
+
