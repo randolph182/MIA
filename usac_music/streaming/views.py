@@ -111,15 +111,36 @@ def archivoCSV(request):
 				lineas = chunk.split('\n')
 				for linea in lineas:
 					if i != 0:
-						elementos = linea.split(',')
-						num_elm = 0
-						for elemento in elementos:
-							print(str(num_elm) + ": "+ elemento)
-							num_elm = num_elm + 1
+						#inicializamos las variables por defecto por si no se encuntra algun campo
+						if linea != "":
+							nombre_song = ""
+							fecha_song = "2019/01/01"
+							genero_song = "----"
+							nombre_artista = ""
+							nombre_album = ""
+							fecha_album = "2019/01/01"
+							genero_album = ""
+							fecha_artista = "2019/01/01"
+							pais_artista = ""
+							ruta_cancion = "---------"
+							#epliteamos los campos por coma
+							elementos = linea.split(',')
+							#asignamos los valores a las variables
+							nombre_song = elementos[0]
+							fecha_song = elementos[1]
+							genero_song = elementos[2]
+							nombre_artista = elementos[3]
+							nombre_album = elementos[4]
+							fecha_album = elementos[5]
+							genero_album = elementos[6]
+							fecha_artista = elementos[7]
+							pais_artista = elementos[8]
+							#ejecutamos el procedimiento almacenado que esta en oracle
+							with connection.cursor() as cursor:
+								cursor.callproc("archivoCSV",(nombre_song,fecha_song,genero_song,nombre_artista,nombre_album,fecha_album,genero_album,fecha_artista,pais_artista,ruta_cancion))
+								cursor.close()
 					i = i + 1
-			print("numero de lineas del doc  = ")
-			print(i)
-			# return HttpResponseRedirect('/success/url/')
+			messages.warning(request, 'El archivo se ha subido')
 		else:
 			messages.warning(request, 'Hay problemas para subir el archivo')
 	else:
