@@ -87,10 +87,40 @@ def registro_usr(request):
 			with connection.cursor() as cursor:
 				cursor.callproc("registroUsuario",(name,apell,passw,correo,tel,foto,genero,fecha_nac,fecha_reg,dire,rol,pais))
 				cursor.close()
-
 	else:
 		registro_form = form_registro2()
+	return render(request, 'usuario/administrador/adminRegistroUsr.html',{'registro_form':registro_form})
+
+
+
+def registro_normal(request):
+	if request.method == 'POST' :
+		registro_form = form_registro(request.POST)
+		if registro_form.is_valid:
+			name = request.POST['nombre']
+			passw = request.POST['password']
+			apell = request.POST['apellidos']
+			correo = request.POST['correo']
+			tel = request.POST['telefono']
+			foto = request.POST['fotografia']
+			genero = request.POST['genero']
+			fecha_nac = request.POST['fecha_nacimiento']
+			fecha_reg = "2019/01/05"
+			dire = request.POST['direccion']
+			rol = "usuario"
+			pais = request.POST['pais']
+			print(name)
+			print(pais)
+			print(fecha_nac)
+			acum = 'execute registroUsuario(\''+ name +'\',\''+apell+'\',\''+passw+'\',\''+correo+'\','+ tel +',\''+foto+'\',\''+genero+'\',TO_DATE(\''+fecha_nac+'\',\'yyyy/mm/dd\'),TO_DATE(\''+fecha_reg+'\',\'yyyy/mm/dd\'),\''+dire+'\',\''+rol+'\',\''+pais+'\');'
+			print(acum)
+			with connection.cursor() as cursor:
+				cursor.callproc("registroUsuario",(name,apell,passw,correo,tel,foto,genero,fecha_nac,fecha_reg,dire,rol,pais))
+				cursor.close()
+	else:
+		registro_form = form_registro()
 	return render(request, 'usuario/registro.html',{'registro_form':registro_form})
+
 
 def logout(request):
 	request.session['id_usr'] = ""
