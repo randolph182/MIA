@@ -1,4 +1,51 @@
+============================================= registro de usuarios de funcion ============================================================================
+create or replace FUNCTION registroUsuario(nNombre VARCHAR2,nApellido VARCHAR2,nPass VARCHAR2,
+                                  nEmail VARCHAR2,nTel INTEGER,nFoto VARCHAR2,
+                                  nGenero VARCHAR2,nFecha_nac DATE,nFecha_reg DATE,
+                                  nDir VARCHAR2, nRol VARCHAR2,namePais VARCHAR2)
+RETURN INTEGER IS
+--Declaracion de variables 
+--variables que verifican si existe pais y usuario para insertarlo
+t_pais number;
+t_usuario number;
+idPais integer;
+resultado integer;
+BEGIN
+--Declaracion de los procedimientos
+    t_pais := 0;  --le asignamos valor
+    t_usuario := 0;
+    resultado := 0;
+    SELECT COUNT(*) INTO t_pais 
+    FROM pais
+    WHERE nombre = namePais;
 
+    SELECT COUNT(*) INTO t_usuario
+    FROM usuario
+    WHERE correo = nEmail; --los usuarios pueden tener casi los mismos atributos pero no el mismo correo
+
+    IF t_pais != 0 AND t_usuario = 0 THEN --si pais existe y usaurio no 
+        --obteniendo el id del pais
+        SELECT id_pais INTO idPais
+        FROM pais
+        WHERE nombre = namePais;
+        --insersion de los nuevos datos 
+        INSERT INTO usuario(nombre,apellidos,password,correo,telefono,fotografia,genero,fecha_nacimiento,fecha_registro,direccion,rol,pais_id_pais) 
+        VALUES(nNombre,nApellido,nPass,nEmail,nTel,nFoto,nGenero,nFecha_nac,nFecha_reg,nDir,nRol,idPais);
+        resultado := 1;
+    ELSIF t_pais = 0 AND t_usuario = 0 THEN --su pais no existe y usuario no existe
+        INSERT INTO pais(nombre) VALUES(namePais);
+
+        SELECT id_pais INTO idPais
+        FROM pais
+        WHERE nombre = namePais;
+
+        INSERT INTO usuario(nombre,apellidos,password,correo,telefono,fotografia,genero,fecha_nacimiento,fecha_registro,direccion,rol,pais_id_pais) 
+        VALUES(nNombre,nApellido,nPass,nEmail,nTel,nFoto,nGenero,nFecha_nac,nFecha_reg,nDir,nRol,idPais);
+        resultado := 1;
+    END IF;
+
+    RETURN resultado;
+END registroUsuario;
 ================================================ registro de usuarios ============================================================================
 
 create or replace PROCEDURE registroUsuario(nNombre VARCHAR2,nApellido VARCHAR2,nPass VARCHAR2,
