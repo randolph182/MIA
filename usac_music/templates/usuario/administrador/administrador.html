@@ -9,19 +9,8 @@
 {% block content %}
 <div class="row">
     <div class="col-sm-3 col-dm-3">
-        <br><br>
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-sm-6 col-md-6 sidebar">
-                    <ul class="nav nav-sidebar">
-                        <li class="active"><a href="{% url 'streaming.views.archivoCSV' %}">Cargar Archivo <span class="sr-only">(current)</span></a></li>
-                        <li><a href="{% url 'streaming.views.registro_usr' %}">Registrar usuarios</a></li>
-                        <li><a href="#">Analytics</a></li>
-                        <li><a href="#">Export</a></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+        {% block content_admin_menu %}
+        {% endblock %}
     </div>
     <div class="col-sm-8 col-dm-8">
             {% block content_admin %}

@@ -10,6 +10,7 @@ urlpatterns = [
     url(r'^registro/$',views.registro_normal,name='registro_normal'),
     url(r'^administrador/$',views.administrador,name='administrador'),
     url(r'^archivoCSV/$',views.archivoCSV,name='archivoCSV'),
+    url(r'^crud_usuario/$',views.crud_usuario,name='crud_usuario'),
     url(r'^$', views.home, name='home'),
 
 ]

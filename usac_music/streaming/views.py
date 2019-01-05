@@ -7,7 +7,6 @@ from streaming.forms import form_login,form_registro,form_registro2,form_csv
 from django.contrib import messages
 from streaming.models import Usuario
 from django.db import connection
-import cx_Oracle
 from django.http import HttpResponseRedirect
 
 # Create your views here.
@@ -54,7 +53,7 @@ def login(request):
 				request.session['rol_usr'] = rol_usr
 				request.session['name_usr'] = nombre_usr
 				if rol_usr == 'administrador':
-					return render(request,'usuario/administrador/administrador.html')
+					return render(request,'usuario/administrador/principalAdmin.html')
 				messages.success(request, 'Logeado exitosamente')
 			else:
 				messages.warning(request, 'El usuario o la contrasenia son incorrectos')
@@ -114,26 +113,12 @@ def registro_normal(request):
 			print(pais)
 			print(fecha_nac)
 			# acum = ' DECLARE result number;BEGIN registroUsuario(\''+ name +'\',\''+apell+'\',\''+passw+'\',\''+correo+'\','+ tel +',\''+foto+'\',\''+genero+'\',TO_DATE(\''+fecha_nac+'\',\'yyyy/mm/dd\'),TO_DATE(\''+fecha_reg+'\',\'yyyy/mm/dd\'),\''+dire+'\',\''+rol+'\',\''+pais+'\');'
-			acum = """BEGIN
-   						REGISTROUSUARIO('usuario6','usuario6,','123456','usuario6@gmail.com',123456,'home','masculino',TO_DATE('2019/01/01','yyyy/mm/dd'),TO_DATE('2019/01/01','yyyy/mm/dd'),'guate','usuario','Guatemala');
-				      END;;"""
-			print(acum)
-			# try:
-			# 	plsql="registroUsuario(%s, %s, %s,%s, %s, %s,%s, %s, %s,%s, %s, %s)"
-			# 	resultado = call_procedimiento(plsql, [name,apell,passw,correo,tel,foto,genero,fecha_nac,fecha_reg,dire,rol,pais])
-			# 	print(resultado)
-			# except Exception, ex:
-			# 	print(str(ex))
-			# with connection.cursor() as cursor:
-			# 	respuesta = cursor.callproc("registroUsuario",(name,apell,passw,correo,tel,foto,genero,fecha_nac,fecha_reg,dire,rol,pais,resultado))
-			# 	# respuesta = cursor.fetchone()
-			# 	print(resultado)
-			# 	cursor.close()
 			with connection.cursor() as cursor:
-				cursor.execute(acum)
-				result = cursor.fetchone()
-				print(result)
+				respuesta = cursor.callproc("registroUsuario",(name,apell,passw,correo,tel,foto,genero,fecha_nac,fecha_reg,dire,rol,pais,resultado))
+				# respuesta = cursor.fetchone()
+				print(resultado)
 				cursor.close()
+
 			
 	else:
 		registro_form = form_registro()
@@ -147,7 +132,7 @@ def logout(request):
 	return render(request, 'inicio/home.html')
 
 def administrador(request):
-	return render(request,'usuario/administrador/administrador.html')
+	return render(request,'usuario/administrador/principalAdmin.html')
 
 def archivoCSV(request):
 	if request.method == 'POST' :
@@ -195,20 +180,5 @@ def archivoCSV(request):
 		csv_form = form_csv()
 	return render(request, 'usuario/administrador/cargaArchivo.html',{'csv_form':csv_form})
 
-def call_procedimiento(cadena, valors=None):  
-	with connection.cursor() as cur:
-		# preparam cadena per a Oracle
-		cadena="BEGIN %s; END;;" % (cadena,)
-		# preparam el parametre de sortida
-		sortida= cur.cursor.var(cx_Oracle.STRING)
-		# afeixim parAmetre com a darrer
-		valors.append(sortida)
-		try:
-			cur.execute(cadena, valors)
-			# retornam parAmetre de sortida
-			return sortida.getvalue()
-		except Exception, e:
-			mensaje="%s Error: call_proc cadena#%s valors#%s" % (e, cadena, valors)
-			raise Exception(mensaje)
-		finally:
-			cur.close()
+def crud_usuario(request):
+	return render(request,'usuario/administrador/crudUsuarios.html')

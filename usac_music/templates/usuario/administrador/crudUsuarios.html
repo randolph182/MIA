@@ -1,0 +1,22 @@
+{% extends 'usuario/administrador/administrador.html'%}
+
+{% block content_admin_menu %}
+<br><br>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-6 col-md-6 sidebar">
+            <ul class="nav nav-sidebar">
+                <li class="active"><a href="{% url 'streaming.views.archivoCSV' %}">MOSTRAR USUARIOS <span class="sr-only">(current)</span></a></li>
+                <li><a href="{% url 'streaming.views.registro_usr' %}">REGISTRAR USUARIOS</a></li>
+                <li><a href="#">Analytics</a></li>
+                <li><a href="#">Export</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content_admin %}
+    {% block content_crud_usr %}
+    {% endblock %}
+{% endblock %}
