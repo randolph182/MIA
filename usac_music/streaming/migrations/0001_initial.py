@@ -176,10 +176,8 @@ class Migration(migrations.Migration):
                 ('fecha_registro', models.DateField(null=True, blank=True)),
                 ('direccion', models.CharField(max_length=195, null=True, blank=True)),
                 ('rol', models.CharField(max_length=60, null=True, blank=True)),
+                ('token_email', models.CharField(max_length=100, null=True, blank=True)),
+                ('pais_id_pais', models.ForeignKey(db_column='pais_id_pais', default=0, to='streaming.Pais')),
             ],
-            options={
-                'db_table': 'usuario',
-                'managed': False,
-            },
         ),
     ]

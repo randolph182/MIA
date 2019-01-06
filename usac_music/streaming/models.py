@@ -143,8 +143,8 @@ class UsrLog(models.Model):
     fecha = models.DateField(blank=True, null=True)
     descripcion = models.CharField(max_length=600, blank=True, null=True)
     tipo_accion = models.CharField(max_length=60, blank=True, null=True)
-    usuario_id_usuario = models.ForeignKey('Usuario', db_column='usuario_id_usuario')
-    usuario_id_usuario1 = models.ForeignKey('Usuario', db_column='usuario_id_usuario1')
+    usuario_id_usuario = models.ForeignKey('Usuario', related_name='usuario_id_usuario')
+    usuario_id_usuario1 = models.ForeignKey('Usuario', related_name='usuario_id_usuario1')
 
     class Meta:
         managed = False
@@ -164,8 +164,5 @@ class Usuario(models.Model):
     fecha_registro = models.DateField(blank=True, null=True)
     direccion = models.CharField(max_length=195, blank=True, null=True)
     rol = models.CharField(max_length=60, blank=True, null=True)
-    pais_id_pais = models.ForeignKey(Pais, db_column='pais_id_pais')
-
-    class Meta:
-        managed = False
-        db_table = 'usuario'
+    pais_id_pais = models.ForeignKey(Pais, db_column='pais_id_pais',default =0)
+    token_email = models.CharField(max_length=100, blank=True, null=True)
