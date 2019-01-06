@@ -6,7 +6,7 @@
 
 <div class="container">
 
-	<form method="POST" class="signin">
+	<form method="POST" class="signin" enctype="multipart/form-data">
 		
 		{% csrf_token %}
 		{{registro_form.as_p}}

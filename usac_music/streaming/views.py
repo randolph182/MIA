@@ -9,6 +9,8 @@ from streaming.models import Usuario
 from django.db import connection
 from django.http import HttpResponseRedirect
 
+import os
+
 # Create your views here.
 def home(request):
 	template = 'inicio/home.html'
@@ -88,22 +90,25 @@ def registro_usr(request):
 
 def registro_normal(request):
 	if request.method == 'POST' :
-		registro_form = form_registro(request.POST)
+		registro_form = form_registro(request.POST,request.FILES or None)
 		if registro_form.is_valid():
 			name = request.POST['nombre']
 			passw = request.POST['password']
 			apell = request.POST['apellidos']
 			correo = request.POST['correo']
 			tel = request.POST['telefono']
-			foto = request.POST['fotografia']
+			# foto = request.POST['fotografia']
 			genero = request.POST['genero']
 			fecha_nac = request.POST['fecha_nacimiento']
 			dire = request.POST['direccion']
 			rol = "usuario"
 			pais = request.POST['pais']
-			with connection.cursor() as cursor:
-				respuesta = cursor.callproc("registroUsuario",(name,apell,passw,correo,tel,foto,genero,fecha_nac,dire,rol,pais))
-				cursor.close()
+			obj  = request.FILES['fotografia']
+			ruta = os.path.realpath(obj.name)
+			print(ruta)
+			# with connection.cursor() as cursor:
+			# 	respuesta = cursor.callproc("registroUsuario",(name,apell,passw,correo,tel,foto,genero,fecha_nac,dire,rol,pais))
+			# 	cursor.close()
 	else:
 		registro_form = form_registro()
 	return render(request, 'usuario/registro.html',{'registro_form':registro_form})

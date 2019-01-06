@@ -49,7 +49,7 @@ class form_registro(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput)
     correo = forms.EmailField(label='correo', max_length=100)
     telefono = forms.IntegerField(label='telefono')
-    fotografia = forms.CharField(label='fotografia', max_length=100)
+    fotografia = forms.FileField(label='fotografia')
     genero = forms.CharField(label='genero', max_length=100)
     fecha_nacimiento =  forms.CharField(label = 'fecha de nacimiento')
     direccion = forms.CharField(label='direccion', max_length=100)
