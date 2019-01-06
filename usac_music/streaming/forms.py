@@ -9,17 +9,17 @@ class form_login(forms.ModelForm):
         model = Usuario
         
         fields = [
-            'nombre',
+            'correo',
             'password',
         ]
 
         labels = {
-            'nombre': 'usuario',
+            'correo': 'Email',
             'password': 'password',
         }
         
         widgets = {
-            'nombre':forms.TextInput(),
+            'correo':forms.TextInput(),
             'password': forms.PasswordInput(),
         }
 
@@ -31,8 +31,7 @@ class form_registro2(forms.Form):
     telefono = forms.IntegerField(label='telefono')
     fotografia = forms.CharField(label='fotografia', max_length=100)
     genero = forms.CharField(label='genero', max_length=100)
-    fecha_nacimiento =  forms.TimeField(label = 'fecha de nacimiento')
-    fecha_registro = forms.TimeField(label = 'fecha de registro')
+    fecha_nacimiento =  forms.CharField(label = 'fecha de nacimiento')
     direccion = forms.CharField(label='direccion', max_length=100)
     rol = forms.CharField(label='rol', max_length=100)
     pais = forms.CharField(label='pais', max_length=100)
@@ -52,7 +51,7 @@ class form_registro(forms.Form):
     telefono = forms.IntegerField(label='telefono')
     fotografia = forms.CharField(label='fotografia', max_length=100)
     genero = forms.CharField(label='genero', max_length=100)
-    fecha_nacimiento =  forms.TimeField(label = 'fecha de nacimiento')
+    fecha_nacimiento =  forms.CharField(label = 'fecha de nacimiento')
     direccion = forms.CharField(label='direccion', max_length=100)
     pais = forms.CharField(label='pais', max_length=100)
     widgets = {
@@ -71,7 +70,8 @@ class form_datosUsr(forms.Form):
     telefono = forms.IntegerField(label='telefono')
     fotografia = forms.CharField(label='fotografia', max_length=100)
     genero = forms.CharField(label='genero', max_length=100)
-    fecha_nacimiento =  forms.TimeField(label = 'fecha de nacimiento')
+    fecha_nacimiento =  forms.CharField(label = 'fecha de nacimiento')
     direccion = forms.CharField(label='direccion', max_length=100)
+    rol = forms.CharField(label='rol', max_length=100)
     pais = forms.CharField(label='pais', max_length=100)
     comentario = forms.CharField(widget=forms.Textarea)

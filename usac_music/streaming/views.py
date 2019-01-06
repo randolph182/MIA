@@ -31,16 +31,16 @@ def index(request):
 	return render(request,"usuario/index.html",context)
     
 
-
+#el usuario se logeara por medio del correo
 def login(request):
 	if request.method == 'POST' :
 		login_form = form_login(request.POST)
 
 		if login_form.is_valid:
-			nombre_usr = request.POST['nombre']
+			correo_usr = request.POST['correo']
 			passw = request.POST['password']
 			cursor = connection.cursor()
-			cursor.execute("SELECT id_usuario,rol FROM usuario WHERE nombre = '"+nombre_usr+"' AND password = '"+passw+"';")
+			cursor.execute("SELECT id_usuario,rol,nombre FROM usuario WHERE correo = '"+correo_usr+"' AND password = '"+passw+"';")
 			usr = cursor.fetchone()
 
 			if usr != None:
@@ -51,7 +51,7 @@ def login(request):
 				cursor.close()
 				request.session['id_usr'] = id_usr
 				request.session['rol_usr'] = rol_usr
-				request.session['name_usr'] = nombre_usr
+				request.session['name_usr'] = usr[2]
 				if rol_usr == 'administrador':
 					return render(request,'usuario/administrador/principalAdmin.html')
 				messages.success(request, 'Logeado exitosamente')
@@ -65,7 +65,7 @@ def registro_usr(request):
 	if request.method == 'POST' :
 		registro_form = form_registro2(request.POST)
 
-		if registro_form.is_valid:
+		if registro_form.is_valid():
 			name = request.POST['nombre']
 			passw = request.POST['password']
 			apell = request.POST['apellidos']
@@ -74,17 +74,11 @@ def registro_usr(request):
 			foto = request.POST['fotografia']
 			genero = request.POST['genero']
 			fecha_nac = request.POST['fecha_nacimiento']
-			fecha_reg = request.POST['fecha_registro']
 			dire = request.POST['direccion']
 			rol = request.POST['rol']
 			pais = request.POST['pais']
-			print(name)
-			print(pais)
-			print(fecha_nac)
-			acum = 'execute registroUsuario(\''+ name +'\',\''+apell+'\',\''+passw+'\',\''+correo+'\','+ tel +',\''+foto+'\',\''+genero+'\',TO_DATE(\''+fecha_nac+'\',\'yyyy/mm/dd\'),TO_DATE(\''+fecha_reg+'\',\'yyyy/mm/dd\'),\''+dire+'\',\''+rol+'\',\''+pais+'\');'
-			print(acum)
 			with connection.cursor() as cursor:
-				cursor.callproc("registroUsuario",(name,apell,passw,correo,tel,foto,genero,fecha_nac,fecha_reg,dire,rol,pais))
+				cursor.callproc("registroUsuario",(name,apell,passw,correo,tel,foto,genero,fecha_nac,dire,rol,pais))
 				cursor.close()
 	else:
 		registro_form = form_registro2()
@@ -95,7 +89,7 @@ def registro_usr(request):
 def registro_normal(request):
 	if request.method == 'POST' :
 		registro_form = form_registro(request.POST)
-		if registro_form.is_valid:
+		if registro_form.is_valid():
 			name = request.POST['nombre']
 			passw = request.POST['password']
 			apell = request.POST['apellidos']
@@ -104,16 +98,11 @@ def registro_normal(request):
 			foto = request.POST['fotografia']
 			genero = request.POST['genero']
 			fecha_nac = request.POST['fecha_nacimiento']
-			fecha_reg = "2019/01/05"
 			dire = request.POST['direccion']
 			rol = "usuario"
 			pais = request.POST['pais']
-			print(name)
-			print(pais)
-			print(fecha_nac)
-			# acum = ' DECLARE result number;BEGIN registroUsuario(\''+ name +'\',\''+apell+'\',\''+passw+'\',\''+correo+'\','+ tel +',\''+foto+'\',\''+genero+'\',TO_DATE(\''+fecha_nac+'\',\'yyyy/mm/dd\'),TO_DATE(\''+fecha_reg+'\',\'yyyy/mm/dd\'),\''+dire+'\',\''+rol+'\',\''+pais+'\');'
 			with connection.cursor() as cursor:
-				respuesta = cursor.callproc("registroUsuario",(name,apell,passw,correo,tel,foto,genero,fecha_nac,fecha_reg,dire,rol,pais))
+				respuesta = cursor.callproc("registroUsuario",(name,apell,passw,correo,tel,foto,genero,fecha_nac,dire,rol,pais))
 				cursor.close()
 	else:
 		registro_form = form_registro()
@@ -193,14 +182,41 @@ def crud_modif_usr(request):
 		if correo.is_valid():
 			val_correo = correo.cleaned_data['correo_id']
 			result_usr = Usuario.objects.get(correo = val_correo)
-			if result_usr:
-				print(result_usr.nombre)
-			# result_usr = Usuario.objects.filter(correo = request.POST['correo'])
-			# print(correo.cleaned_data['correo_id'])
-			# if result_usr == True:
-			# 	print("El correo si existe")
-			# else:
-			# 	print("El correo no existe")
+			if result_usr: #si el usuario es valido que esxiste
+				if usrData.is_valid(): #ahora pregunta si los campos del otro formulario son correctos
+					nombre = usrData.cleaned_data['nombre']
+					apell = usrData.cleaned_data['apellidos']
+					passw = usrData.cleaned_data['password']
+					nCorreo = usrData.cleaned_data['correo']
+					tel = usrData.cleaned_data['telefono']
+					foto = usrData.cleaned_data['fotografia']
+					genero = usrData.cleaned_data['genero']
+					fecha_nac = usrData.cleaned_data['fecha_nacimiento']
+					direccion = usrData.cleaned_data['direccion']
+					rol = usrData.cleaned_data['rol']
+					pais = usrData.cleaned_data['pais']
+					coment = usrData.cleaned_data['comentario']
+					#luego de obtener todos los datos a modificar se procede a verficiar que el nuevo correo no este rep
+					result_correo = Usuario.objects.get(correo = nCorreo)
+					if result_correo == None: #sino exite el correo se registra
+						id1 = request.session['id_usr']
+						id2 = result_correo.id_usuario
+						with connection.cursor() as cursor:
+							cursor.callproc("actualizarUsuario",(id1,id2,nombre,apell,passw,nCorreo,tel,foto,genero,fecha_nac,direccion,rol,pais,coment))
+							cursor.close()
+					elif result_correo != None and result_correo.nombre == nombre: #si el correo existe y es el mismo nombre
+						id1 = request.session['id_usr']
+						id2 = result_correo.id_usuario
+						with connection.cursor() as cursor:
+							cursor.callproc("actualizarUsuario",(id1,id2,nombre,apell,passw,nCorreo,tel,foto,genero,fecha_nac,direccion,rol,pais,coment))
+							cursor.close()
+					else:
+						print("el correo ya existe al que desea modificar")
+
+				else:
+					print("tiene que escribir todos los campos del usuario que desea modificar")
+			else:
+				print("el correo del usuario que desea modificar no existe")
 	else:
 		usr = Usuario.objects.all()
 		correo = form_correo()
