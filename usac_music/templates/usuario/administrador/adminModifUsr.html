@@ -1,0 +1,65 @@
+{% extends 'usuario/administrador/crudUsuarios.html'%}
+
+{% block content_crud_usr %}
+<div class="row">
+    <div class="col-sm-8 col-dm-8">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <td>#</td>
+                    <td>nombre</td>
+                    <td>apellidos</td>
+                    <td>password</td>
+                    <td>correo</td>
+                    <td>telefono</td>
+                    <td>fotografia</td>
+                    <td>genero</td>
+                    <td>fecha_nacimiento</td>
+                    <td>fecha_registro</td>
+                    <td>direccion</td>
+                    <td>rol</td>
+                    <td>pais</td>
+                </tr>
+            </thead>
+            <tbody>
+                {% if usuarios%}
+                {% for usuario in usuarios %}
+                <tr>
+                    <td>{{usuario.id_usuario}}</td>
+                    <td>{{usuario.nombre}}</td>
+                    <td>{{usuario.apellidos}}</td>
+                    <td>{{usuario.password}}</td>
+                    <td>{{usuario.correo}}</td>
+                    <td>{{usuario.telefono}}</td>
+                    <td>{{usuario.fotografia}}</td>
+                    <td>{{usuario.genero}}</td>
+                    <td>{{usuario.fecha_nacimiento}}</td>
+                    <td>{{usuario.fecha_registro}}</td>
+                    <td>{{usuario.direccion}}</td>
+                    <td>{{usuario.rol}}</td>
+                    <td>{{usuario.pais_id_pais.nombre}}</td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <h1> No hay registros de usuarios</h1>
+                {% endif %}
+            </tbody>
+        </table>
+
+    </div>
+</div>
+<div class="row">
+    <form method="POST" class="signin" enctype="multipart/form-data">
+        <div class="col-sm-4 col-dm-4">
+            {% csrf_token %}
+            {{correo.as_p}}
+        </div>
+        <div class="col-sm-8 col-dm-8">
+            {% csrf_token %}
+            {{datos_usr.as_p}}
+            <input type="submit" value="Enviar datos"> <!-- boton de enviar datos -->
+        </div>
+    </form>
+</div>
+
+{% endblock %}

@@ -52,7 +52,7 @@ class Cancion(models.Model):
     fecha_lanzamiento = models.DateField(blank=True, null=True)
     genero_id_genero = models.ForeignKey('Genero', db_column='genero_id_genero')
     artista_id_artista = models.ForeignKey(Artista, db_column='artista_id_artista')
-
+    ruta_cancion = models.CharField(max_length=750, blank=True, null=True)
     class Meta:
         managed = False
         db_table = 'cancion'

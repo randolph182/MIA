@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, render_to_response
 from django.template import RequestContext
 from django.http import HttpResponse
 
-from streaming.forms import form_login,form_registro,form_registro2,form_csv
+from streaming.forms import form_login,form_registro,form_registro2,form_csv,form_correo,form_datosUsr
 from django.contrib import messages
 from streaming.models import Usuario
 from django.db import connection
@@ -108,18 +108,13 @@ def registro_normal(request):
 			dire = request.POST['direccion']
 			rol = "usuario"
 			pais = request.POST['pais']
-			resultado = 0
 			print(name)
 			print(pais)
 			print(fecha_nac)
 			# acum = ' DECLARE result number;BEGIN registroUsuario(\''+ name +'\',\''+apell+'\',\''+passw+'\',\''+correo+'\','+ tel +',\''+foto+'\',\''+genero+'\',TO_DATE(\''+fecha_nac+'\',\'yyyy/mm/dd\'),TO_DATE(\''+fecha_reg+'\',\'yyyy/mm/dd\'),\''+dire+'\',\''+rol+'\',\''+pais+'\');'
 			with connection.cursor() as cursor:
-				respuesta = cursor.callproc("registroUsuario",(name,apell,passw,correo,tel,foto,genero,fecha_nac,fecha_reg,dire,rol,pais,resultado))
-				# respuesta = cursor.fetchone()
-				print(resultado)
+				respuesta = cursor.callproc("registroUsuario",(name,apell,passw,correo,tel,foto,genero,fecha_nac,fecha_reg,dire,rol,pais))
 				cursor.close()
-
-			
 	else:
 		registro_form = form_registro()
 	return render(request, 'usuario/registro.html',{'registro_form':registro_form})
@@ -182,3 +177,33 @@ def archivoCSV(request):
 
 def crud_usuario(request):
 	return render(request,'usuario/administrador/crudUsuarios.html')
+
+def crud_show_usr(request):
+	usr = Usuario.objects.all()
+	contexto = {'usuarios':usr}
+	return render(request,'usuario/administrador/mostrarUsuarios.html',contexto)
+
+def crud_modif_usr(request):
+	if request.method == 'POST' :
+		usr = Usuario.objects.all()
+		correo = form_correo(request.POST)
+		usrData = form_datosUsr(request.POST)
+		contexto = {'usuarios':usr,'correo':correo,'datos_usr':usrData}
+		#verificando primero el correo 
+		if correo.is_valid():
+			val_correo = correo.cleaned_data['correo_id']
+			result_usr = Usuario.objects.filter(correo = val_correo)
+			if result_usr:
+				print("hola Mundo")
+			# result_usr = Usuario.objects.filter(correo = request.POST['correo'])
+			# print(correo.cleaned_data['correo_id'])
+			# if result_usr == True:
+			# 	print("El correo si existe")
+			# else:
+			# 	print("El correo no existe")
+	else:
+		usr = Usuario.objects.all()
+		correo = form_correo()
+		usrData = form_datosUsr()
+		contexto = {'usuarios':usr,'correo':correo,'datos_usr':usrData}
+	return render(request,'usuario/administrador/adminModifUsr.html',contexto)

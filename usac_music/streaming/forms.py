@@ -58,3 +58,20 @@ class form_registro(forms.Form):
     widgets = {
             'password': forms.PasswordInput(),
         }
+
+class form_correo(forms.Form):
+    correo_id = forms.EmailField(label='correo mod', max_length=100)
+
+
+class form_datosUsr(forms.Form):
+    nombre = forms.CharField(label='nombre', max_length=100)
+    apellidos = forms.CharField(label='apellidos', max_length=100)
+    password = forms.CharField(label='password', max_length=100)
+    correo = forms.EmailField(label='correo', max_length=100)
+    telefono = forms.IntegerField(label='telefono')
+    fotografia = forms.CharField(label='fotografia', max_length=100)
+    genero = forms.CharField(label='genero', max_length=100)
+    fecha_nacimiento =  forms.TimeField(label = 'fecha de nacimiento')
+    direccion = forms.CharField(label='direccion', max_length=100)
+    pais = forms.CharField(label='pais', max_length=100)
+    comentario = forms.CharField(widget=forms.Textarea)

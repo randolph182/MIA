@@ -4,11 +4,11 @@
 <br><br>
 <div class="container-fluid">
     <div class="row">
-        <div class="col-sm-6 col-md-6 sidebar">
+        <div class="col-sm-10 col-md-10 sidebar">
             <ul class="nav nav-sidebar">
-                <li class="active"><a href="{% url 'streaming.views.archivoCSV' %}">MOSTRAR USUARIOS <span class="sr-only">(current)</span></a></li>
+                <li class="active"><a href="{% url 'streaming.views.crud_show_usr' %}">MOSTRAR USUARIOS <span class="sr-only">(current)</span></a></li>
                 <li><a href="{% url 'streaming.views.registro_usr' %}">REGISTRAR USUARIOS</a></li>
-                <li><a href="#">Analytics</a></li>
+                <li><a href="{% url 'streaming.views.crud_modif_usr' %}">MODIFICAR USUARIO</a></li>
                 <li><a href="#">Export</a></li>
             </ul>
         </div>
