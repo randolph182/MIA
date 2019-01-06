@@ -52,22 +52,10 @@ class Migration(migrations.Migration):
                 ('id_cancion', models.BigIntegerField(serialize=False, primary_key=True)),
                 ('nombre', models.CharField(max_length=300, null=True, blank=True)),
                 ('fecha_lanzamiento', models.DateField(null=True, blank=True)),
+                ('ruta_cancion', models.CharField(max_length=750, null=True, blank=True)),
             ],
             options={
                 'db_table': 'cancion',
-                'managed': False,
-            },
-        ),
-        migrations.CreateModel(
-            name='DjangoMigrations',
-            fields=[
-                ('id', models.IntegerField(serialize=False, primary_key=True)),
-                ('app', models.TextField(null=True, blank=True)),
-                ('name', models.TextField(null=True, blank=True)),
-                ('applied', models.DateTimeField()),
-            ],
-            options={
-                'db_table': 'django_migrations',
                 'managed': False,
             },
         ),
@@ -188,7 +176,6 @@ class Migration(migrations.Migration):
                 ('fecha_registro', models.DateField(null=True, blank=True)),
                 ('direccion', models.CharField(max_length=195, null=True, blank=True)),
                 ('rol', models.CharField(max_length=60, null=True, blank=True)),
-                ('activo', models.BigIntegerField(null=True, blank=True)),
             ],
             options={
                 'db_table': 'usuario',

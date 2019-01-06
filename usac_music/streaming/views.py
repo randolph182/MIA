@@ -192,9 +192,9 @@ def crud_modif_usr(request):
 		#verificando primero el correo 
 		if correo.is_valid():
 			val_correo = correo.cleaned_data['correo_id']
-			result_usr = Usuario.objects.filter(correo = val_correo)
+			result_usr = Usuario.objects.get(correo = val_correo)
 			if result_usr:
-				print("hola Mundo")
+				print(result_usr.nombre)
 			# result_usr = Usuario.objects.filter(correo = request.POST['correo'])
 			# print(correo.cleaned_data['correo_id'])
 			# if result_usr == True:

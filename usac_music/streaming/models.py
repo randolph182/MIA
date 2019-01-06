@@ -53,20 +53,10 @@ class Cancion(models.Model):
     genero_id_genero = models.ForeignKey('Genero', db_column='genero_id_genero')
     artista_id_artista = models.ForeignKey(Artista, db_column='artista_id_artista')
     ruta_cancion = models.CharField(max_length=750, blank=True, null=True)
+
     class Meta:
         managed = False
         db_table = 'cancion'
-
-
-class DjangoMigrations(models.Model):
-    id = models.IntegerField(primary_key=True)  # AutoField?
-    app = models.TextField(blank=True, null=True)  # This field type is a guess.
-    name = models.TextField(blank=True, null=True)  # This field type is a guess.
-    applied = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'django_migrations'
 
 
 class Genero(models.Model):
@@ -153,8 +143,8 @@ class UsrLog(models.Model):
     fecha = models.DateField(blank=True, null=True)
     descripcion = models.CharField(max_length=600, blank=True, null=True)
     tipo_accion = models.CharField(max_length=60, blank=True, null=True)
-    usuario_id_usuario = models.ForeignKey('Usuario', related_name='usuario_id_usuario',null =True)
-    usuario_id_usuario1 = models.ForeignKey('Usuario', related_name='usuario_id_usuario1' , null =True)
+    usuario_id_usuario = models.ForeignKey('Usuario', db_column='usuario_id_usuario')
+    usuario_id_usuario1 = models.ForeignKey('Usuario', db_column='usuario_id_usuario1')
 
     class Meta:
         managed = False
