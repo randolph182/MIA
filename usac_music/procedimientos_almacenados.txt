@@ -1,4 +1,4 @@
-============================================= registro de usuarios de funcion ============================================================================
+============================================= registro de usuarios de funcion(NO UTILIZADO) ============================================================================
 create or replace FUNCTION registroUsuario(nNombre VARCHAR2,nApellido VARCHAR2,nPass VARCHAR2,
                                   nEmail VARCHAR2,nTel INTEGER,nFoto VARCHAR2,
                                   nGenero VARCHAR2,nFecha_nac DATE,nFecha_reg DATE,
@@ -50,19 +50,20 @@ END registroUsuario;
 
 create or replace PROCEDURE registroUsuario(nNombre VARCHAR2,nApellido VARCHAR2,nPass VARCHAR2,
                                   nEmail VARCHAR2,nTel INTEGER,nFoto VARCHAR2,
-                                  nGenero VARCHAR2,nFecha_nac DATE,nFecha_reg DATE,
-                                  nDir VARCHAR2, nRol VARCHAR2,namePais VARCHAR2)
+                                  nGenero VARCHAR2,nFecha_nac DATE,
+                                  nDir VARCHAR2, nRol VARCHAR2,namePais VARCHAR2,tokenAct VARCHAR2,cActiva INTEGER)
 IS
 --Declaracion de variables 
 --variables que verifican si existe pais y usuario para insertarlo
 t_pais number;
 t_usuario number;
 idPais integer;
+fecha_actual VARCHAR2(50); --se va a poner fecha_actual para el registro es mejor hacerlo desde la base de datos
 BEGIN
 --Declaracion de los procedimientos
     t_pais := 0;  --le asignamos valor
     t_usuario := 0;
-
+    
     SELECT COUNT(*) INTO t_pais 
     FROM pais
     WHERE nombre = namePais;
@@ -70,26 +71,28 @@ BEGIN
     SELECT COUNT(*) INTO t_usuario
     FROM usuario
     WHERE correo = nEmail; --los usuarios pueden tener casi los mismos atributos pero no el mismo correo
-
+    
+    SELECT TO_CHAR(SysDate,'yyyy/mm/dd') todays_date
+    INTO fecha_actual
+    FROM dual;
+    
     IF t_pais != 0 AND t_usuario = 0 THEN --si pais existe y usaurio no 
         --obteniendo el id del pais
         SELECT id_pais INTO idPais
         FROM pais
         WHERE nombre = namePais;
         --insersion de los nuevos datos 
-        INSERT INTO usuario(nombre,apellidos,password,correo,telefono,fotografia,genero,fecha_nacimiento,fecha_registro,direccion,rol,pais_id_pais) 
-        VALUES(nNombre,nApellido,nPass,nEmail,nTel,nFoto,nGenero,nFecha_nac,nFecha_reg,nDir,nRol,idPais);
-        
+        INSERT INTO usuario(nombre,apellidos,password,correo,telefono,fotografia,genero,fecha_nacimiento,fecha_registro,direccion,rol,pais_id_pais,token_correo,tactivo) 
+        VALUES(nNombre,nApellido,nPass,nEmail,nTel,nFoto,nGenero,nFecha_nac,fecha_actual,nDir,nRol,idPais,tokenAct,cActiva);
     ELSIF t_pais = 0 AND t_usuario = 0 THEN --su pais no existe y usuario no existe
         INSERT INTO pais(nombre) VALUES(namePais);
-        
+
         SELECT id_pais INTO idPais
         FROM pais
         WHERE nombre = namePais;
-        
-        INSERT INTO usuario(nombre,apellidos,password,correo,telefono,fotografia,genero,fecha_nacimiento,fecha_registro,direccion,rol,pais_id_pais) 
-        VALUES(nNombre,nApellido,nPass,nEmail,nTel,nFoto,nGenero,nFecha_nac,nFecha_reg,nDir,nRol,idPais);
-        
+
+        INSERT INTO usuario(nombre,apellidos,password,correo,telefono,fotografia,genero,fecha_nacimiento,fecha_registro,direccion,rol,pais_id_pais,token_correo,tactivo) 
+        VALUES(nNombre,nApellido,nPass,nEmail,nTel,nFoto,nGenero,nFecha_nac,fecha_actual,nDir,nRol,idPais,tokenAct,cActiva);
     END IF;
 END;
 
@@ -128,16 +131,68 @@ BEGIN
     IF c_song = 0 THEN --SIGNIFICA QUE NO HAY UNA CANCION CON EL NOMBRE ENTRANTE SE CREA
         INSERT INTO cancion(nombre,fecha_lanzamiento,genero_id_genero,artista_id_artista,ruta_cancion)
         VALUES(nSong,fechaSong,idGenero_song,idArtista,rutaCancion);
+
+         --luego de haber insertado en la tabla de canciones buscamos su id para insertarla en la tabla intermedia entre cancion y album
+        SELECT id_cancion INTO idSong
+        FROM cancion
+        WHERE nombre = nSong;
+
+        INSERT INTO albm_song(cancion_id_cancion,album_id_album)
+        VALUES(idSong,idAlbum);
     END IF;
-    --luego de haber insertado en la tabla de canciones buscamos su id para insertarla en la tabla intermedia entre cancion y album
 
-    SELECT id_cancion INTO idSong
-    FROM cancion
-    WHERE nombre = nSong;
 
-    INSERT INTO albm_song(cancion_id_cancion,album_id_album)
-    VALUES(idSong,idAlbum);
+END;
 
+
+
+============================================== FUNCION ACTUALIZAR USUARIO ============================================================================
+
+create or replace PROCEDURE actualizarUsuario(id1 INTEGER, id2 INTEGER,nNombre VARCHAR2,nApell VARCHAR2,nPass VARCHAR2,nCorreo VARCHAR2,
+                                    nTel Integer, nFoto VARCHAR2, nGenero VARCHAR2,nFechaNac DATE,nDir VARCHAR2,
+                                    nRol VARCHAR2,nPais VARCHAR2,comentario VARCHAR2,cuentaActiva INTEGER)
+IS
+idPais INTEGER;
+BEGIN
+    --ID1 ES QUIEN REALIZA LA ACCINO 
+    --ID2 ES QUIEN RECIBE LA ACCION 
+    BEGIN
+        idPais := ingresoPais(nPais); --si existe solo retorna el id sino lo creo pero igual retorna el id
+    END;
+
+    --parte de la actualizacion
+    UPDATE usuario
+    SET nombre = nNombre,
+        apellidos = nApell,
+        password = nPass,
+        correo = nCorreo,
+        telefono = nTel,
+        fotografia = nFoto,
+        genero = nGenero,
+        fecha_nacimiento = nFechaNac,
+        direccion = nDir,
+        rol  = nRol,
+        pais_id_pais = idPais,
+        tactivo = cuentaActiva
+    WHERE id_usuario = id2;
+    
+    --guardamos en la tabla usr_log
+    BEGIN
+        insertarUsrLog(comentario,'modificacion',id1, id2);
+    END;
+END;
+
+================================================ insertarUsrLog ============================================================================
+create or replace PROCEDURE insertarUsrLog(comentario VARCHAR2,tipoAccion VARCHAR2,id1 INTEGER, id2 INTEGER)
+IS
+    fecha_actual VARCHAR2(50);
+BEGIN
+    SELECT TO_CHAR(SysDate,'yyyy/mm/dd') todays_date
+    INTO fecha_actual
+    FROM dual;
+    
+    INSERT INTO USR_LOG(fecha,descripcion,tipo_accion,usuario_id_usuario,usuario_id_usuario1)
+    VALUES(fecha_actual,comentario,tipoAccion,id1,id2);
 END;
 
 ================================================ FUNCION INGRESO ALBUM ============================================================================
@@ -166,7 +221,6 @@ BEGIN
 
   RETURN idAlbum;
 END ingresoAlbum;
-
 ================================================ FUNCION INGRESO ARTISTA ============================================================================
 create or replace FUNCTION ingresoArtista(nArtista IN VARCHAR2,fecha IN DATE,foto IN VARCHAR2,id_pais IN INTEGER) 
    RETURN INTEGER --RETORNA EL ID DEL GENERO
@@ -192,7 +246,6 @@ BEGIN
 
   RETURN idArtista;
 END ingresoArtista;
-
 ================================================ FUNCION INGRESO GENERO ============================================================================
 
 create or replace FUNCTION ingresoGenero(nGenero IN VARCHAR2) 
@@ -219,7 +272,6 @@ BEGIN
 
   RETURN idGenero;
 END ingresoGenero;
-
 ================================================ FUNCION INGRESO PAIS ============================================================================
 create or replace FUNCTION ingresoPais(nPais IN VARCHAR2) 
    RETURN INTEGER --RETORNA EL ID DEL PAIS
