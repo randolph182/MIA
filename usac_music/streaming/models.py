@@ -158,7 +158,7 @@ class Usuario(models.Model):
     password = models.CharField(max_length=90, blank=True, null=True)
     correo = models.CharField(max_length=150, blank=True, null=True)
     telefono = models.BigIntegerField(blank=True, null=True)
-    fotografia = models.FileField(upload_to='usuarios/', blank =True, null=True)
+    fotografia = models.CharField(max_length=600, blank=True, null=True)
     genero = models.CharField(max_length=30, blank=True, null=True)
     fecha_nacimiento = models.DateField(blank=True, null=True)
     fecha_registro = models.DateField(blank=True, null=True)
@@ -166,6 +166,7 @@ class Usuario(models.Model):
     rol = models.CharField(max_length=60, blank=True, null=True)
     pais_id_pais = models.ForeignKey(Pais, db_column='pais_id_pais')
     token_correo = models.CharField(max_length=450, blank=True, null=True)
+    tactivo = models.BigIntegerField(blank=True, null=True)
     
     class Meta:
         managed = False

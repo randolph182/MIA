@@ -13,6 +13,8 @@ urlpatterns = [
     url(r'^crud_usuario/$',views.crud_usuario,name='crud_usuario'),
     url(r'^mostrar_usuarios/$',views.crud_show_usr,name='crud_show_usr'),
     url(r'^modificar_usuarios/$',views.crud_modif_usr,name='crud_modif_usr'),
+    url(r'^eliminar_usuarios/$',views.admin_del_usr,name='admin_del_usr'),
+    url(r'^correo_verificacion/([A-Za-z]{10})/$',views.confirm_correo,name='confirm_correo'),
     url(r'^$', views.home, name='home'),
 
 ]

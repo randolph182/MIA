@@ -1,0 +1,26 @@
+{% extends 'base/base.html'%}
+
+{% block barra_navegadora %}
+<form class="navbar-form navbar-right">
+    <button type="button" class="btn btn-success" onclick="location.href='{% url 'streaming.views.login' %}'">Ingresar</button>
+    <button type="button" class="btn btn-success" onclick="location.href='{% url 'streaming.views.registro_normal' %}'">Registrarse</button>
+</form>
+{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <br><br>
+    <br><br>
+    <div class="col-md-2"></div>
+    <div class="col-md-8">
+        <h1> SE HA APROVADO LA SOLICITUD DE SU CORREO! </h1>
+        <form method="POST" class="signin" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="submit" value="CONFIRMAR"> <!-- boton de enviar datos -->
+        </form>
+
+    </div>
+    <div class="col-md-2"></div>
+</div>
+{% endblock %}

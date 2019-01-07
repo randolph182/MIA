@@ -107,3 +107,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 MEDIA_ROOT = (os.path.join(BASE_DIR, 'media'),)
+
+#configuracion de email
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'randman182@gmail.com'
+EMAIL_HOST_PASSWORD = 'r50759832'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
