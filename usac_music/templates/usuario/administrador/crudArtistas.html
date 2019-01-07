@@ -1,0 +1,22 @@
+{% extends 'usuario/administrador/administrador.html'%}
+
+{% block content_admin_menu %}
+<br><br>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-10 col-md-10 sidebar">
+            <ul class="nav nav-sidebar">
+                <li class="active"><a href="{% url 'streaming.views.crud_show_usr' %}">MOSTRAR ARTISTAS <span class="sr-only">(current)</span></a></li>
+                <li><a href="{% url 'streaming.views.registro_usr' %}">REGISTRAR ARTISTA</a></li>
+                <li><a href="{% url 'streaming.views.crud_modif_usr' %}">MODIFICAR ARTISTA</a></li>
+                <li><a href="{% url 'streaming.views.admin_del_usr' %}">ELIMINAR ARTISTA</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content_admin %}
+    {% block content_crud_art %}
+    {% endblock %}
+{% endblock %}

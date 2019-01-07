@@ -160,7 +160,7 @@ def archivoCSV(request):
 							genero_album = ""
 							fecha_artista = "2019/01/01"
 							pais_artista = ""
-							ruta_cancion = "---------"
+							ruta_cancion = "/home/rm/Documentos/Django/MIA/usac_music/upload/Pink_Floyd - Comfortably_numb.mp3"
 							#epliteamos los campos por coma
 							elementos = linea.split(',')
 							#asignamos los valores a las variables
@@ -208,6 +208,7 @@ def crud_modif_usr(request):
 				result_usr = Usuario.objects.get(correo = val_correo)
 			except:
 				result_usr = None
+
 			if result_usr: #si el usuario es valido que esxiste
 				if usrData.is_valid(): #ahora pregunta si los campos del otro formulario son correctos
 					nombre = usrData.cleaned_data['nombre']
@@ -239,19 +240,21 @@ def crud_modif_usr(request):
 						with connection.cursor() as cursor:
 							cursor.callproc("actualizarUsuario",(id1,id2,nombre,apell,passw,nCorreo,tel,foto,genero,fecha_nac,direccion,rol,pais,coment,cActivo))
 							cursor.close()
-					elif result_correo != None and result_correo.nombre == nombre: #si el correo existe y es el mismo nombre
+							messages.success(request, "datos modificados")
+					elif result_correo != None and result_correo.nombre == result_usr.nombre: #si el correo existe y es el mismo nombre
 						id1 = request.session['id_usr']
 						id2 = result_usr.id_usuario
 						with connection.cursor() as cursor:
 							cursor.callproc("actualizarUsuario",(id1,id2,nombre,apell,passw,nCorreo,tel,foto,genero,fecha_nac,direccion,rol,pais,coment,cActivo))
 							cursor.close()
+							messages.success(request, "datos modificados")
 					else:
-						print("el correo ya existe al que desea modificar")
+						messages.success(request, "el correo ya existe al que desea modificar")
 
 				else:
-					print("tiene que escribir todos los campos del usuario que desea modificar")
+					messages.success(request, "tiene que escribir todos los campos del usuario que desea modificar")
 			else:
-				print("el correo del usuario que desea modificar no existe")
+				messages.success(request, "el correo del usuario que desea modificar no existe")
 	else:
 		usr = Usuario.objects.all()
 		correo = form_correo()
