@@ -3,9 +3,9 @@ from django.shortcuts import render, redirect, render_to_response
 from django.template import RequestContext
 from django.http import HttpResponse
 
-from streaming.forms import form_login,form_registro,form_registro2,form_csv,form_correo,form_datosUsr,form_delUsr
+from streaming.forms import form_login,form_registro,form_registro2,form_csv,form_correo,form_datosUsr,form_delUsr,form_regArti,form_nombre_artMod,form_delArt
 from django.contrib import messages
-from streaming.models import Usuario
+from streaming.models import Usuario,Artista
 from django.db import connection
 from django.http import HttpResponseRedirect
 
@@ -85,7 +85,7 @@ def registro_usr(request):
 			cActivo = 1
 			token = ''
 			handle_uploaded_file(request.FILES['fotografia'],str(request.FILES['fotografia']))
-			ruta_archivo = '/home/rm/Documentos/Django/MIA/usac_music/upload' + str(request.FILES['fotografia'])
+			ruta_archivo = '/home/rm/Documentos/Django/MIA/usac_music/upload/' + str(request.FILES['fotografia'])
 			with connection.cursor() as cursor:
 				cursor.callproc("registroUsuario",(name,apell,passw,correo,tel,ruta_archivo,genero,fecha_nac,dire,rol,pais,token,cActivo))
 				cursor.close()
@@ -112,7 +112,7 @@ def registro_normal(request):
 			pais = request.POST['pais']
 			cActivo = 0
 			handle_uploaded_file(request.FILES['fotografia'],str(request.FILES['fotografia']))
-			ruta_archivo = '/home/rm/Documentos/Django/MIA/usac_music/upload' + str(request.FILES['fotografia'])
+			ruta_archivo = '/home/rm/Documentos/Django/MIA/usac_music/upload/' + str(request.FILES['fotografia'])
 			
 			llveEmail = random_string(10)
 
@@ -160,7 +160,7 @@ def archivoCSV(request):
 							genero_album = ""
 							fecha_artista = "2019/01/01"
 							pais_artista = ""
-							ruta_cancion = "/home/rm/Documentos/Django/MIA/usac_music/upload/Pink_Floyd - Comfortably_numb.mp3"
+							ruta_cancion = "/home/rm/Documentos/Django/MIA/usac_music/upload/Pink_Floyd-Comfortably_numb.mp3"
 							#epliteamos los campos por coma
 							elementos = linea.split(',')
 							#asignamos los valores a las variables
@@ -219,7 +219,7 @@ def crud_modif_usr(request):
 					cActivo = usrData.cleaned_data['c_activo']
 					#para la foto
 					handle_uploaded_file(request.FILES['fotografia'],str(request.FILES['fotografia']))
-					foto = '/home/rm/Documentos/Django/MIA/usac_music/upload' + str(request.FILES['fotografia'])
+					foto = '/home/rm/Documentos/Django/MIA/usac_music/upload/' + str(request.FILES['fotografia'])
 					# foto = usrData.cleaned_data['fotografia']
 					genero = usrData.cleaned_data['genero']
 					fecha_nac = usrData.cleaned_data['fecha_nacimiento']
@@ -323,3 +323,133 @@ def confirm_correo(request,url_str):
 			print("HUBO PROBLEMAS CON LA VERIFICACION DEL TOKEN CON EL USUARIO")
 
 	return render(request,'inicio/confirmCorreo.html',{})
+
+
+def crud_artista(request):
+	return render(request,'usuario/administrador/crudArtistas.html')
+
+def crud_show_artistas(request):
+	art = Artista.objects.all()
+	contexto = {'artistas':art}
+	return render(request,'usuario/administrador/mostrarArtistas.html',contexto)
+
+def crud_reg_art(request):
+	if request.method == 'POST':
+		form = form_regArti(request.POST)
+		if form.is_valid():
+			#VERIFICANDO PRIMERO SINO EXISTE EL ARTISTA
+			nombre = form.cleaned_data['nombre']
+			result = None
+			try:
+				result = Artista.objects.get(nombre = nombre)
+			except:
+				result = None
+
+			if result == None: #signifia que no existe
+				fecha_nac = form.cleaned_data['fecha_nacimiento']
+				pais = form.cleaned_data['pais']
+				handle_uploaded_file(request.FILES['fotografia'],str(request.FILES['fotografia']))
+				foto = '/home/rm/Documentos/Django/MIA/usac_music/upload/' + str(request.FILES['fotografia'])
+				with connection.cursor() as cursor:
+					cursor.callproc("registroArtista",(nombre,fecha_nac,foto,pais))
+					cursor.close()
+					messages.success(request, 'Se ha registrado un nuevo Artista')
+			else:
+				messages.success(request, 'el artista que desea registrar ya existe')
+	else:
+		form = form_regArti()
+	return render(request,'usuario/administrador/adminRegistroArt.html',{'formArt':form})
+
+
+def crud_mod_art(request):
+	art = Artista.objects.all()
+	if request.method == 'POST':
+		nomb_viejo = form_nombre_artMod(request.POST)
+		form = form_regArti(request.POST,request.FILES or None)
+		contexto = {'artistas':art,'nomb_viejo':nomb_viejo,'campos':form}
+		#verificando el nombre viejo
+		if nomb_viejo.is_valid():
+			old_name = nomb_viejo.cleaned_data['nombre_viejo']
+			#verificamos si existe en nombre que queremos modifica
+			print(old_name)
+			artista_actual = None
+			try:
+				artista_actual = Artista.objects.get(nombre = old_name)
+			except:
+				artista_actual = None
+
+			if artista_actual != None: #si existe el usuario
+				#preguntamos si se llenaron los campos del formulario para modificar al artista
+				if form.is_valid():
+					nombre = form.cleaned_data['nombre']
+					#verificando que el nuevo nombre no sea igual a los demas artistas o que si sea del mismo artista
+					mod_art = None
+					try:
+						mod_art = Artista.objects.get(nombre = nombre)
+					except:
+						mod_art = None
+
+					fecha_nac = form.cleaned_data['fecha_nacimiento']
+					pais = form.cleaned_data['pais']
+					id_art_act = artista_actual.id_artista
+					handle_uploaded_file(request.FILES['fotografia'],str(request.FILES['fotografia']))
+					foto = '/home/rm/Documentos/Django/MIA/usac_music/upload/' + str(request.FILES['fotografia'])
+
+					if mod_art == None: #no existe el artista
+						with connection.cursor() as cursor:
+							cursor.callproc("actualizarArtista",(id_art_act,nombre,fecha_nac,foto,pais))
+							cursor.close()
+							messages.success(request, "datos modificados")
+					elif mod_art != None and mod_art.nombre == artista_actual.nombre:
+						with connection.cursor() as cursor:
+							cursor.callproc("actualizarArtista",(id_art_act,nombre,fecha_nac,foto,pais))
+							cursor.close()
+							messages.success(request, "datos modificados")
+					else:
+						messages.success(request, "el nombre porque el que lo desa cambiar ya existe")
+				else:
+					messages.success(request, 'asegurese que estan llenos los campos para modifiar al artista')
+			else:
+				messages.success(request, 'el artista que desea modificar no existe en la base de datos')
+
+		else:
+			messages.success(request, 'tiene que llenar el campo del nombre viejo')
+	else:	
+		nomb_viejo = form_nombre_artMod()
+		form = form_regArti()
+		contexto = {'artistas':art,'nomb_viejo':nomb_viejo,'campos':form}
+	return render(request,'usuario/administrador/adminModArt.html',contexto)
+
+
+
+def admin_del_art(request):
+	if request.method == 'POST' :
+		form_del = form_delArt(request.POST)
+		if form_del.is_valid():
+			nomb = form_del.cleaned_data['nombre']
+			art = None
+			try:
+				art = Artista.objects.get(nombre = nomb)
+			except :
+				art = None
+			if art != None:
+				with connection.cursor() as cursor:
+					cursor.execute('DELETE FROM artista WHERE nombre = \''+nomb+'\';')
+					messages.success(request, 'el artista fue eliminado')
+					cursor.close()
+			else:
+				messages.success(request, 'El artista que ingreso no es valido')
+		else:
+			messages.success(request, 'tiene que llenar todos los campos requeridos')
+	else:
+		form_del = form_delArt()
+	return render(request,'usuario/administrador/adminDelArt.html',{'form_del':form_del})
+
+
+def existe_obj(modelo,identif,id_cmp):
+	result = None
+	try:
+		result = modelo.objects.get(identif = id_cmp)
+	except:
+		result = None
+	return result

@@ -1,0 +1,27 @@
+{% extends 'usuario/administrador/crudArtistas.html'%}
+
+{% block content_crud_art %}
+<div class="row">
+    <br><br>
+    <br><br>
+    <form method="POST" class="signin" enctype="multipart/form-data">
+        <div class="col-sm-8 col-dm-8">
+            {% csrf_token %}
+            {{form_del.as_p}}
+            <input type="submit" value="Eliminar"> <!-- boton de enviar datos -->
+            {% if messages %}
+            <div class="row">
+                <div class='col-xs-12'>
+                    {% for message in messages %}
+                    <p {% if message.tags %} class="{{message.tags}}" {% endif %}>
+                        {{message}}
+                    </p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+{% endblock %}

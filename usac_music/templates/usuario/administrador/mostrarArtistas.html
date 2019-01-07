@@ -1,0 +1,32 @@
+{% extends 'usuario/administrador/crudArtistas.html'%}
+
+{% block content_crud_art %}
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <td>#</td>
+            <td>nombre</td>
+            <td>fecha_nacimiento</td>
+            <td>fotografia</td>
+            <td>pais</td>
+        </tr>
+    </thead>
+    <tbody>
+        {% if artistas%}
+        {% for artista in artistas %}
+        <tr>
+            <td>{{artista.id_artista}}</td>
+            <td>{{artista.nombre}}</td>
+            <td>{{artista.fecha_nacimiento}}</td>
+            <td>{{artista.fotografia}}</td>
+            <td>{{artista.pais_id_pais.nombre}}</td>
+        </tr>
+        {% endfor %}
+        {% else %}
+            <h1> No hay registros de artista</h1>
+        {% endif %}
+    </tbody>
+</table>
+
+{% endblock %}

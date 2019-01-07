@@ -80,3 +80,15 @@ class form_datosUsr(forms.Form):
 class form_delUsr(forms.Form):
     correo = forms.EmailField(label='correo', max_length=100)
     comentario = forms.CharField(widget=forms.Textarea)
+
+class form_regArti(forms.Form):
+    nombre = forms.CharField(label='nombre', max_length=100)
+    fecha_nacimiento = forms.CharField(label = 'fecha de nacimiento')
+    fotografia = forms.FileField(required=False,label='fotografia')
+    pais  = forms.CharField(label='pais', max_length=100)
+
+class form_nombre_artMod(forms.Form):
+    nombre_viejo = forms.CharField(label='nombre Anterior', max_length=100)
+
+class form_delArt(forms.Form):
+    nombre = forms.CharField(label='nombre', max_length=100)

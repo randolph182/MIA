@@ -1,0 +1,60 @@
+{% extends 'usuario/administrador/crudArtistas.html'%}
+
+{% block content_crud_art %}
+<div class="row">
+    <div class="col-sm-8 col-dm-8">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <td>#</td>
+                    <td>nombre</td>
+                    <td>fecha_nacimiento</td>
+                    <td>fotografia</td>
+                    <td>pais</td>
+                </tr>
+            </thead>
+            <tbody>
+                {% if artistas%}
+                {% for artista in artistas %}
+                <tr>
+                    <td>{{artista.id_artista}}</td>
+                    <td>{{artista.nombre}}</td>
+                    <td>{{artista.fecha_nacimiento}}</td>
+                    <td>{{artista.fotografia}}</td>
+                    <td>{{artista.pais_id_pais.nombre}}</td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <h1> No hay registros de artista</h1>
+                {% endif %}
+            </tbody>
+        </table>
+
+    </div>
+</div>
+<div class="row">
+    <form method="POST" class="signin" enctype="multipart/form-data">
+        <div class="col-sm-4 col-dm-4">
+            {% csrf_token %}
+            {{nomb_viejo.as_p}}
+        </div>
+        <div class="col-sm-8 col-dm-8">
+            {% csrf_token %}
+            {{campos.as_p}}
+            <input type="submit" value="Enviar datos"> <!-- boton de enviar datos -->
+            {% if messages %}
+            <div class="row">
+                <div class='col-xs-12'>
+                    {% for message in messages %}
+                    <p {% if message.tags %} class="{{message.tags}}" {% endif %}>
+                        {{message}}
+                    </p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+{% endblock %}
