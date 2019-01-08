@@ -60,6 +60,8 @@ def login(request):
 				request.session['name_usr'] = usr[2]
 				if rol_usr == 'administrador':
 					return render(request,'usuario/administrador/principalAdmin.html')
+				elif rol_usr == 'usuario':
+					return render(request,'usuario/normal/principalUsuario.html')
 				messages.success(request, 'Logeado exitosamente')
 			else:
 				messages.warning(request, 'El usuario o la contrasenia son incorrectos o no esta activa la cuenta')
@@ -86,7 +88,7 @@ def registro_usr(request):
 			cActivo = 1
 			token = ''
 			handle_uploaded_file(request.FILES['fotografia'],str(request.FILES['fotografia']))
-			ruta_archivo = '/home/rm/Documentos/Django/MIA/usac_music/upload/' + str(request.FILES['fotografia'])
+			ruta_archivo = str(request.FILES['fotografia'])
 			with connection.cursor() as cursor:
 				cursor.callproc("registroUsuario",(name,apell,passw,correo,tel,ruta_archivo,genero,fecha_nac,dire,rol,pais,token,cActivo))
 				cursor.close()
@@ -113,7 +115,7 @@ def registro_normal(request):
 			pais = request.POST['pais']
 			cActivo = 0
 			handle_uploaded_file(request.FILES['fotografia'],str(request.FILES['fotografia']))
-			ruta_archivo = '/home/rm/Documentos/Django/MIA/usac_music/upload/' + str(request.FILES['fotografia'])
+			ruta_archivo = str(request.FILES['fotografia'])
 			
 			llveEmail = random_string(10)
 
@@ -161,7 +163,7 @@ def archivoCSV(request):
 							genero_album = ""
 							fecha_artista = "2019/01/01"
 							pais_artista = ""
-							ruta_cancion = "/home/rm/Documentos/Django/MIA/usac_music/upload/Pink_Floyd-Comfortably_numb.mp3"
+							ruta_cancion = "Pink_Floyd-Comfortably_numb.mp3"
 							#epliteamos los campos por coma
 							elementos = linea.split(',')
 							#asignamos los valores a las variables
@@ -220,7 +222,7 @@ def crud_modif_usr(request):
 					cActivo = usrData.cleaned_data['c_activo']
 					#para la foto
 					handle_uploaded_file(request.FILES['fotografia'],str(request.FILES['fotografia']))
-					foto = '/home/rm/Documentos/Django/MIA/usac_music/upload/' + str(request.FILES['fotografia'])
+					foto = str(request.FILES['fotografia'])
 					# foto = usrData.cleaned_data['fotografia']
 					genero = usrData.cleaned_data['genero']
 					fecha_nac = usrData.cleaned_data['fecha_nacimiento']
@@ -350,7 +352,7 @@ def crud_reg_art(request):
 				fecha_nac = form.cleaned_data['fecha_nacimiento']
 				pais = form.cleaned_data['pais']
 				handle_uploaded_file(request.FILES['fotografia'],str(request.FILES['fotografia']))
-				foto = '/home/rm/Documentos/Django/MIA/usac_music/upload/' + str(request.FILES['fotografia'])
+				foto = str(request.FILES['fotografia'])
 				with connection.cursor() as cursor:
 					cursor.callproc("registroArtista",(nombre,fecha_nac,foto,pais))
 					cursor.close()
@@ -394,7 +396,7 @@ def crud_mod_art(request):
 					pais = form.cleaned_data['pais']
 					id_art_act = artista_actual.id_artista
 					handle_uploaded_file(request.FILES['fotografia'],str(request.FILES['fotografia']))
-					foto = '/home/rm/Documentos/Django/MIA/usac_music/upload/' + str(request.FILES['fotografia'])
+					foto = str(request.FILES['fotografia'])
 
 					if mod_art == None: #no existe el artista
 						with connection.cursor() as cursor:
@@ -511,7 +513,7 @@ def crud_mod_canciones(request):
 							fecha_lanzamiento = infoCan.cleaned_data['fecha_lanzamiento']
 							idCan = cancion_nueva.id_cancion
 							handle_uploaded_file(request.FILES['ruta_cancion'],str(request.FILES['ruta_cancion']))
-							ruta_cancion = '/home/rm/Documentos/Django/MIA/usac_music/upload/' + str(request.FILES['ruta_cancion'])
+							ruta_cancion = str(request.FILES['ruta_cancion'])
 
 							if cancion_nueva == None:
 								with connection.cursor() as cursor:
@@ -541,6 +543,17 @@ def crud_mod_canciones(request):
 		infoCan = forms.form_modCan()
 	return render(request,'usuario/administrador/adminModCan.html',{'canciones':canciones,'nombre_viejo':nombCan,'form':infoCan})
 
+
+#================================================================ USUARIO NORMAL =====================================
+
+
+def usuarioNormal(request):
+	return render(request,'usuario/normal/principalUsuario.html')
+
+def un_show_songs(request):
+	sngs = Cancion.objects.all()
+	return render(request,'usuario/normal/showCanciones.html',{'canciones':sngs})
+
 def existe_obj(modelo,identif,id_cmp):
 	result = None
 	try:
@@ -548,3 +561,4 @@ def existe_obj(modelo,identif,id_cmp):
 	except:
 		result = None
 	return result
+

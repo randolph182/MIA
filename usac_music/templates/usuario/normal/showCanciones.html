@@ -1,0 +1,32 @@
+{% extends 'usuario/normal/principalUsuario.html'%}
+
+{% block content_usrNormal %}
+<form method="POST" class="signin" enctype="multipart/form-data">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <td>#</td>
+                <td>nombre</td>
+                <td>fecha_lanzamiento</td>
+                <td>genero</td>
+                <td>artista</td>
+            </tr>
+        </thead>
+        <tbody>
+            {% if canciones%}
+            {% for cancion in canciones %}
+            <tr>
+                <td>{{cancion.id_cancion}}</td>
+                <td>{{cancion.nombre}}</td>
+                <td>{{cancion.fecha_lanzamiento}}</td>
+                <td>{{cancion.genero_id_genero.nombre}}</td>
+                <td>{{cancion.artista_id_artista.nombre}}</td>
+                <td><audio controls> <source src="/upload/{{cancion.ruta_cancion}}" type="audio/mpeg"> </audio> </td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <h1> No hay registros de canciones</h1>
+            {% endif %}
+        </tbody>
+    </table>
+    {% endblock %}

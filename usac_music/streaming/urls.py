@@ -2,6 +2,9 @@ from django.conf.urls import  url
 
 from streaming import views
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 urlpatterns = [
     url(r'^login/$',views.login,name='login'),
     url(r'^logout$',views.logout,name='logout'),
@@ -23,6 +26,8 @@ urlpatterns = [
     url(r'^crud_canciones/$',views.crud_canciones,name='crud_canciones'),
     url(r'^mostrar_canciones/$',views.crud_show_canciones,name='crud_show_canciones'),
     url(r'^modificar_canciones/$',views.crud_mod_canciones,name='crud_mod_canciones'),
+    url(r'^usuario_normal/$',views.usuarioNormal,name='usuarioNormal'),
+    url(r'^usr_normal_canciones/$',views.un_show_songs,name='un_show_songs'),
     url(r'^$', views.home, name='home'),
 
-]
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

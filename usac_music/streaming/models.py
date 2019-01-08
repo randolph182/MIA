@@ -15,13 +15,11 @@ from django.db import models
 class AlbmSong(models.Model):
     cancion_id_cancion = models.ForeignKey('Cancion', db_column='cancion_id_cancion')
     album_id_album = models.ForeignKey('Album', db_column='album_id_album')
+    id_albm_song = models.BigIntegerField(primary_key=True)
 
     class Meta:
         managed = False
         db_table = 'albm_song'
-
-    def __str__(self):
-        return self.cancion_id_cancion.nombre
 
 
 class Album(models.Model):
@@ -97,11 +95,11 @@ class Pais(models.Model):
 class Play(models.Model):
     usuario_id_usuario = models.ForeignKey('Usuario', db_column='usuario_id_usuario')
     cancion_id_cancion = models.ForeignKey(Cancion, db_column='cancion_id_cancion')
+    id_play = models.BigIntegerField(primary_key=True)
 
     class Meta:
         managed = False
         db_table = 'play'
-
 
 class PlayList(models.Model):
     id_play_list = models.BigIntegerField(primary_key=True)
@@ -117,6 +115,7 @@ class PlayList(models.Model):
 class PlstSong(models.Model):
     play_list_id_play_list = models.ForeignKey(PlayList, db_column='play_list_id_play_list')
     cancion_id_cancion = models.ForeignKey(Cancion, db_column='cancion_id_cancion')
+    id_plst_song = models.BigIntegerField(primary_key=True)
 
     class Meta:
         managed = False
@@ -126,6 +125,7 @@ class PlstSong(models.Model):
 class Seguidor(models.Model):
     usuario_id_usuario = models.ForeignKey('Usuario', db_column='usuario_id_usuario')
     play_list_id_play_list = models.ForeignKey(PlayList, db_column='play_list_id_play_list')
+    id_seguidor = models.BigIntegerField(primary_key=True)
 
     class Meta:
         managed = False
@@ -135,6 +135,7 @@ class Seguidor(models.Model):
 class Suscriptor(models.Model):
     usuario_id_usuario = models.ForeignKey('Usuario', db_column='usuario_id_usuario')
     artista_id_artista = models.ForeignKey(Artista, db_column='artista_id_artista')
+    id_suscriptor = models.BigIntegerField(primary_key=True)
 
     class Meta:
         managed = False
@@ -167,10 +168,10 @@ class Usuario(models.Model):
     fecha_registro = models.DateField(blank=True, null=True)
     direccion = models.CharField(max_length=195, blank=True, null=True)
     rol = models.CharField(max_length=60, blank=True, null=True)
-    pais_id_pais = models.ForeignKey(Pais, db_column='pais_id_pais')
+    pais_id_pais = models.BigIntegerField()
     token_correo = models.CharField(max_length=450, blank=True, null=True)
     tactivo = models.BigIntegerField(blank=True, null=True)
-    
+
     class Meta:
         managed = False
         db_table = 'usuario'
