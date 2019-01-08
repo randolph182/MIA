@@ -20,6 +20,9 @@ urlpatterns = [
     url(r'^registro_artistas/$',views.crud_reg_art,name='crud_reg_art'),
     url(r'^modificar_artistas/$',views.crud_mod_art,name='crud_mod_art'),
     url(r'^eliminar_artistas/$',views.admin_del_art,name='admin_del_art'),
+    url(r'^crud_canciones/$',views.crud_canciones,name='crud_canciones'),
+    url(r'^mostrar_canciones/$',views.crud_show_canciones,name='crud_show_canciones'),
+    url(r'^modificar_canciones/$',views.crud_mod_canciones,name='crud_mod_canciones'),
     url(r'^$', views.home, name='home'),
 
 ]

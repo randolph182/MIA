@@ -92,3 +92,13 @@ class form_nombre_artMod(forms.Form):
 
 class form_delArt(forms.Form):
     nombre = forms.CharField(label='nombre', max_length=100)
+
+class form_modCan(forms.Form):
+    nombre = forms.CharField(label='nuevo nombre', max_length=100)
+    fecha_lanzamiento = forms.CharField(label = 'fecha de lanzamiento')
+    genero = forms.CharField(label='genero', max_length=100)
+    artista = forms.CharField(label='artista', max_length=100)
+    ruta_cancion = forms.FileField(required=False,label='Ruta de la cancion')
+
+class form_nombCAn(forms.Form):
+    nombre = forms.CharField(label='nombre viejo', max_length=100)

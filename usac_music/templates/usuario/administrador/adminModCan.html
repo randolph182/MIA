@@ -1,0 +1,63 @@
+{% extends 'usuario/administrador/crudCanciones.html'%}
+
+{% block content_crud_can %}
+<div class="row">
+    <div class="col-sm-8 col-dm-8">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <td>#</td>
+                    <td>nombre</td>
+                    <td>fecha_lanzamiento</td>
+                    <td>genero</td>
+                    <td>artista</td>
+                    <td>ruta cancion</td>
+                </tr>
+            </thead>
+            <tbody>
+                {% if canciones%}
+                {% for cancion in canciones %}
+                <tr>
+                    <td>{{cancion.id_cancion}}</td>
+                    <td>{{cancion.nombre}}</td>
+                    <td>{{cancion.fecha_lanzamiento}}</td>
+                    <td>{{cancion.genero_id_genero.nombre}}</td>
+                    <td>{{cancion.artista_id_artista.nombre}}</td>
+                    <td>{{cancion.ruta_cancion}}</td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <h1> No hay registros de canciones</h1>
+                {% endif %}
+            </tbody>
+        </table>
+
+    </div>
+</div>
+<div class="row">
+    <form method="POST" class="signin" enctype="multipart/form-data">
+        <div class="col-sm-4 col-dm-4">
+            {% csrf_token %}
+            {{nombre_viejo.as_p}}
+        </div>
+        <div class="col-sm-8 col-dm-8">
+            {% csrf_token %}
+            {{form.as_p}}
+            <input type="submit" value="Enviar datos"> <!-- boton de enviar datos -->
+
+            {% if messages %}
+            <div class="row">
+                <div class='col-xs-12'>
+                    {% for message in messages %}
+                    <p {% if message.tags %} class="{{message.tags}}" {% endif %}>
+                        {{message}}
+                    </p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+{% endblock %}

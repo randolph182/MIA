@@ -5,7 +5,8 @@ from django.http import HttpResponse
 
 from streaming.forms import form_login,form_registro,form_registro2,form_csv,form_correo,form_datosUsr,form_delUsr,form_regArti,form_nombre_artMod,form_delArt
 from django.contrib import messages
-from streaming.models import Usuario,Artista
+from streaming import forms
+from streaming.models import Usuario,Artista,Cancion,Album,AlbmSong,Genero
 from django.db import connection
 from django.http import HttpResponseRedirect
 
@@ -445,6 +446,100 @@ def admin_del_art(request):
 		form_del = form_delArt()
 	return render(request,'usuario/administrador/adminDelArt.html',{'form_del':form_del})
 
+
+def crud_canciones(request):
+	return render(request,'usuario/administrador/crudCanciones.html')
+
+def crud_show_canciones(request):
+	canciones = Cancion.objects.all()
+	abm = []
+	# for cancion in canciones:
+	# 	with connection.cursor() as cursor:
+	# 		sql = """SELECT album.nombre
+	# 				 FROM album,albm_song
+	# 				 WHERE albm_song.cancion_id_cancion =""" + str(cancion.id_cancion) + """
+	# 				 AND albm_song.album_id_album = album.id_album;"""
+	# 		cursor.execute(sql)
+	# 		n_albm = cursor.fetchone()
+	# 		abm.append(n_albm[0])
+	# 		cursor.close()
+
+	return render(request,'usuario/administrador/mostrarCanciones.html',{'canciones':canciones,'album':abm})
+
+
+def crud_mod_canciones(request):
+	canciones = Cancion.objects.all()
+	if request.method == 'POST':
+		nombCan = forms.form_nombCAn(request.POST)
+		infoCan = forms.form_modCan(request.POST)
+		if nombCan.is_valid():
+			nomb_act_can = nombCan.cleaned_data['nombre']
+
+			cancion_actual = None
+			try:
+				cancion_actual = Cancion.objects.get(nombre = nomb_act_can)
+			except :
+				cancion_actual = None
+
+			if cancion_actual != None:
+				if infoCan.is_valid():
+
+					nomb_genero = infoCan.cleaned_data['genero']
+					nomb_artista = infoCan.cleaned_data['artista']
+
+					nuevo_genero = None
+					nuevo_artista = None
+					try:
+						nuevo_genero = Genero.objects.get(nombre = nomb_genero)
+						nuevo_artista = Artista.objects.get(nombre = nomb_artista)
+					except :
+						nuevo_genero = None
+						nuevo_artista = None
+
+					if nuevo_genero != None:
+						if nuevo_artista != None:
+							nuevo_nomb = infoCan.cleaned_data['nombre']
+
+							cancion_nueva = None
+							try:
+								cancion_nueva = Cancion.objects.get(nombre = nuevo_nomb)
+							except :
+								cancion_nueva = None
+
+							idGenero = nuevo_genero.id_genero
+							idArtista = nuevo_artista.id_artista
+							fecha_lanzamiento = infoCan.cleaned_data['fecha_lanzamiento']
+							idCan = cancion_nueva.id_cancion
+							handle_uploaded_file(request.FILES['ruta_cancion'],str(request.FILES['ruta_cancion']))
+							ruta_cancion = '/home/rm/Documentos/Django/MIA/usac_music/upload/' + str(request.FILES['ruta_cancion'])
+
+							if cancion_nueva == None:
+								with connection.cursor() as cursor:
+									cursor.callproc("modificarCancion",(idCan,nuevo_nomb,fecha_lanzamiento,idGenero,idArtista,ruta_cancion))
+									messages.success(request, 'la cancion fue modificada')
+									cursor.close()
+							elif cancion_nueva != None and cancion_nueva.nombre == cancion_actual.nombre:
+								with connection.cursor() as cursor:
+									cursor.callproc("modificarCancion",(idCan,nuevo_nomb,fecha_lanzamiento,idGenero,idArtista,ruta_cancion))
+									messages.success(request, 'la cancion fue modificada')
+									cursor.close()
+							else:
+								messages.success(request, "el nuevo nobre ya existe")
+						else:
+							messages.success(request, "el artista no existe tiene que crearlo")
+					else:
+						messages.success(request, "el genero no existe tiene que crearlo")
+				else:
+					messages.success(request, "tiene que llenar los campos para modificar la cancion")
+			else:
+				messages.success(request, "el nombre viejo de la cancion no existe ")
+
+		else:
+			messages.success(request, "tiene que llenar el nombre viejo para modificar")
+	else:
+		nombCan = forms.form_nombCAn()
+		infoCan = forms.form_modCan()
+	return render(request,'usuario/administrador/adminModCan.html',{'canciones':canciones,'nombre_viejo':nombCan,'form':infoCan})
 
 def existe_obj(modelo,identif,id_cmp):
 	result = None

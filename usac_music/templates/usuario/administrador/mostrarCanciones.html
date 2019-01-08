@@ -1,0 +1,34 @@
+{% extends 'usuario/administrador/crudCanciones.html'%}
+
+{% block content_crud_can %}
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <td>#</td>
+            <td>nombre</td>
+            <td>fecha_lanzamiento</td>
+            <td>genero</td>
+            <td>artista</td>
+            <td>ruta cancion</td>
+        </tr>
+    </thead>
+    <tbody>
+        {% if canciones%}
+            {% for cancion in canciones %}
+            <tr>
+                <td>{{cancion.id_cancion}}</td>
+                <td>{{cancion.nombre}}</td>
+                <td>{{cancion.fecha_lanzamiento}}</td>
+                <td>{{cancion.genero_id_genero.nombre}}</td>
+                <td>{{cancion.artista_id_artista.nombre}}</td>
+                <td>{{cancion.ruta_cancion}}</td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <h1> No hay registros de canciones</h1>
+        {% endif %}
+    </tbody>
+</table>
+
+{% endblock %}

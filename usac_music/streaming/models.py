@@ -20,6 +20,9 @@ class AlbmSong(models.Model):
         managed = False
         db_table = 'albm_song'
 
+    def __str__(self):
+        return self.cancion_id_cancion.nombre
+
 
 class Album(models.Model):
     id_album = models.BigIntegerField(primary_key=True)
