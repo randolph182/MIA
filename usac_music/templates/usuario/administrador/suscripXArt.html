@@ -21,7 +21,7 @@
                 Suscrito a:
             </td>
             <td>
-                    <h4>Artista</h4>
+                <h4>Artista</h4>
             </td>
             <td>
                 <select name="dropdown2">
@@ -36,6 +36,35 @@
             <td>
                 <input type="submit" value="mostrar">
             </td>
+        </tr>
+        <tr>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <td>#</td>
+                        <td>nombre</td>
+                        <td>apellidos</td>
+                        <td>correo</td>
+                        <td>telefono</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if usuariosxartistas%}
+                    {% for suscrito in usuariosxartistas %}
+                    <tr>
+                        <td>{{suscrito.usuario_id_usuario.id_usuario}}</td>
+                        <td>{{suscrito.usuario_id_usuario.nombre}}</td>
+                        <td>{{suscrito.usuario_id_usuario.apellidos}}</td>
+                        <td>{{suscrito.usuario_id_usuario.correo}}</td>
+                        <td>{{suscrito.usuario_id_usuario.telefono}}</td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <h1> No hay registros de usuarios</h1>
+                    {% endif %}
+                </tbody>
+            </table>
+
         </tr>
     </table>
 

@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from streaming.forms import form_login,form_registro,form_registro2,form_csv,form_correo,form_datosUsr,form_delUsr,form_regArti,form_nombre_artMod,form_delArt
 from django.contrib import messages
 from streaming import forms
-from streaming.models import Usuario,Artista,Cancion,Album,AlbmSong,Genero,Membresia
+from streaming.models import Usuario,Artista,Cancion,Album,AlbmSong,Genero,Membresia,Suscriptor
 from django.db import connection
 from django.http import HttpResponseRedirect
 
@@ -636,10 +636,10 @@ def show_repoAdmin(request):
 def rep_suscripXArt(request):
 	usrs = Usuario.objects.all()
 	arts = Artista.objects.all()
+	usuariosxartistas = Suscriptor.objects.filter(artista_id_artista = 0)
 	if request.method == 'POST':
-		nombre = request.POST.get('dropdown1')
-		nombre2 = request.POST.get('dropdown2')
-		print(nombre)
-		print(nombre2)
-	return render(request,'usuario/administrador/suscripXArt.html',{'usuarios':usrs,'artistas':arts})
+		idArtista = request.POST.get('dropdown2')
+		usuariosxartistas = Suscriptor.objects.filter(artista_id_artista = idArtista)
+
+	return render(request,'usuario/administrador/suscripXArt.html',{'usuarios':usrs,'artistas':arts,'usuariosxartistas':usuariosxartistas})
 
