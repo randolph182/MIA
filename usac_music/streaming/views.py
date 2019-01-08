@@ -453,20 +453,8 @@ def crud_canciones(request):
 	return render(request,'usuario/administrador/crudCanciones.html')
 
 def crud_show_canciones(request):
-	canciones = Cancion.objects.all()
-	abm = []
-	# for cancion in canciones:
-	# 	with connection.cursor() as cursor:
-	# 		sql = """SELECT album.nombre
-	# 				 FROM album,albm_song
-	# 				 WHERE albm_song.cancion_id_cancion =""" + str(cancion.id_cancion) + """
-	# 				 AND albm_song.album_id_album = album.id_album;"""
-	# 		cursor.execute(sql)
-	# 		n_albm = cursor.fetchone()
-	# 		abm.append(n_albm[0])
-	# 		cursor.close()
-
-	return render(request,'usuario/administrador/mostrarCanciones.html',{'canciones':canciones,'album':abm})
+	canciones = AlbmSong.objects.all()
+	return render(request,'usuario/administrador/mostrarCanciones.html',{'canciones':canciones})
 
 
 def crud_mod_canciones(request):
@@ -551,8 +539,25 @@ def usuarioNormal(request):
 	return render(request,'usuario/normal/principalUsuario.html')
 
 def un_show_songs(request):
-	sngs = Cancion.objects.all()
+	sngs = AlbmSong.objects.all()
 	return render(request,'usuario/normal/showCanciones.html',{'canciones':sngs})
+
+def play_songs(request,id_song):
+	#busacando la cancion por id
+	idSng = None
+	try:
+		idSng = Cancion.objects.get(id_cancion = id_song)
+	except:
+		idSng = None
+
+	if idSng != None:
+		sql = """INSERT INTO play(usuario_id_usuario,cancion_id_cancion)
+				 VALUES("""+str(request.session['id_usr'])+""","""+str(idSng.id_cancion)+""");"""
+		with connection.cursor() as cursor:
+			cursor.execute(sql)
+			cursor.close()
+		# sngs = Cancion.objects.all()
+		return render(request,'playCancion.html',{'cancion':idSng})
 
 def existe_obj(modelo,identif,id_cmp):
 	result = None

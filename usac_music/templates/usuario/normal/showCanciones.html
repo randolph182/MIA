@@ -10,18 +10,25 @@
                 <td>fecha_lanzamiento</td>
                 <td>genero</td>
                 <td>artista</td>
+                <td>album</td>
+                <td>ruta cancion</td>
             </tr>
         </thead>
         <tbody>
             {% if canciones%}
             {% for cancion in canciones %}
             <tr>
-                <td>{{cancion.id_cancion}}</td>
-                <td>{{cancion.nombre}}</td>
-                <td>{{cancion.fecha_lanzamiento}}</td>
-                <td>{{cancion.genero_id_genero.nombre}}</td>
-                <td>{{cancion.artista_id_artista.nombre}}</td>
-                <td><audio controls> <source src="/upload/{{cancion.ruta_cancion}}" type="audio/mpeg"> </audio> </td>
+                <td>{{cancion.cancion_id_cancion.id_cancion}}</td>
+                <td>{{cancion.cancion_id_cancion.nombre}}</td>
+                <td>{{cancion.cancion_id_cancion.fecha_lanzamiento}}</td>
+                <td>{{cancion.cancion_id_cancion.genero_id_genero.nombre}}</td>
+                <td>{{cancion.cancion_id_cancion.artista_id_artista.nombre}}</td>
+                <td>{{cancion.album_id_album.nombre}}</td>
+                <td>{{cancion.cancion_id_cancion.ruta_cancion}}</td>
+                <td>
+                    <button type="button" class="btn btn-info" onclick="location.href='http://127.0.0.1:8000/play_songs/{{cancion.cancion_id_cancion.id_cancion}}/'">Escuchar</button>
+                </td>    
+                    
             </tr>
             {% endfor %}
             {% else %}

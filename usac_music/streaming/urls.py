@@ -14,7 +14,7 @@ urlpatterns = [
     url(r'^administrador/$',views.administrador,name='administrador'),
     url(r'^archivoCSV/$',views.archivoCSV,name='archivoCSV'),
     url(r'^crud_usuario/$',views.crud_usuario,name='crud_usuario'),
-     url(r'^crud_artista/$',views.crud_artista,name='crud_artista'),
+    url(r'^crud_artista/$',views.crud_artista,name='crud_artista'),
     url(r'^mostrar_usuarios/$',views.crud_show_usr,name='crud_show_usr'),
     url(r'^modificar_usuarios/$',views.crud_modif_usr,name='crud_modif_usr'),
     url(r'^eliminar_usuarios/$',views.admin_del_usr,name='admin_del_usr'),
@@ -28,6 +28,7 @@ urlpatterns = [
     url(r'^modificar_canciones/$',views.crud_mod_canciones,name='crud_mod_canciones'),
     url(r'^usuario_normal/$',views.usuarioNormal,name='usuarioNormal'),
     url(r'^usr_normal_canciones/$',views.un_show_songs,name='un_show_songs'),
+    url(r'^play_songs/([0-9]+)/$',views.play_songs,name='play_songs'),
     url(r'^$', views.home, name='home'),
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
