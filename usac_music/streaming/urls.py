@@ -30,6 +30,14 @@ urlpatterns = [
     url(r'^usr_normal_canciones/$',views.un_show_songs,name='un_show_songs'),
     url(r'^play_songs/([0-9]+)/$',views.play_songs,name='play_songs'),
     url(r'^buy_membresia/$',views.buy_membresia,name='buy_membresia'),
+    url(r'^usuario_premium/$',views.usuarioPremium,name='usuarioPremium'),
+    url(r'^show_canciones_prem/$',views.un_show_songsPrem,name='un_show_songsPrem'),
+    url(r'^show_artistas/([0-9]+)/$',views.show_artistas,name='show_artistas'),
+    url(r'^show_usr_membresia/([0-9]+)/$',views.show_usr_membresia,name='show_usr_membresia'),
+    url(r'^show_repoAdmin/$',views.show_repoAdmin,name='show_repoAdmin'),
+    url(r'^rep_suscripXArt/$',views.rep_suscripXArt,name='rep_suscripXArt'),
+
     url(r'^$', views.home, name='home'),
 
-]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) 

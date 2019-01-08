@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from streaming.forms import form_login,form_registro,form_registro2,form_csv,form_correo,form_datosUsr,form_delUsr,form_regArti,form_nombre_artMod,form_delArt
 from django.contrib import messages
 from streaming import forms
-from streaming.models import Usuario,Artista,Cancion,Album,AlbmSong,Genero
+from streaming.models import Usuario,Artista,Cancion,Album,AlbmSong,Genero,Membresia
 from django.db import connection
 from django.http import HttpResponseRedirect
 
@@ -62,8 +62,21 @@ def login(request):
 					return render(request,'usuario/administrador/principalAdmin.html')
 				elif rol_usr == 'usuario':
 					#debo preguntar si tiene membreia activa
-					return render(request,'usuario/normal/principalUsuario.html')
-				messages.success(request, 'Logeado exitosamente')
+					sql = """SELECT COUNT(*)
+							 FROM membresia
+							 WHERE usuario_id_usuario = """+ str(id_usr) +"""
+							 AND activa = 1;"""
+					cursor = connection.cursor()
+					cursor.execute(sql)
+					tiene_memb = cursor.fetchone()
+					cursor.close()
+					if tiene_memb != None:
+						if tiene_memb[0] > 0 :
+							return redirect('usuarioPremium')
+						else:
+							return render(request,'usuario/normal/principalUsuario.html')
+					else:
+						messages.success(request, 'Salio algo mal en la consulta')
 			else:
 				messages.warning(request, 'El usuario o la contrasenia son incorrectos o no esta activa la cuenta')
 	else:
@@ -532,6 +545,16 @@ def crud_mod_canciones(request):
 		infoCan = forms.form_modCan()
 	return render(request,'usuario/administrador/adminModCan.html',{'canciones':canciones,'nombre_viejo':nombCan,'form':infoCan})
 
+def show_usr_membresia(request,id_memb):
+	memb = Membresia.objects.all()
+	if id_memb != '0':
+		sql = """UPDATE membresia
+				 SET activa = 0	
+				 WHERE id_membresia = """+str(id_memb)+""";"""
+		cursor = connection.cursor()
+		cursor.execute(sql)
+		cursor.close()
+	return render(request,'usuario/administrador/showUsrMemb.html',{'memb':memb})
 
 #================================================================ USUARIO NORMAL =====================================
 
@@ -579,11 +602,44 @@ def buy_membresia(request):
 		formulario = forms.form_newMembresia();
 	return render(request,'usuario/normal/compraMembresia.html',{'form':formulario})
 
-def existe_obj(modelo,identif,id_cmp):
-	result = None
-	try:
-		result = modelo.objects.get(identif = id_cmp)
-	except:
-		result = None
-	return result
+
+#================================================================ USUARIO premium =====================================
+
+def usuarioPremium(request):
+	return render(request,'usuario/premium/principal.html')
+
+def un_show_songsPrem(request):
+	sngs = AlbmSong.objects.all()
+	return render(request,'usuario/premium/showCanPrem.html',{'canciones':sngs})
+
+def show_artistas(request,id_art):
+	art = Artista.objects.all()
+	if id_art != '0':
+		idUsr = request.session['id_usr']
+		sql = """INSERT INTO suscriptor(usuario_id_usuario,artista_id_artista)
+				 VALUES("""+str(idUsr)+""","""+str(id_art)+""");"""
+		cursor = connection.cursor()
+		cursor.execute(sql)
+		cursor.close()
+		print(sql)
+	else:
+		print(id_art)
+	return render(request,'usuario/premium/showArtistasPrem.html',{'artistas':art})
+
+
+
+
+	#================================================ ADMIN REPORTES ===============================
+def show_repoAdmin(request):
+	return render(request,'usuario/administrador/reportesPrinc.html')
+
+def rep_suscripXArt(request):
+	usrs = Usuario.objects.all()
+	arts = Artista.objects.all()
+	if request.method == 'POST':
+		nombre = request.POST.get('dropdown1')
+		nombre2 = request.POST.get('dropdown2')
+		print(nombre)
+		print(nombre2)
+	return render(request,'usuario/administrador/suscripXArt.html',{'usuarios':usrs,'artistas':arts})
 

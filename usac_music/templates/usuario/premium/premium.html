@@ -1,0 +1,20 @@
+{% extends 'base/base.html'%}
+
+{% block barra_navegadora %}
+<form class="navbar-form navbar-right">
+    <button type="button" class="btn btn-warning" onclick="location.href='{% url 'streaming.views.logout' %}'">logout</button>
+</form>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-sm-3 col-dm-3">
+        {% block content_menu_usrPrem %}
+        {% endblock %}
+    </div>
+    <div class="col-sm-8 col-dm-8">
+            {% block content_usrPrem %}
+            {% endblock %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'usuario/administrador/administrador.html'%}
+
+{% block content_admin_menu %}
+<br><br>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-10 col-md-10 sidebar">
+            <ul class="nav nav-sidebar">
+                <li class="active"><a href="{% url 'streaming.views.rep_suscripXArt' %}">SUSCRIPCION X ARTISTA <span class="sr-only">(current)</span></a></li>
+                <li><a href="{% url 'streaming.views.crud_usuario' %}">MEMBRESIA</a></li>
+                <li><a href="{% url 'streaming.views.crud_artista' %}">ADQUISICION MEBRESIAS</a></li>
+                <li><a href="{% url 'streaming.views.crud_canciones' %}">USUARIOS GASTADO</a></li>
+                <li><a href="http://127.0.0.1:8000/show_usr_membresia/0/">USUARIOS X PAIS</a></li>
+                <li><a href="http://127.0.0.1:8000/show_usr_membresia/0/">USUARIOS X GENERO</a></li>
+                <li><a href="http://127.0.0.1:8000/show_usr_membresia/0/">USUARIOS X ANIOS</a></li>
+                <li><a href="http://127.0.0.1:8000/show_usr_membresia/0/">LOG ADMINISTRADOR</a></li>
+                <li><a href="http://127.0.0.1:8000/show_usr_membresia/0/">CANCIONES POPULARES</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content_admin %}
+    {% block content_admin_reportes %}
+    {% endblock %}
+{% endblock %}

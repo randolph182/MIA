@@ -1,0 +1,43 @@
+{% extends 'usuario/administrador/reportesPrinc.html'%}
+
+{% block content_admin_reportes %}
+<form method="POST" class="signin" enctype="multipart/form-data">{% csrf_token %}
+    <table class="table table-bordered">
+        <tr>
+            <td>
+                <h4>Usuario</h4>
+            </td>
+            <td>
+                <select name="dropdown1">
+                    {% if usuarios%}
+                    {% for usuario in usuarios%}
+                    <option value="{{usuario.id_usuario}}">{{usuario.nombre}}
+                    </option>
+                    {% endfor %}
+                    {% endif%}
+                </select>
+            </td>
+            <td>
+                Suscrito a:
+            </td>
+            <td>
+                    <h4>Artista</h4>
+            </td>
+            <td>
+                <select name="dropdown2">
+                    {% if artistas%}
+                    {% for artista in artistas%}
+                    <option value="{{artista.id_artista}}">{{artista.nombre}}
+                    </option>
+                    {% endfor %}
+                    {% endif%}
+                </select>
+            </td>
+            <td>
+                <input type="submit" value="mostrar">
+            </td>
+        </tr>
+    </table>
+
+</form>
+{% endblock %}

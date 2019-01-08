@@ -1,0 +1,41 @@
+{% extends 'usuario/administrador/principalAdmin.html'%}
+
+{% block content_admin_principal %}
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <td>#</td>
+            <td>propietario</td>
+            <td>fecha adquirida</td>
+            <td>fecha final</td>
+            <td>presio</td>
+            <td>activa</td>
+            <td>tarjeta</td>
+
+        </tr>
+    </thead>
+    <tbody>
+        {% if memb%}
+        {% for membresia in memb %}
+        <tr>
+            <td>{{membresia.id_membresia}}</td>
+            <td>{{membresia.usuario_id_usuario.nombre}}</td>
+            <td>{{membresia.fecha_inicio}}</td>
+            <td>{{membresia.fecha_fin}}</td>
+            <td>{{membresia.precio}}</td>
+            <td>{{membresia.activa}}</td>
+            <td>{{membresia.tarjeta}}</td>
+            <td>
+                <form method="POST" class="signin" enctype="multipart/form-data">
+                    <button type="button" class="btn btn-info" onclick="location.href='http://127.0.0.1:8000/show_usr_membresia/{{membresia.id_membresia}}/'">Desactivar</button>
+                </form>
+            </td>
+
+        </tr>
+        {% endfor %}
+        {% else %}
+        <h1> No hay registros de canciones</h1>
+        {% endif %}
+    </tbody>
+</table>
+{% endblock %}

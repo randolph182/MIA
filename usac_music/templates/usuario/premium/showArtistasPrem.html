@@ -1,0 +1,35 @@
+{% extends 'usuario/premium/principal.html'%}
+
+{% block content_usrPrem %}
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <td>#</td>
+                <td>nombre</td>
+                <td>fecha_nacimiento</td>
+                <td>pais</td>
+                <td>estado</td>
+            </tr>
+        </thead>
+        <tbody>
+            {% if artistas%}
+            {% for artista in artistas %}
+            <tr>
+                <td>{{artista.id_artista}}</td>
+                <td>{{artista.nombre}}</td>
+                <td>{{artista.fecha_nacimiento}}</td>
+                <td>{{artista.pais_id_pais.nombre}}</td>
+                <td>
+                    <form method="POST" class="signin" enctype="multipart/form-data">
+                        <button type="button" class="btn btn-info" onclick="location.href='http://127.0.0.1:8000/show_artistas/{{artista.id_artista}}/'">Seguir</button>
+                    </form>
+                </td>    
+                    
+            </tr>
+            {% endfor %}
+            {% else %}
+            <h1> No hay registros de canciones</h1>
+            {% endif %}
+        </tbody>
+    </table>
+{% endblock %}
