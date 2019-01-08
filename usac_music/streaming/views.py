@@ -61,6 +61,7 @@ def login(request):
 				if rol_usr == 'administrador':
 					return render(request,'usuario/administrador/principalAdmin.html')
 				elif rol_usr == 'usuario':
+					#debo preguntar si tiene membreia activa
 					return render(request,'usuario/normal/principalUsuario.html')
 				messages.success(request, 'Logeado exitosamente')
 			else:
@@ -558,6 +559,25 @@ def play_songs(request,id_song):
 			cursor.close()
 		# sngs = Cancion.objects.all()
 		return render(request,'playCancion.html',{'cancion':idSng})
+
+
+
+def buy_membresia(request):
+	if request.method == 'POST':
+		formulario = forms.form_newMembresia(request.POST)
+		if formulario.is_valid():
+			idUsuario = request.session['id_usr']
+			noTarjeta = formulario.cleaned_data['tarjeta']
+			valorMembresia = 15
+			with connection.cursor() as cursor:
+				cursor.callproc("nuevaMembresia",(idUsuario,noTarjeta,valorMembresia))
+				cursor.close()
+				return redirect('home')
+		else:
+			messages.success(request, "tine que ingresar el Numero de su tarjeta")
+	else:
+		formulario = forms.form_newMembresia();
+	return render(request,'usuario/normal/compraMembresia.html',{'form':formulario})
 
 def existe_obj(modelo,identif,id_cmp):
 	result = None

@@ -29,6 +29,7 @@ urlpatterns = [
     url(r'^usuario_normal/$',views.usuarioNormal,name='usuarioNormal'),
     url(r'^usr_normal_canciones/$',views.un_show_songs,name='un_show_songs'),
     url(r'^play_songs/([0-9]+)/$',views.play_songs,name='play_songs'),
+    url(r'^buy_membresia/$',views.buy_membresia,name='buy_membresia'),
     url(r'^$', views.home, name='home'),
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

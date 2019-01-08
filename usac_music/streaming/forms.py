@@ -102,3 +102,6 @@ class form_modCan(forms.Form):
 
 class form_nombCAn(forms.Form):
     nombre = forms.CharField(label='nombre viejo', max_length=100)
+
+class form_newMembresia(forms.Form):
+    tarjeta = forms.IntegerField(label='Numero de tarjeta')

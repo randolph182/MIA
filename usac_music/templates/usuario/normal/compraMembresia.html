@@ -1,0 +1,29 @@
+{% extends 'usuario/normal/principalUsuario.html'%}
+
+{% block content_usrNormal %}
+<br><br>
+<br><br>
+<br><br>
+<div class="row">
+    <form method="POST" class="signin" enctype="multipart/form-data">
+        <div class="col-sm-8 col-dm-8">
+            {% csrf_token %}
+            {{form.as_p}}
+            <input type="submit" value="Enviar datos"> <!-- boton de enviar datos -->
+
+            {% if messages %}
+            <div class="row">
+                <div class='col-xs-12'>
+                    {% for message in messages %}
+                    <p {% if message.tags %} class="{{message.tags}}" {% endif %}>
+                        {{message}}
+                    </p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+{% endblock %}
