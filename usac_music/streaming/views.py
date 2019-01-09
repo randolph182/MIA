@@ -12,10 +12,12 @@ from django.http import HttpResponseRedirect
 
 from django.core.mail import EmailMessage
 import random, string
-
 import os
-
 from django.core.urlresolvers import resolve
+
+from serializers import CancionSerializer
+from rest_framework import viewsets
+from django.core import serializers
 
 # Create your views here.
 def home(request):
@@ -812,3 +814,9 @@ def showAlbumXGenero(request):
 		else: #desc
 			lstAlbm = Album.objects.filter(genero_id_genero = idGen).order_by('-nombre')
 	return render(request,'usuario/premium/showAlbumXGenero.html',{'lstAlbm':lstAlbm,'lstGen':lstGen,'lstOrden':lstOrden})
+
+
+
+class CancionViewSet(viewsets.ModelViewSet):
+	queryset = Cancion.objects.all()
+	serializer_class = CancionSerializer

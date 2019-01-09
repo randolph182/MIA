@@ -59,6 +59,9 @@ class Cancion(models.Model):
         managed = False
         db_table = 'cancion'
 
+    def __unicode__(self):
+		return self.nombre
+
 
 class Genero(models.Model):
     id_genero = models.BigIntegerField(primary_key=True)

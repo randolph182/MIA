@@ -1,11 +1,15 @@
-from django.conf.urls import  url
-
+from django.conf.urls import include, url
 from streaming import views
-
 from django.conf import settings
 from django.conf.urls.static import static
 
+from rest_framework import routers
+
+router = routers.DefaultRouter(views.CancionViewSet)
+router.register(r'cancion',views.CancionViewSet)
+
 urlpatterns = [
+    url(r'^app/',include(router.urls)),
     url(r'^login/$',views.login,name='login'),
     url(r'^logout$',views.logout,name='logout'),
     url(r'^index/$',views.index,name='index'),
