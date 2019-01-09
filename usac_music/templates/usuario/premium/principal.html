@@ -8,7 +8,7 @@
             <ul class="nav nav-sidebar">
                 <li class="active"><a href="{% url 'streaming.views.un_show_songsPrem' %}">VER CANCIONES <span class="sr-only">(current)</span></a></li>
                 <li><a href="#">EDITAR CUENTA</a></li>
-                <li><a href="http://127.0.0.1:8000/show_artistas/0/">MOSTRAR ARTISTAS</a></li>
+                <li><a href="{% url 'show_artistas' 0 %}">MOSTRAR ARTISTAS</a></li>
                 <li><a href="{% url 'streaming.views.showRepPrincipal' %}">REPORTES</a></li>
             </ul>
         </div>

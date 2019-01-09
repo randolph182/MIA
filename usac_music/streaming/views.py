@@ -15,6 +15,8 @@ import random, string
 
 import os
 
+from django.core.urlresolvers import resolve
+
 # Create your views here.
 def home(request):
 	template = 'inicio/home.html'
@@ -132,10 +134,12 @@ def registro_normal(request):
 			ruta_archivo = str(request.FILES['fotografia'])
 			
 			llveEmail = random_string(10)
-
+			# ur =  str( request.build_absolute_uri() )
+			ur = request.get_host()
+			print(ur)
 			msg = EmailMessage(
-				'DJANGO confirm email'
-				'Para activar su cuenta en USAC MUSIC acceda al siguiente enlace: http://127.0.0.1:8000/correo_verificacion/' + llveEmail + '/',
+				"DJANGO confirm email"
+				"Para activar su cuenta en USAC MUSIC acceda al siguiente enlace:http://"+ur+"/correo_verificacion/"+llveEmail+"/",
 				to=[correo]
 			)
 			msg.send()
@@ -320,13 +324,13 @@ def handle_uploaded_file(file,filename):
 def random_string(cant):
 	return ''.join(random.choice(string.ascii_lowercase) for a in range(cant))
 
-def confirm_correo(request,url_str):
+def confirm_correo(request,value):
 	if request.method == 'POST':
 		return redirect('home')
 	else:
 		usr_new = None
 		try:
-			usr_new = Usuario.objects.get(token_correo = url_str)
+			usr_new = Usuario.objects.get(token_correo = value)
 		except:
 			usr_new = None
 		if usr_new != None:
@@ -545,12 +549,12 @@ def crud_mod_canciones(request):
 		infoCan = forms.form_modCan()
 	return render(request,'usuario/administrador/adminModCan.html',{'canciones':canciones,'nombre_viejo':nombCan,'form':infoCan})
 
-def show_usr_membresia(request,id_memb):
+def show_usr_membresia(request,value):
 	memb = Membresia.objects.all()
-	if id_memb != '0':
+	if value != '0':
 		sql = """UPDATE membresia
 				 SET activa = 0	
-				 WHERE id_membresia = """+str(id_memb)+""";"""
+				 WHERE id_membresia = """+str(value)+""";"""
 		cursor = connection.cursor()
 		cursor.execute(sql)
 		cursor.close()
@@ -566,11 +570,12 @@ def un_show_songs(request):
 	sngs = AlbmSong.objects.all()
 	return render(request,'usuario/normal/showCanciones.html',{'canciones':sngs})
 
-def play_songs(request,id_song):
+def play_songs(request,value):
 	#busacando la cancion por id
+	print(value)
 	idSng = None
 	try:
-		idSng = Cancion.objects.get(id_cancion = id_song)
+		idSng = Cancion.objects.get(id_cancion = value)
 	except:
 		idSng = None
 
@@ -612,18 +617,18 @@ def un_show_songsPrem(request):
 	sngs = AlbmSong.objects.all()
 	return render(request,'usuario/premium/showCanPrem.html',{'canciones':sngs})
 
-def show_artistas(request,id_art):
+def show_artistas(request,value):
 	art = Artista.objects.all()
-	if id_art != '0':
+	if value != '0':
 		idUsr = request.session['id_usr']
 		sql = """INSERT INTO suscriptor(usuario_id_usuario,artista_id_artista)
-				 VALUES("""+str(idUsr)+""","""+str(id_art)+""");"""
+				 VALUES("""+str(idUsr)+""","""+str(value)+""");"""
 		cursor = connection.cursor()
 		cursor.execute(sql)
 		cursor.close()
 		print(sql)
 	else:
-		print(id_art)
+		print(value)
 	return render(request,'usuario/premium/showArtistasPrem.html',{'artistas':art})
 
 

@@ -21,7 +21,8 @@
                 <td>{{artista.pais_id_pais.nombre}}</td>
                 <td>
                     <form method="POST" class="signin" enctype="multipart/form-data">
-                        <button type="button" class="btn btn-info" onclick="location.href='http://127.0.0.1:8000/show_artistas/{{artista.id_artista}}/'">Seguir</button>
+
+                        <a class="btn btn-info" href="{% url 'show_artistas' artista.id_artista %}"> Seguir </a>
                     </form>
                 </td>    
                     

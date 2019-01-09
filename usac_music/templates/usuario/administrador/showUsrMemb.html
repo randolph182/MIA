@@ -27,7 +27,7 @@
             <td>{{membresia.tarjeta}}</td>
             <td>
                 <form method="POST" class="signin" enctype="multipart/form-data">
-                    <button type="button" class="btn btn-info" onclick="location.href='http://127.0.0.1:8000/show_usr_membresia/{{membresia.id_membresia}}/'">Desactivar</button>
+                    <a class="btn btn-info" href="{% url 'show_usr_membresia' membresia.id_membresia %}"> desactivar </a>
                 </form>
             </td>
 
