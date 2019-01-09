@@ -168,7 +168,7 @@ class Usuario(models.Model):
     fecha_registro = models.DateField(blank=True, null=True)
     direccion = models.CharField(max_length=195, blank=True, null=True)
     rol = models.CharField(max_length=60, blank=True, null=True)
-    pais_id_pais = models.BigIntegerField()
+    pais_id_pais = models.ForeignKey(Pais, db_column='pais_id_pais')
     token_correo = models.CharField(max_length=450, blank=True, null=True)
     tactivo = models.BigIntegerField(blank=True, null=True)
 

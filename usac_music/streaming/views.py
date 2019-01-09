@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from streaming.forms import form_login,form_registro,form_registro2,form_csv,form_correo,form_datosUsr,form_delUsr,form_regArti,form_nombre_artMod,form_delArt
 from django.contrib import messages
 from streaming import forms
-from streaming.models import Usuario,Artista,Cancion,Album,AlbmSong,Genero,Membresia,Suscriptor
+from streaming.models import Usuario,Artista,Cancion,Album,AlbmSong,Genero,Membresia,Suscriptor,Pais,Genero,UsrLog
 from django.db import connection
 from django.http import HttpResponseRedirect
 
@@ -643,3 +643,167 @@ def rep_suscripXArt(request):
 
 	return render(request,'usuario/administrador/suscripXArt.html',{'usuarios':usrs,'artistas':arts,'usuariosxartistas':usuariosxartistas})
 
+
+def rep_showMembresias(request):
+	estado = ["activada","desactivada"]
+	membresias = Membresia.objects.filter(activa = 1)
+	if request.method == 'POST':
+		estado = request.POST.get('dropdown1')
+		print(estado)
+		if estado == "activada":
+			membresias = Membresia.objects.filter(activa = 1)
+		else:
+			membresias = Membresia.objects.filter(activa = 0)
+		estado = ["activada","desactivada"]
+	return render(request,'usuario/administrador/showMembresias.html',{'estados':estado,'membresias':membresias})
+
+def rep_showMoreMemb(request):
+	sql = """select usuario.nombre, count(membresia.id_membresia) as total
+			 FROM usuario,membresia
+			 WHERE usuario.id_usuario = membresia.usuario_id_usuario
+			 group by usuario.nombre
+			 order by total
+			 desc;"""
+	cursor = connection.cursor()
+	cursor.execute(sql)
+	lst_memb = cursor.fetchall()
+	cursor.close()
+	return render(request,'usuario/administrador/showMoreMemb.html',{'lst_memb':lst_memb})
+
+def rep_repUsrMasDinero(request):
+	sql = """select usuario.nombre,sum(membresia.precio) as total
+			 from usuario,membresia
+			 where usuario.id_usuario = membresia.usuario_id_usuario
+			 group by usuario.nombre;"""
+	cursor = connection.cursor()
+	cursor.execute(sql)
+	resp = cursor.fetchall()
+	cursor.close()
+	return  render(request,'usuario/administrador/repUsrMasDinero.html',{'resp':resp})
+
+
+def rep_showXPais(request):
+	paises = Pais.objects.all()
+	resultUsr = None
+	if request.method == 'POST':
+		pais = request.POST.get('dropdown1')
+		resultUsr = Usuario.objects.filter(pais_id_pais = pais)
+	return render(request,'usuario/administrador/rep_showXPais.html',{'paises':paises,'usuarios':resultUsr})
+
+
+	
+def rep_showXGenero(request):
+	generos = ["femenino","masculino"]
+	resultUsr = None
+	if request.method == 'POST':
+		genero = request.POST.get('dropdown1')
+		resultUsr = Usuario.objects.filter(genero = genero)
+	return render(request,'usuario/administrador/showXGenero.html',{'generos':generos,'usuarios':resultUsr})	
+
+
+def rep_showRepLog(request):
+	sql = """SELECT * FROM USR_LOG;"""
+	cursor = connection.cursor()
+	cursor.execute(sql)
+	lst_lst_logs = cursor.fetchall()
+	cursor.close()
+	for losgs in lst_lst_logs:
+		print (losgs)
+	return render(request,'usuario/administrador/showRepLog.html',{'lst_lst_logs':lst_lst_logs})
+
+def rep_showCanPopu(request):
+	sql = """select cancion.nombre,count(play.id_play) as play_song
+			 from cancion,play
+			 where cancion.id_cancion = play.cancion_id_cancion
+			 group by cancion.nombre
+			 order by play_song
+			 desc;"""
+	cursor = connection.cursor()
+	cursor.execute(sql)
+	logs_lst = cursor.fetchall()
+	cursor.close()
+	return render(request,'usuario/administrador/showCanPopu.html',{'logs_lst':logs_lst})
+
+#================================================ USUARIO REPORTES ===============================
+def showRepPrincipal(request):
+	return render(request,'usuario/premium/showRepPrincipal.html')
+
+def rep_showArtXPaisPrem(request):
+	paises = Pais.objects.all()
+	resultArt = None
+	if request.method == 'POST':
+		pais = request.POST.get('dropdown1')
+		resultArt = Artista.objects.filter(pais_id_pais = pais)
+	return render(request,'usuario/premium/showArtXPais.html',{'paises':paises,'artistas':resultArt})
+
+
+def rep_showArtXEdad(request):
+	arts = None
+	cond = ["mayor","menor"]
+	if request.method == 'POST':
+		edadArt = forms.form_anioArtista(request.POST)
+		edadDef = 24;
+		if edadArt.is_valid():
+			edad = edadArt.cleaned_data['anios']
+		resulCond =  request.POST.get('dropdown1')
+		edadStr = str(edad)
+		signCond = ">"
+		if resulCond == "mayor":
+			signCond = ">"
+		else:
+			signCond = "<"
+		print(signCond)
+		print(resulCond)
+		sql = """select artista.nombre,(MONTHS_BETWEEN(SYSDATE,artista.fecha_nacimiento)/12) as edad
+				 FROM DUAL,artista
+				 where (MONTHS_BETWEEN(SYSDATE,artista.fecha_nacimiento)/12)"""+ signCond + edadStr +"""
+				 order by edad,nombre;"""
+		print(sql)
+		cursor = connection.cursor()
+		cursor.execute(sql)
+		arts = cursor.fetchall()
+		cursor.close()
+	else:
+		edadArt = forms.form_anioArtista()
+	return render(request,'usuario/premium/showArtXEdad.html',{'edad':edadArt,'cond':cond,'artistas':arts})
+
+
+def rep_showArtXGeneroPrem(request):
+	generos = Genero.objects.all()
+	canciones = None
+	resultArt = None
+	if request.method == 'POST':
+		genero = request.POST.get('dropdown1')
+		canciones = Cancion.objects.filter(genero_id_genero = genero)
+	return render(request,'usuario/premium/showArtXGenero.html',{'generos':generos,'canciones':canciones})	
+
+
+def showCanXGeneroPrem(request):
+	lstGen = Genero.objects.all()
+	lstOrden = ["a-z","z-a"]
+	lstCan = None
+	if request.method == 'POST':
+		idGen = request.POST.get('dropdown1')
+		orden = request.POST.get('dropdown2')
+		tipoOrden = "a-z"
+		if orden == "a-z": #asc
+			lstCan = Cancion.objects.filter(genero_id_genero = idGen).order_by('nombre')
+		else: #desc
+			lstCan = Cancion.objects.filter(genero_id_genero = idGen).order_by('-nombre')
+	return render(request,'usuario/premium/showCanXGenero.html',{'canciones':lstCan,'lstGen':lstGen,'lstOrden':lstOrden})
+
+	
+
+def showAlbumXGenero(request):
+	lstGen = Genero.objects.all()
+	lstOrden = ["a-z","z-a"]
+	lstAlbm = None
+	if request.method == 'POST':
+		idGen = request.POST.get('dropdown1')
+		orden = request.POST.get('dropdown2')
+		tipoOrden = "a-z"
+		if orden == "a-z": #asc
+			lstAlbm = Album.objects.filter(genero_id_genero = idGen).order_by('nombre')
+		else: #desc
+			lstAlbm = Album.objects.filter(genero_id_genero = idGen).order_by('-nombre')
+	return render(request,'usuario/premium/showAlbumXGenero.html',{'lstAlbm':lstAlbm,'lstGen':lstGen,'lstOrden':lstOrden})

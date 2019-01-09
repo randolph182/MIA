@@ -1,0 +1,33 @@
+{% extends 'usuario/administrador/reportesPrinc.html'%}
+
+{% block content_admin_reportes %}
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <td>#</td>
+            <td>fecha</td>
+            <td>descripcion</td>
+            <td>tipo accion</td>
+            <td>usuario responsable</td>
+            <td>usuario afectado</td>
+        </tr>
+    </thead>
+    <tbody>
+        {% if lst_lst_logs %}
+        {% for logs in lst_lst_logs%}
+        <tr>
+                <td>{{logs.0}}</td>
+                <td>{{logs.1}}</td>
+                <td>{{logs.2}}</td>
+                <td>{{logs.3}}</td>
+                <td>{{logs.4}}</td>
+                <td>{{logs.5}}</td>
+         </tr>
+        {% endfor %}
+        {% else %}
+        <h1> No hay registros de usuarios</h1>
+        {% endif %}
+    </tbody>
+</table>
+{% endblock %}

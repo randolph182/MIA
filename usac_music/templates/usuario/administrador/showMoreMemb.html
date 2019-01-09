@@ -1,0 +1,24 @@
+{% extends 'usuario/administrador/reportesPrinc.html'%}
+
+{% block content_admin_reportes %}
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <td>nombre</td>
+            <td>veces compradas</td>
+        </tr>
+    </thead>
+    <tbody>
+        {% if lst_memb%}
+        {% for memb in lst_memb %}
+        <tr>
+            <td>{{memb.0}}</td>
+            <td>{{memb.1}}</td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <h1> No hay registros de canciones</h1>
+        {% endif %}
+    </tbody>
+</table>
+{% endblock %}

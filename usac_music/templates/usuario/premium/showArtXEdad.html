@@ -1,0 +1,53 @@
+{% extends 'usuario/premium/showRepPrincipal.html'%}
+
+{% block content_premium_reportes %}
+<form method="POST" class="signin" enctype="multipart/form-data">{% csrf_token %}
+    <table class="table table-bordered">
+        <tr>
+            <td>
+                ARTISTAS
+            </td>
+            <td>
+                <select name="dropdown1">
+                    {% if cond%}
+                    {% for condicion in cond%}
+                    <option value="{{condicion}}">{{condicion}}
+                    </option>
+                    {% endfor %}
+                    {% endif%}
+                </select>
+            </td>
+            <td>
+                    {{edad.as_p}}
+            </td>
+            <td>
+                <input type="submit" value="mostrar">
+            </td>
+        </tr>
+        <tr>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <td>nombre</td>
+                        <td>edad</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if artistas %}
+                    {% for artista in artistas %}
+                    <tr>
+                        <td>{{artista.0}}</td>
+                        <td>{{artista.1}}</td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <h1> No hay registros de artistas</h1>
+                    {% endif %}
+                </tbody>
+            </table>
+
+        </tr>
+    </table>
+
+</form>
+{% endblock %}

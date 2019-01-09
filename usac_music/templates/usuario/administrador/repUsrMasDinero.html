@@ -1,0 +1,36 @@
+{% extends 'usuario/administrador/reportesPrinc.html'%}
+
+{% block content_admin_reportes %}
+<table class="table table-bordered">
+    <tr>
+        <td>
+            USUARIOS QUE MAS HAN GASTADO EN MEMBRESIAS
+        </td>
+    </tr>
+    <tr>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <td>nombre</td>
+                    <td>total gastado</td>
+
+                </tr>
+            </thead>
+            <tbody>
+                {% if resp%}
+                {% for resultado in resp %}
+                <tr>
+                    <td>{{resultado.0}}</td>
+                    <td>{{resultado.1}}</td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <h1> No hay registros de usuarios</h1>
+                {% endif %}
+            </tbody>
+        </table>
+
+    </tr>
+</table>
+
+{% endblock %}

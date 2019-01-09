@@ -1,0 +1,57 @@
+{% extends 'usuario/premium/showRepPrincipal.html'%}
+
+{% block content_premium_reportes %}
+<form method="POST" class="signin" enctype="multipart/form-data">{% csrf_token %}
+    <table class="table table-bordered">
+        <tr>
+            <td>
+                <h4>Genero</h4>
+            </td>
+            <td>
+                <select name="dropdown1">
+                    {% if generos%}
+                    {% for genero in generos%}
+                    <option value="{{genero.id_genero}}">{{genero.nombre}}
+                    </option>
+                    {% endfor %}
+                    {% endif%}
+                </select>
+            </td>
+            <td>
+                    <h3>artistas de x genero</h3>
+            </td>
+            <td>
+                <input type="submit" value="mostrar">
+            </td>
+        </tr>
+        <tr>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <td>#</td>
+                        <td>nombre</td>
+                        <td>fecha_nacimiento</td>
+                        <td>genero</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if canciones %}
+                    {% for cancion in canciones %}
+                    <tr>
+                        <td>{{cancion.artista_id_artista.id_artista}}</td>
+                        <td>{{cancion.artista_id_artista.nombre}}</td>
+                        <td>{{cancion.artista_id_artista.fecha_nacimiento}}</td>
+                        <td>{{cancion.genero_id_genero.nombre}}</td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <h1> No hay registros de artistas</h1>
+                    {% endif %}
+                </tbody>
+            </table>
+
+        </tr>
+    </table>
+
+</form>
+{% endblock %}

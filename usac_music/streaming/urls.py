@@ -36,7 +36,19 @@ urlpatterns = [
     url(r'^show_usr_membresia/([0-9]+)/$',views.show_usr_membresia,name='show_usr_membresia'),
     url(r'^show_repoAdmin/$',views.show_repoAdmin,name='show_repoAdmin'),
     url(r'^rep_suscripXArt/$',views.rep_suscripXArt,name='rep_suscripXArt'),
-
+    url(r'^rep_showMembresias/$',views.rep_showMembresias,name='rep_showMembresias'),
+    url(r'^rep_repUsrMasDinero/$',views.rep_repUsrMasDinero,name='rep_repUsrMasDinero'),
+    url(r'^rep_showXPais/$',views.rep_showXPais,name='rep_showXPais'),
+    url(r'^rep_showXGenero/$',views.rep_showXGenero,name='rep_showXGenero'),
+    url(r'^rep_showRepLog/$',views.rep_showRepLog,name='rep_showRepLog'),
+    url(r'^rep_showCanPopu/$',views.rep_showCanPopu,name='rep_showCanPopu'),
+    url(r'^rep_showMoreMemb/$',views.rep_showMoreMemb,name='rep_showMoreMemb'),
+    url(r'^showRepPrincipal/$',views.showRepPrincipal,name='showRepPrincipal'),
+    url(r'^rep_showArtXPaisPrem/$',views.rep_showArtXPaisPrem,name='rep_showArtXPaisPrem'),
+    url(r'^rep_showArtXEdad/$',views.rep_showArtXEdad,name='rep_showArtXEdad'),
+    url(r'^rep_showArtXGeneroPrem/$',views.rep_showArtXGeneroPrem,name='rep_showArtXGeneroPrem'),
+    url(r'^showCanXGeneroPrem/$',views.showCanXGeneroPrem,name='showCanXGeneroPrem'),
+    url(r'^showAlbumXGenero/$',views.showAlbumXGenero,name='showAlbumXGenero'),
     url(r'^$', views.home, name='home'),
 
 

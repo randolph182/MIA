@@ -1,0 +1,61 @@
+{% extends 'usuario/administrador/reportesPrinc.html'%}
+
+{% block content_admin_reportes %}
+<form method="POST" class="signin" enctype="multipart/form-data">{% csrf_token %}
+    <table class="table table-bordered">
+        <tr>
+            <td>
+                <h4>Genero</h4>
+            </td>
+            <td>
+                <select name="dropdown1">
+                    {% if generos%}
+                    {% for genero in generos%}
+                    <option value="{{genero}}">{{genero}}
+                    </option>
+                    {% endfor %}
+                    {% endif%}
+                </select>
+            </td>
+            <td>
+                    <h3>usaurios de x genero</h3>
+            </td>
+            <td>
+                <input type="submit" value="mostrar">
+            </td>
+        </tr>
+        <tr>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <td>#</td>
+                        <td>nombre</td>
+                        <td>apellidos</td>
+                        <td>correo</td>
+                        <td>genero</td>
+                        <td>pais</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if usuarios %}
+                    {% for usuario in usuarios %}
+                    <tr>
+                        <td>{{usuario.id_usuario}}</td>
+                        <td>{{usuario.nombre}}</td>
+                        <td>{{usuario.apellidos}}</td>
+                        <td>{{usuario.correo}}</td>
+                        <td>{{usuario.genero}}</td>
+                        <td>{{usuario.pais_id_pais.nombre}}</td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <h1> No hay registros de usuarios</h1>
+                    {% endif %}
+                </tbody>
+            </table>
+
+        </tr>
+    </table>
+
+</form>
+{% endblock %}

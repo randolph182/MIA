@@ -105,3 +105,6 @@ class form_nombCAn(forms.Form):
 
 class form_newMembresia(forms.Form):
     tarjeta = forms.IntegerField(label='Numero de tarjeta')
+
+class form_anioArtista(forms.Form):
+    anios = forms.IntegerField(label='anios')
